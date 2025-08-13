@@ -38,7 +38,7 @@ import { useToast } from '@/hooks/use-toast';
 const ChatSidebar = () => {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
-  const { user, profile, signOut, updateProfile } = useAuth();
+  const { user, profile, signOut, updateProfileBasicInfo } = useAuth();
   const { toast } = useToast();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [profileData, setProfileData] = useState({
@@ -49,7 +49,10 @@ const ChatSidebar = () => {
 
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { error } = await updateProfile(profileData);
+    const { error } = await updateProfileBasicInfo(
+      profileData.full_name,
+      profileData.whatsapp
+    );
     
     if (error) {
       toast({

@@ -22,6 +22,7 @@ interface AuthContextType {
   signUp: (email: string, password: string, fullName?: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   updateProfile: (updates: Partial<Profile>) => Promise<{ error: any }>;
+  updateProfileBasicInfo: (fullName: string, whatsapp: string) => Promise<{ error: any }>;
   refreshProfile: () => Promise<void>;
 }
 
@@ -144,6 +145,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return { error };
   };
 
+  const updateProfileBasicInfo = async (fullName: string, whatsapp: string) => {
+    if (!user) return { error: new Error('No user logged in') };
+
+    try {
+      const { error } = await supabase.rpc('update_profile_basic_info', {
+        p_full_name: fullName,
+        p_whatsapp: whatsapp
+      });
+
+      if (!error && profile) {
+        setProfile({ 
+          ...profile, 
+          full_name: fullName || profile.full_name,
+          whatsapp: whatsapp || null
+        });
+      }
+
+      return { error };
+    } catch (error: any) {
+      return { error };
+    }
+  };
+
   const value = {
     user,
     session,
@@ -153,6 +177,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signUp,
     signOut,
     updateProfile,
+    updateProfileBasicInfo,
     refreshProfile,
   };
 

@@ -72,8 +72,8 @@ const ChatInterface = () => {
         } else {
           const formattedMessages = data.map(msg => ({
             id: msg.id,
-            content: msg.content,
-            message_type: msg.message_type,
+            content: msg.text,
+            message_type: msg.type,
             created_at: msg.created_at,
             sender: (msg.sender === 'assistant' ? 'ai' : msg.sender) as 'user' | 'ai',
             user_id: msg.user_id
@@ -149,9 +149,9 @@ const ChatInterface = () => {
         .from('messages')
         .insert({
           user_id: user.id,
-          content: messageContent,
-          message_type: messageType,
-          file_url: currentAttachment?.url,
+          text: messageContent,
+          type: messageType,
+          media_url: currentAttachment?.url,
           thread_id: user.id,
           sender: 'user'
         });
@@ -191,8 +191,8 @@ const ChatInterface = () => {
       if (latestMessages) {
         const formattedMessages = latestMessages.map(msg => ({
           id: msg.id,
-          content: msg.content,
-          message_type: msg.message_type,
+          content: msg.text,
+          message_type: msg.type,
           created_at: msg.created_at,
           sender: (msg.sender === 'assistant' ? 'ai' : msg.sender) as 'user' | 'ai',
           user_id: msg.user_id

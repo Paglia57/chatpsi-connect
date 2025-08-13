@@ -16,39 +16,39 @@ export type Database = {
     Tables: {
       messages: {
         Row: {
-          content: string
           created_at: string
-          file_url: string | null
           id: string
           is_deleted: boolean | null
-          message_type: string
+          media_url: string | null
           metadata: Json | null
           sender: string | null
-          thread_id: string | null
+          text: string
+          thread_id: string
+          type: string
           user_id: string
         }
         Insert: {
-          content: string
           created_at?: string
-          file_url?: string | null
           id?: string
           is_deleted?: boolean | null
-          message_type?: string
+          media_url?: string | null
           metadata?: Json | null
           sender?: string | null
-          thread_id?: string | null
+          text: string
+          thread_id: string
+          type?: string
           user_id: string
         }
         Update: {
-          content?: string
           created_at?: string
-          file_url?: string | null
           id?: string
           is_deleted?: boolean | null
-          message_type?: string
+          media_url?: string | null
           metadata?: Json | null
           sender?: string | null
-          thread_id?: string | null
+          text?: string
+          thread_id?: string
+          type?: string
           user_id?: string
         }
         Relationships: [
@@ -64,11 +64,17 @@ export type Database = {
       profiles: {
         Row: {
           created_at: string
+          current_period_end: string | null
+          default_thread_id: string
           email: string
           full_name: string | null
           id: string
+          name: string | null
+          plan: string | null
+          subscribed_at: string | null
           subscription_active: boolean
           subscription_end: string | null
+          subscription_id: string | null
           subscription_tier: string | null
           updated_at: string
           user_id: string
@@ -76,11 +82,17 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          current_period_end?: string | null
+          default_thread_id?: string
           email: string
           full_name?: string | null
           id?: string
+          name?: string | null
+          plan?: string | null
+          subscribed_at?: string | null
           subscription_active?: boolean
           subscription_end?: string | null
+          subscription_id?: string | null
           subscription_tier?: string | null
           updated_at?: string
           user_id: string
@@ -88,15 +100,48 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          current_period_end?: string | null
+          default_thread_id?: string
           email?: string
           full_name?: string | null
           id?: string
+          name?: string | null
+          plan?: string | null
+          subscribed_at?: string | null
           subscription_active?: boolean
           subscription_end?: string | null
+          subscription_id?: string | null
           subscription_tier?: string | null
           updated_at?: string
           user_id?: string
           whatsapp?: string | null
+        }
+        Relationships: []
+      }
+      webhook_events: {
+        Row: {
+          created_at: string | null
+          direction: string | null
+          error: string | null
+          id: string
+          payload: Json | null
+          status_code: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          direction?: string | null
+          error?: string | null
+          id?: string
+          payload?: Json | null
+          status_code?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          direction?: string | null
+          error?: string | null
+          id?: string
+          payload?: Json | null
+          status_code?: number | null
         }
         Relationships: []
       }

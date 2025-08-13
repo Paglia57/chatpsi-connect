@@ -54,3 +54,6 @@ enable_phone_autoconfirm = false
 
 [functions.dispatch-message]
 verify_jwt = false
+
+[functions.dispatch_message]
+verify_jwt = false

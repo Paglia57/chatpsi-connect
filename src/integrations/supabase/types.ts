@@ -150,6 +150,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      update_profile_basic_info: {
+        Args: { p_full_name: string; p_whatsapp: string }
+        Returns: undefined
+      }
       validate_file_type: {
         Args: { filename: string }
         Returns: boolean

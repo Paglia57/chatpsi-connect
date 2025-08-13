@@ -14,9 +14,22 @@ serve(async (req) => {
   }
 
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     const webhookUrl = 'https://n8n.seconsult.com.br/webhook-test/chatprincipal';
+
+    console.log('Environment check:', {
+      supabaseUrl: supabaseUrl ? 'Present' : 'Missing',
+      serviceKey: supabaseServiceKey ? 'Present' : 'Missing'
+    });
+
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('Missing required environment variables');
+      return new Response(
+        JSON.stringify({ error: 'Configuração de ambiente incompleta' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 

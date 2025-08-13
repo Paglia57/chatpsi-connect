@@ -53,4 +53,4 @@ enable_phone_confirmations = false
 enable_phone_autoconfirm = false
 
 [functions.dispatch-message]
-verify_jwt = true
+verify_jwt = false

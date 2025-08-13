@@ -7,6 +7,7 @@ interface Profile {
   user_id: string;
   email: string;
   full_name?: string;
+  nickname?: string;
   whatsapp?: string;
   subscription_active: boolean;
   subscription_tier?: string;
@@ -22,7 +23,7 @@ interface AuthContextType {
   signUp: (email: string, password: string, fullName?: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   updateProfile: (updates: Partial<Profile>) => Promise<{ error: any }>;
-  updateProfileBasicInfo: (fullName: string, whatsapp: string) => Promise<{ error: any }>;
+  updateProfileBasicInfo: (fullName: string, whatsapp: string, nickname?: string) => Promise<{ error: any }>;
   refreshProfile: () => Promise<void>;
 }
 
@@ -145,20 +146,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return { error };
   };
 
-  const updateProfileBasicInfo = async (fullName: string, whatsapp: string) => {
+  const updateProfileBasicInfo = async (fullName: string, whatsapp: string, nickname?: string) => {
     if (!user) return { error: new Error('No user logged in') };
 
     try {
       const { error } = await supabase.rpc('update_profile_basic_info', {
         p_full_name: fullName,
-        p_whatsapp: whatsapp
+        p_whatsapp: whatsapp,
+        p_nickname: nickname || null
       });
 
       if (!error && profile) {
         setProfile({ 
           ...profile, 
           full_name: fullName || profile.full_name,
-          whatsapp: whatsapp || null
+          whatsapp: whatsapp || null,
+          nickname: nickname || null
         });
       }
 

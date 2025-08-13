@@ -43,6 +43,7 @@ const ChatSidebar = () => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [profileData, setProfileData] = useState({
     full_name: profile?.full_name || '',
+    nickname: profile?.nickname || '',
     email: profile?.email || '',
     whatsapp: profile?.whatsapp || '',
   });
@@ -51,7 +52,8 @@ const ChatSidebar = () => {
     e.preventDefault();
     const { error } = await updateProfileBasicInfo(
       profileData.full_name,
-      profileData.whatsapp
+      profileData.whatsapp,
+      profileData.nickname
     );
     
     if (error) {
@@ -197,6 +199,18 @@ const ChatSidebar = () => {
                         />
                       </div>
                       <div className="space-y-2">
+                        <Label htmlFor="nickname">Apelido</Label>
+                        <Input
+                          id="nickname"
+                          value={profileData.nickname}
+                          onChange={(e) => setProfileData(prev => ({ 
+                            ...prev, 
+                            nickname: e.target.value 
+                          }))}
+                          placeholder="Como gostaria de ser chamado(a)"
+                        />
+                      </div>
+                      <div className="space-y-2">
                         <Label htmlFor="email">Email</Label>
                         <Input
                           id="email"
@@ -207,7 +221,12 @@ const ChatSidebar = () => {
                             email: e.target.value 
                           }))}
                           placeholder="seu@email.com"
+                          disabled
+                          className="bg-muted"
                         />
+                        <p className="text-xs text-muted-foreground">
+                          Para alterar o e-mail, entre em contato com o suporte
+                        </p>
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="whatsapp">WhatsApp</Label>

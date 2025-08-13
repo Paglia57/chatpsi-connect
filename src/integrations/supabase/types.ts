@@ -70,6 +70,7 @@ export type Database = {
           full_name: string | null
           id: string
           name: string | null
+          nickname: string | null
           plan: string | null
           subscribed_at: string | null
           subscription_active: boolean
@@ -88,6 +89,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           name?: string | null
+          nickname?: string | null
           plan?: string | null
           subscribed_at?: string | null
           subscription_active?: boolean
@@ -106,6 +108,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           name?: string | null
+          nickname?: string | null
           plan?: string | null
           subscribed_at?: string | null
           subscription_active?: boolean
@@ -151,7 +154,9 @@ export type Database = {
     }
     Functions: {
       update_profile_basic_info: {
-        Args: { p_full_name: string; p_whatsapp: string }
+        Args:
+          | { p_full_name: string; p_whatsapp: string }
+          | { p_full_name: string; p_whatsapp: string; p_nickname?: string }
         Returns: undefined
       }
       validate_file_type: {

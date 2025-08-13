@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { 
   Send, 
   Paperclip, 
@@ -11,11 +12,17 @@ import {
   AlertCircle, 
   Bot, 
   User as UserIcon,
-  Lock
+  Lock,
+  Upload,
+  Mic,
+  Image as ImageIcon,
+  Video,
+  File
 } from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useFileUpload, UploadedFile } from '@/hooks/useFileUpload';
 
 interface Message {
   id: string;
@@ -33,7 +40,10 @@ const ChatInterface = () => {
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [fetchingMessages, setFetchingMessages] = useState(true);
+  const [attachedFile, setAttachedFile] = useState<UploadedFile | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { uploadFile, uploading } = useFileUpload();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -61,8 +71,12 @@ const ChatInterface = () => {
           console.error('Error fetching messages:', error);
         } else {
           const formattedMessages = data.map(msg => ({
-            ...msg,
-            sender: 'user' as const
+            id: msg.id,
+            content: msg.content,
+            message_type: msg.message_type,
+            created_at: msg.created_at,
+            sender: (msg.sender === 'assistant' ? 'ai' : msg.sender) as 'user' | 'ai',
+            user_id: msg.user_id
           }));
           setMessages(formattedMessages);
         }
@@ -78,6 +92,23 @@ const ChatInterface = () => {
 
   const canSendMessage = profile?.subscription_active === true;
 
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const uploadedFile = await uploadFile(file);
+    if (uploadedFile) {
+      setAttachedFile(uploadedFile);
+    }
+  };
+
+  const handleRemoveAttachment = () => {
+    setAttachedFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -90,10 +121,14 @@ const ChatInterface = () => {
       return;
     }
 
-    if (!newMessage.trim() || loading || !user) return;
+    if ((!newMessage.trim() && !attachedFile) || loading || !user) return;
 
-    const messageContent = newMessage.trim();
+    const messageType = attachedFile ? attachedFile.type : 'text';
+    const messageContent = attachedFile ? attachedFile.name : newMessage.trim();
+    
     setNewMessage('');
+    const currentAttachment = attachedFile;
+    setAttachedFile(null);
     setLoading(true);
 
     try {
@@ -101,7 +136,7 @@ const ChatInterface = () => {
       const userMessage: Message = {
         id: `temp-${Date.now()}`,
         content: messageContent,
-        message_type: 'text',
+        message_type: messageType,
         created_at: new Date().toISOString(),
         sender: 'user',
         user_id: user.id
@@ -109,13 +144,16 @@ const ChatInterface = () => {
       
       setMessages(prev => [...prev, userMessage]);
 
-      // Save to database
+      // Save to database and send to AI
       const { error } = await supabase
         .from('messages')
         .insert({
           user_id: user.id,
           content: messageContent,
-          message_type: 'text'
+          message_type: messageType,
+          file_url: currentAttachment?.url,
+          thread_id: user.id,
+          sender: 'user'
         });
 
       if (error) {
@@ -128,18 +166,39 @@ const ChatInterface = () => {
         return;
       }
 
-      // Simulate AI response (placeholder for future integration)
-      setTimeout(() => {
-        const aiResponse: Message = {
-          id: `ai-${Date.now()}`,
-          content: "Olá! Sou a IA especializada em saúde mental do ChatPsi. Em breve terei funcionalidades mais avançadas para ajudar em sua prática clínica. Como posso ajudá-lo hoje?",
-          message_type: 'text',
-          created_at: new Date().toISOString(),
-          sender: 'ai'
-        };
-        
-        setMessages(prev => [...prev, aiResponse]);
-      }, 1000);
+      // Send to AI webhook
+      const response = await supabase.functions.invoke('dispatch-message', {
+        body: {
+          message: messageContent,
+          userId: user.id,
+          messageType: messageType,
+          fileUrl: currentAttachment?.url,
+          threadId: user.id
+        }
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
+
+      // Fetch latest messages to get the AI response
+      const { data: latestMessages } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: true });
+
+      if (latestMessages) {
+        const formattedMessages = latestMessages.map(msg => ({
+          id: msg.id,
+          content: msg.content,
+          message_type: msg.message_type,
+          created_at: msg.created_at,
+          sender: (msg.sender === 'assistant' ? 'ai' : msg.sender) as 'user' | 'ai',
+          user_id: msg.user_id
+        }));
+        setMessages(formattedMessages);
+      }
 
     } catch (error) {
       console.error('Error sending message:', error);
@@ -158,6 +217,16 @@ const ChatInterface = () => {
       hour: '2-digit',
       minute: '2-digit'
     });
+  };
+
+  const getFileIcon = (messageType: string) => {
+    switch (messageType) {
+      case 'audio': return <Mic className="h-3 w-3" />;
+      case 'image': return <ImageIcon className="h-3 w-3" />;
+      case 'video': return <Video className="h-3 w-3" />;
+      case 'document': return <File className="h-3 w-3" />;
+      default: return null;
+    }
   };
 
   if (fetchingMessages) {
@@ -210,7 +279,7 @@ const ChatInterface = () => {
               <h3 className="text-lg font-medium mb-2">Bem-vindo ao ChatPsi!</h3>
               <p className="text-muted-foreground mb-4">
                 {canSendMessage 
-                  ? "Inicie uma conversa para começar a usar a IA especializada em saúde mental."
+                  ? "Envie mensagens, áudios, imagens ou documentos para começar a conversar com a IA."
                   : "Você precisa de uma assinatura ativa para começar a conversar."
                 }
               </p>
@@ -240,6 +309,16 @@ const ChatInterface = () => {
                     : 'bg-card'
                 }`}>
                   <CardContent className="p-3">
+                    {message.message_type !== 'text' && (
+                      <div className={`flex items-center gap-2 text-xs mb-2 ${
+                        message.sender === 'user' 
+                          ? 'text-primary-foreground/70' 
+                          : 'text-muted-foreground'
+                      }`}>
+                        {getFileIcon(message.message_type)}
+                        {message.message_type}
+                      </div>
+                    )}
                     <p className="text-sm">{message.content}</p>
                     <p className={`text-xs mt-1 ${
                       message.sender === 'user' 
@@ -261,6 +340,24 @@ const ChatInterface = () => {
               </div>
             ))
           )}
+          {loading && (
+            <div className="flex gap-3 justify-start">
+              <div className="flex-shrink-0">
+                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Bot className="h-4 w-4 text-primary" />
+                </div>
+              </div>
+              <Card className="bg-card">
+                <CardContent className="p-3">
+                  <div className="flex space-x-1">
+                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce"></div>
+                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
           <div ref={messagesEndRef} />
         </div>
       </ScrollArea>
@@ -268,35 +365,63 @@ const ChatInterface = () => {
       {/* Input */}
       <div className="border-t bg-card p-4">
         {canSendMessage ? (
-          <form onSubmit={handleSendMessage} className="max-w-4xl mx-auto">
-            <div className="flex gap-2">
-              <div className="flex-1 relative">
-                <Input
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  placeholder="Digite sua mensagem..."
-                  disabled={loading}
-                  className="pr-12"
-                />
-                <Button
-                  type="button"
-                  size="icon"
-                  variant="ghost"
-                  className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
-                  disabled={loading}
-                >
-                  <Paperclip className="h-4 w-4" />
+          <div className="max-w-4xl mx-auto">
+            {attachedFile && (
+              <div className="mb-3 p-2 bg-muted rounded-md flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-1">
+                  {getFileIcon(attachedFile.type)}
+                  <span className="text-sm">{attachedFile.name}</span>
+                </div>
+                <Button variant="ghost" size="sm" onClick={handleRemoveAttachment}>
+                  ×
                 </Button>
               </div>
-              <Button 
-                type="submit" 
-                disabled={loading || !newMessage.trim()}
-                size="icon"
-              >
-                <Send className="h-4 w-4" />
-              </Button>
-            </div>
-          </form>
+            )}
+            <form onSubmit={handleSendMessage}>
+              <div className="flex gap-2">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="outline"
+                      disabled={loading || uploading}
+                    >
+                      <Paperclip className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
+                      <Upload className="h-4 w-4 mr-2" />
+                      Enviar arquivo
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <div className="flex-1">
+                  <Input
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    placeholder={attachedFile ? "Comentário (opcional)" : "Digite sua mensagem..."}
+                    disabled={loading || uploading}
+                  />
+                </div>
+                <Button 
+                  type="submit" 
+                  disabled={loading || uploading || (!newMessage.trim() && !attachedFile)}
+                  size="icon"
+                >
+                  <Send className="h-4 w-4" />
+                </Button>
+              </div>
+            </form>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="audio/*,image/*,video/*,.pdf,.doc,.docx"
+              onChange={handleFileSelect}
+              className="hidden"
+            />
+          </div>
         ) : (
           <div className="max-w-4xl mx-auto text-center py-4">
             <div className="flex items-center justify-center gap-2 text-muted-foreground mb-2">

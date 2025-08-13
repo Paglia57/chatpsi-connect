@@ -20,8 +20,11 @@ export type Database = {
           created_at: string
           file_url: string | null
           id: string
+          is_deleted: boolean | null
           message_type: string
           metadata: Json | null
+          sender: string | null
+          thread_id: string | null
           user_id: string
         }
         Insert: {
@@ -29,8 +32,11 @@ export type Database = {
           created_at?: string
           file_url?: string | null
           id?: string
+          is_deleted?: boolean | null
           message_type?: string
           metadata?: Json | null
+          sender?: string | null
+          thread_id?: string | null
           user_id: string
         }
         Update: {
@@ -38,11 +44,22 @@ export type Database = {
           created_at?: string
           file_url?: string | null
           id?: string
+          is_deleted?: boolean | null
           message_type?: string
           metadata?: Json | null
+          sender?: string | null
+          thread_id?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "messages_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       profiles: {
         Row: {

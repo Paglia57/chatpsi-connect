@@ -152,7 +152,7 @@ const ChatInterface = () => {
           text: messageContent,
           type: messageType,
           media_url: currentAttachment?.url,
-          thread_id: user.id,
+          thread_id: profile?.default_thread_id,
           sender: 'user'
         });
 
@@ -173,7 +173,7 @@ const ChatInterface = () => {
           userId: user.id,
           messageType: messageType,
           fileUrl: currentAttachment?.url,
-          threadId: user.id
+          threadId: profile?.default_thread_id
         }
       });
 

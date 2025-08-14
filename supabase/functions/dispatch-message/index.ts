@@ -39,7 +39,7 @@ serve(async (req) => {
     // Verify user subscription and get OpenAI thread ID
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('subscription_active, openai_thread_id')
+      .select('subscription_active, openai_thread_id, nickname')
       .eq('user_id', userId)
       .single();
 
@@ -86,6 +86,11 @@ serve(async (req) => {
     // Include OpenAI thread ID if available
     if (profile.openai_thread_id) {
       webhookPayload.openai_thread_id = profile.openai_thread_id;
+    }
+
+    // Include nickname if available
+    if (profile.nickname) {
+      webhookPayload.nickname = profile.nickname;
     }
 
     console.log('Sending to webhook:', webhookPayload);

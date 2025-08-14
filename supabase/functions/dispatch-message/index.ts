@@ -34,7 +34,11 @@ serve(async (req) => {
 
     const { message, userId, messageType = 'text', fileUrl = null } = await req.json();
 
-    console.log('Dispatch message request:', { userId, messageType });
+    // Validate messageType - use only allowed values, default to 'text'
+    const validTypes = ['text', 'audio', 'image', 'video', 'document'];
+    const validatedMessageType = validTypes.includes(messageType) ? messageType : 'text';
+
+    console.log('Dispatch message request:', { userId, messageType: validatedMessageType });
 
     // Verify user subscription and get OpenAI thread ID
     const { data: profile, error: profileError } = await supabase
@@ -58,7 +62,7 @@ serve(async (req) => {
         user_id: userId,
         thread_id: userId, // Use userId as internal thread_id
         content: message || 'Arquivo enviado',
-        type: messageType,
+        type: validatedMessageType,
         sender: 'user',
         media_url: fileUrl,
         metadata: { original_file_url: fileUrl }
@@ -75,12 +79,12 @@ serve(async (req) => {
     // Prepare webhook payload
     const webhookPayload = {
       UserId: userId,
-      tipodemensagem: messageType,
-      texto: messageType === 'text' ? message : null,
-      audio: messageType === 'audio' ? fileUrl : null,
-      imagem: messageType === 'image' ? fileUrl : null,
-      video: messageType === 'video' ? fileUrl : null,
-      documento: messageType === 'document' ? fileUrl : null
+      tipodemensagem: validatedMessageType,
+      texto: validatedMessageType === 'text' ? message : null,
+      audio: validatedMessageType === 'audio' ? fileUrl : null,
+      imagem: validatedMessageType === 'image' ? fileUrl : null,
+      video: validatedMessageType === 'video' ? fileUrl : null,
+      documento: validatedMessageType === 'document' ? fileUrl : null
     };
 
     // Include OpenAI thread ID if available

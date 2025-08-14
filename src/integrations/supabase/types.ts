@@ -51,26 +51,18 @@ export type Database = {
           type?: string
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "messages_thread_id_fkey"
-            columns: ["thread_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["user_id"]
-          },
-        ]
+        Relationships: []
       }
       profiles: {
         Row: {
           created_at: string
           current_period_end: string | null
-          default_thread_id: string
           email: string
           full_name: string | null
           id: string
           name: string | null
           nickname: string | null
+          openai_thread_id: string | null
           plan: string | null
           subscribed_at: string | null
           subscription_active: boolean
@@ -84,12 +76,12 @@ export type Database = {
         Insert: {
           created_at?: string
           current_period_end?: string | null
-          default_thread_id?: string
           email: string
           full_name?: string | null
           id?: string
           name?: string | null
           nickname?: string | null
+          openai_thread_id?: string | null
           plan?: string | null
           subscribed_at?: string | null
           subscription_active?: boolean
@@ -103,12 +95,12 @@ export type Database = {
         Update: {
           created_at?: string
           current_period_end?: string | null
-          default_thread_id?: string
           email?: string
           full_name?: string | null
           id?: string
           name?: string | null
           nickname?: string | null
+          openai_thread_id?: string | null
           plan?: string | null
           subscribed_at?: string | null
           subscription_active?: boolean

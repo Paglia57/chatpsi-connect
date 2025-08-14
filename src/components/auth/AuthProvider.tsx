@@ -12,7 +12,7 @@ interface Profile {
   subscription_active: boolean;
   subscription_tier?: string;
   subscription_end?: string;
-  default_thread_id: string;
+  openai_thread_id?: string;
 }
 
 interface AuthContextType {

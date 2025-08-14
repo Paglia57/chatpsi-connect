@@ -16,31 +16,32 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-    const webhookUrl = 'https://n8n.seconsult.com.br/webhook-test/chatprincipal';
+    const aiBridgeUrl = Deno.env.get('AI_BRIDGE_URL');
 
     console.log('Environment check:', {
       supabaseUrl: supabaseUrl ? 'Present' : 'Missing',
-      serviceKey: supabaseServiceKey ? 'Present' : 'Missing'
+      serviceKey: supabaseServiceKey ? 'Present' : 'Missing',
+      aiBridgeUrl: aiBridgeUrl ? 'Present' : 'Missing'
     });
 
-    if (!supabaseUrl || !supabaseServiceKey) {
+    if (!supabaseUrl || !supabaseServiceKey || !aiBridgeUrl) {
       console.error('Missing required environment variables');
       return new Response(
-        JSON.stringify({ error: 'Configuração de ambiente incompleta' }),
+        JSON.stringify({ error: 'Configuração de ambiente incompleta (AI_BRIDGE_URL requerida)' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { message, userId, messageType = 'text', fileUrl = null, threadId } = await req.json();
+    const { message, userId, messageType = 'text', fileUrl = null } = await req.json();
 
-    console.log('Dispatch message request:', { userId, messageType, threadId });
+    console.log('Dispatch message request:', { userId, messageType });
 
-    // Verify user subscription is active
+    // Verify user subscription and get OpenAI thread ID
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('subscription_active')
+      .select('subscription_active, openai_thread_id')
       .eq('user_id', userId)
       .single();
 
@@ -52,10 +53,30 @@ serve(async (req) => {
       );
     }
 
-    // Prepare webhook payload
-    const webhookPayload = {
+    // Save user message first
+    const { error: insertError } = await supabase
+      .from('messages')
+      .insert({
+        user_id: userId,
+        thread_id: userId, // Use userId as internal thread_id
+        content: message || 'Arquivo enviado',
+        message_type: messageType,
+        sender: 'user',
+        media_url: fileUrl,
+        metadata: { original_file_url: fileUrl }
+      });
+
+    if (insertError) {
+      console.error('Error saving user message:', insertError);
+      return new Response(
+        JSON.stringify({ error: 'Erro ao salvar mensagem' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Prepare AI Bridge payload
+    const aiPayload = {
       UserId: userId,
-      threadId: threadId || userId, // Use userId as threadId if not provided
       tipodemensagem: messageType,
       texto: messageType === 'text' ? message : null,
       audio: messageType === 'audio' ? fileUrl : null,
@@ -64,44 +85,65 @@ serve(async (req) => {
       documento: messageType === 'document' ? fileUrl : null
     };
 
-    console.log('Sending to webhook:', webhookPayload);
+    // Include OpenAI thread ID if available
+    if (profile.openai_thread_id) {
+      aiPayload.openai_thread_id = profile.openai_thread_id;
+    }
 
-    // Send to external webhook
-    const webhookResponse = await fetch(webhookUrl, {
+    console.log('Sending to AI Bridge:', aiPayload);
+
+    // Send to AI Bridge
+    const aiResponse = await fetch(aiBridgeUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(webhookPayload),
+      body: JSON.stringify(aiPayload),
     });
 
-    if (!webhookResponse.ok) {
-      console.error('Webhook error:', await webhookResponse.text());
-      throw new Error(`Webhook failed: ${webhookResponse.status}`);
+    if (!aiResponse.ok) {
+      console.error('AI Bridge error:', await aiResponse.text());
+      throw new Error(`AI Bridge failed: ${aiResponse.status}`);
     }
 
-    const aiResponse = await webhookResponse.text();
-    console.log('AI response received:', aiResponse);
+    const responseData = await aiResponse.json();
+    console.log('AI response received:', responseData);
+
+    // Update profile with new OpenAI thread ID if provided
+    if (responseData.openai_thread_id && responseData.openai_thread_id !== profile.openai_thread_id) {
+      console.log('Updating OpenAI thread ID:', responseData.openai_thread_id);
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ openai_thread_id: responseData.openai_thread_id })
+        .eq('user_id', userId);
+
+      if (updateError) {
+        console.error('Error updating OpenAI thread ID:', updateError);
+      }
+    }
 
     // Save AI response to database
-    const { error: insertError } = await supabase
+    const { error: aiInsertError } = await supabase
       .from('messages')
       .insert({
         user_id: userId,
-        thread_id: threadId || userId,
-        content: aiResponse,
+        thread_id: userId, // Use userId as internal thread_id
+        content: responseData.response || responseData.texto || 'Resposta da IA',
         message_type: 'text',
         sender: 'assistant',
-        metadata: { webhook_response: true }
+        metadata: { 
+          ai_bridge_response: true,
+          openai_thread_id: responseData.openai_thread_id 
+        }
       });
 
-    if (insertError) {
-      console.error('Error saving AI response:', insertError);
+    if (aiInsertError) {
+      console.error('Error saving AI response:', aiInsertError);
     }
 
     return new Response(
       JSON.stringify({ 
-        response: aiResponse,
+        response: responseData.response || responseData.texto || 'Resposta da IA',
         success: true 
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

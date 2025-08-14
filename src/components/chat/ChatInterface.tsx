@@ -64,7 +64,8 @@ const ChatInterface = () => {
         const { data, error } = await supabase
           .from('messages')
           .select('*')
-          .eq('user_id', user.id)
+          .eq('thread_id', user.id)
+          .eq('is_deleted', false)
           .order('created_at', { ascending: true });
 
         if (error) {
@@ -144,36 +145,13 @@ const ChatInterface = () => {
       
       setMessages(prev => [...prev, userMessage]);
 
-      // Save to database and send to AI
-      const { error } = await supabase
-        .from('messages')
-        .insert({
-          user_id: user.id,
-          text: messageContent,
-          type: messageType,
-          media_url: currentAttachment?.url,
-          thread_id: profile?.default_thread_id,
-          sender: 'user'
-        });
-
-      if (error) {
-        console.error('Error saving message:', error);
-        toast({
-          title: "Erro ao salvar mensagem",
-          description: "Sua mensagem não foi salva. Tente novamente.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Send to AI webhook
+      // Send to AI via dispatch-message Edge Function
       const response = await supabase.functions.invoke('dispatch-message', {
         body: {
-          message: messageContent,
           userId: user.id,
+          message: messageContent,
           messageType: messageType,
-          fileUrl: currentAttachment?.url,
-          threadId: profile?.default_thread_id
+          fileUrl: currentAttachment?.url
         }
       });
 
@@ -185,7 +163,8 @@ const ChatInterface = () => {
       const { data: latestMessages } = await supabase
         .from('messages')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('thread_id', user.id)
+        .eq('is_deleted', false)
         .order('created_at', { ascending: true });
 
       if (latestMessages) {

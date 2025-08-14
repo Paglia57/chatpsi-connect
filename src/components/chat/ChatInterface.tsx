@@ -73,7 +73,7 @@ const ChatInterface = () => {
         } else {
           const formattedMessages = data.map(msg => ({
             id: msg.id,
-            content: msg.text,
+            content: msg.content,
             message_type: msg.type,
             created_at: msg.created_at,
             sender: (msg.sender === 'assistant' ? 'ai' : msg.sender) as 'user' | 'ai',
@@ -170,7 +170,7 @@ const ChatInterface = () => {
       if (latestMessages) {
         const formattedMessages = latestMessages.map(msg => ({
           id: msg.id,
-          content: msg.text,
+          content: msg.content,
           message_type: msg.type,
           created_at: msg.created_at,
           sender: (msg.sender === 'assistant' ? 'ai' : msg.sender) as 'user' | 'ai',

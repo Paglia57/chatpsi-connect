@@ -60,7 +60,7 @@ serve(async (req) => {
         user_id: userId,
         thread_id: userId, // Use userId as internal thread_id
         content: message || 'Arquivo enviado',
-        message_type: messageType,
+        type: messageType,
         sender: 'user',
         media_url: fileUrl,
         metadata: { original_file_url: fileUrl }
@@ -140,7 +140,7 @@ serve(async (req) => {
         user_id: userId,
         thread_id: userId, // Use userId as internal thread_id
         content: responseData.response || responseData.texto || 'Resposta da IA',
-        message_type: 'text',
+        type: 'text',
         sender: 'assistant',
         metadata: { 
           ai_bridge_response: true,

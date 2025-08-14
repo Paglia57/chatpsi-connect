@@ -16,37 +16,37 @@ export type Database = {
     Tables: {
       messages: {
         Row: {
+          content: string
           created_at: string
           id: string
           is_deleted: boolean | null
           media_url: string | null
           metadata: Json | null
           sender: string | null
-          text: string
           thread_id: string
           type: string
           user_id: string
         }
         Insert: {
+          content: string
           created_at?: string
           id?: string
           is_deleted?: boolean | null
           media_url?: string | null
           metadata?: Json | null
           sender?: string | null
-          text: string
           thread_id: string
           type?: string
           user_id: string
         }
         Update: {
+          content?: string
           created_at?: string
           id?: string
           is_deleted?: boolean | null
           media_url?: string | null
           metadata?: Json | null
           sender?: string | null
-          text?: string
           thread_id?: string
           type?: string
           user_id?: string

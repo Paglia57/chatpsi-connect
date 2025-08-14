@@ -24,10 +24,10 @@ serve(async (req) => {
       aiBridgeUrl: aiBridgeUrl ? 'Present' : 'Missing'
     });
 
-    if (!supabaseUrl || !supabaseServiceKey || !aiBridgeUrl) {
+    if (!supabaseUrl || !supabaseServiceKey) {
       console.error('Missing required environment variables');
       return new Response(
-        JSON.stringify({ error: 'Configuração de ambiente incompleta (AI_BRIDGE_URL requerida)' }),
+        JSON.stringify({ error: 'Configuração de ambiente incompleta' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -92,22 +92,33 @@ serve(async (req) => {
 
     console.log('Sending to AI Bridge:', aiPayload);
 
-    // Send to AI Bridge
-    const aiResponse = await fetch(aiBridgeUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(aiPayload),
-    });
+    let responseData;
 
-    if (!aiResponse.ok) {
-      console.error('AI Bridge error:', await aiResponse.text());
-      throw new Error(`AI Bridge failed: ${aiResponse.status}`);
+    // Send to AI Bridge if URL is configured
+    if (aiBridgeUrl) {
+      const aiResponse = await fetch(aiBridgeUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(aiPayload),
+      });
+
+      if (!aiResponse.ok) {
+        console.error('AI Bridge error:', await aiResponse.text());
+        throw new Error(`AI Bridge failed: ${aiResponse.status}`);
+      }
+
+      responseData = await aiResponse.json();
+      console.log('AI response received:', responseData);
+    } else {
+      // Fallback response when AI Bridge URL is not configured
+      console.log('AI Bridge URL not configured, using fallback response');
+      responseData = {
+        response: "Olá! Para que eu possa funcionar completamente, o administrador precisa configurar a integração com o backend de IA. Por enquanto, estou funcionando em modo de demonstração.",
+        openai_thread_id: null
+      };
     }
-
-    const responseData = await aiResponse.json();
-    console.log('AI response received:', responseData);
 
     // Update profile with new OpenAI thread ID if provided
     if (responseData.openai_thread_id && responseData.openai_thread_id !== profile.openai_thread_id) {

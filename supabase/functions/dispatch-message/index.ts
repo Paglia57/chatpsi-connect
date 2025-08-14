@@ -16,12 +16,10 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-    const aiBridgeUrl = Deno.env.get('AI_BRIDGE_URL');
 
     console.log('Environment check:', {
       supabaseUrl: supabaseUrl ? 'Present' : 'Missing',
-      serviceKey: supabaseServiceKey ? 'Present' : 'Missing',
-      aiBridgeUrl: aiBridgeUrl ? 'Present' : 'Missing'
+      serviceKey: supabaseServiceKey ? 'Present' : 'Missing'
     });
 
     if (!supabaseUrl || !supabaseServiceKey) {
@@ -74,8 +72,8 @@ serve(async (req) => {
       );
     }
 
-    // Prepare AI Bridge payload
-    const aiPayload = {
+    // Prepare webhook payload
+    const webhookPayload = {
       UserId: userId,
       tipodemensagem: messageType,
       texto: messageType === 'text' ? message : null,
@@ -87,76 +85,29 @@ serve(async (req) => {
 
     // Include OpenAI thread ID if available
     if (profile.openai_thread_id) {
-      aiPayload.openai_thread_id = profile.openai_thread_id;
+      webhookPayload.openai_thread_id = profile.openai_thread_id;
     }
 
-    console.log('Sending to AI Bridge:', aiPayload);
+    console.log('Sending to webhook:', webhookPayload);
 
-    let responseData;
+    // Send to webhook
+    const webhookResponse = await fetch('https://n8n.seconsult.com.br/webhook-test/chatprincipal', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(webhookPayload),
+    });
 
-    // Send to AI Bridge if URL is configured
-    if (aiBridgeUrl) {
-      const aiResponse = await fetch(aiBridgeUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(aiPayload),
-      });
-
-      if (!aiResponse.ok) {
-        console.error('AI Bridge error:', await aiResponse.text());
-        throw new Error(`AI Bridge failed: ${aiResponse.status}`);
-      }
-
-      responseData = await aiResponse.json();
-      console.log('AI response received:', responseData);
-    } else {
-      // Fallback response when AI Bridge URL is not configured
-      console.log('AI Bridge URL not configured, using fallback response');
-      responseData = {
-        response: "Olá! Para que eu possa funcionar completamente, o administrador precisa configurar a integração com o backend de IA. Por enquanto, estou funcionando em modo de demonstração.",
-        openai_thread_id: null
-      };
+    if (!webhookResponse.ok) {
+      console.error('Webhook error:', await webhookResponse.text());
+      throw new Error(`Webhook failed: ${webhookResponse.status}`);
     }
 
-    // Update profile with new OpenAI thread ID if provided
-    if (responseData.openai_thread_id && responseData.openai_thread_id !== profile.openai_thread_id) {
-      console.log('Updating OpenAI thread ID:', responseData.openai_thread_id);
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ openai_thread_id: responseData.openai_thread_id })
-        .eq('user_id', userId);
-
-      if (updateError) {
-        console.error('Error updating OpenAI thread ID:', updateError);
-      }
-    }
-
-    // Save AI response to database
-    const { error: aiInsertError } = await supabase
-      .from('messages')
-      .insert({
-        user_id: userId,
-        thread_id: userId, // Use userId as internal thread_id
-        content: responseData.response || responseData.texto || 'Resposta da IA',
-        type: 'text',
-        sender: 'assistant',
-        metadata: { 
-          ai_bridge_response: true,
-          openai_thread_id: responseData.openai_thread_id 
-        }
-      });
-
-    if (aiInsertError) {
-      console.error('Error saving AI response:', aiInsertError);
-    }
+    console.log('Webhook sent successfully');
 
     return new Response(
-      JSON.stringify({ 
-        response: responseData.response || responseData.texto || 'Resposta da IA',
-        success: true 
-      }),
+      JSON.stringify({ success: true }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 

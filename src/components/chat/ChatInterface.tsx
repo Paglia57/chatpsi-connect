@@ -503,7 +503,7 @@ const ChatInterface = () => {
                         {message.message_type}
                       </div>
                     )}
-                    <p className="text-sm">{message.content}</p>
+                    <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
                     <div className="flex items-center justify-between mt-1">
                       <p className={`text-xs ${
                         message.sender === 'user' 

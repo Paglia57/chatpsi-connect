@@ -61,16 +61,18 @@ export const useFileUpload = () => {
         'audio/wav', // WAV
         'audio/x-wav',
         'audio/mp4', // M4A
-        'audio/x-m4a'
+        'audio/x-m4a',
+        'audio/webm', // WebM (gravações do navegador)
+        'audio/webm;codecs=opus'
       ];
       
       const isValidAudio = allowedAudioTypes.includes(file.type) || 
-                          file.name.toLowerCase().match(/\.(mp3|ogg|wav|m4a)$/);
+                          file.name.toLowerCase().match(/\.(mp3|ogg|wav|m4a|webm)$/);
       
       if (!isValidAudio) {
         toast({
           title: "Erro",
-          description: "Formato de áudio não suportado. Use MP3, OGG, WAV ou M4A.",
+          description: "Formato de áudio não suportado. Use MP3, OGG, WAV, M4A ou WebM.",
           variant: "destructive",
         });
         return null;

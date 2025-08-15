@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   Sidebar,
@@ -42,11 +42,35 @@ const ChatSidebar = () => {
   const { toast } = useToast();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [profileData, setProfileData] = useState({
-    full_name: profile?.full_name || '',
-    nickname: profile?.nickname || '',
-    email: profile?.email || '',
-    whatsapp: profile?.whatsapp || '',
+    full_name: '',
+    nickname: '',
+    email: '',
+    whatsapp: '',
   });
+
+  // Sincronizar dados do perfil quando carregados
+  useEffect(() => {
+    if (profile) {
+      setProfileData({
+        full_name: profile.full_name || '',
+        nickname: profile.nickname || '',
+        email: profile.email || '',
+        whatsapp: profile.whatsapp || '',
+      });
+    }
+  }, [profile]);
+
+  // Atualizar dados quando o modal abrir
+  useEffect(() => {
+    if (isProfileOpen && profile) {
+      setProfileData({
+        full_name: profile.full_name || '',
+        nickname: profile.nickname || '',
+        email: profile.email || '',
+        whatsapp: profile.whatsapp || '',
+      });
+    }
+  }, [isProfileOpen, profile]);
 
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -91,6 +91,56 @@ const ChatInterface = () => {
     fetchMessages();
   }, [user]);
 
+  // Real-time subscription for new messages
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('New message received via real-time:', payload);
+          const newMessage = payload.new as any;
+          
+          const formattedMessage: Message = {
+            id: newMessage.id,
+            content: newMessage.content,
+            message_type: newMessage.type,
+            created_at: newMessage.created_at,
+            sender: (newMessage.sender === 'assistant' ? 'ai' : newMessage.sender) as 'user' | 'ai',
+            user_id: newMessage.user_id
+          };
+          
+          // Only add if it's not already in the list
+          setMessages(prevMessages => {
+            const exists = prevMessages.some(msg => msg.id === formattedMessage.id);
+            if (exists) return prevMessages;
+            
+            return [...prevMessages, formattedMessage].sort((a, b) => 
+              new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+            );
+          });
+
+          // Stop loading indicator if it's an AI message
+          if (formattedMessage.sender === 'ai') {
+            setLoading(false);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
+
   const canSendMessage = profile?.subscription_active === true;
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -159,25 +209,8 @@ const ChatInterface = () => {
         throw new Error(response.error.message);
       }
 
-      // Fetch latest messages to get the AI response
-      const { data: latestMessages } = await supabase
-        .from('messages')
-        .select('*')
-        .eq('thread_id', user.id)
-        .eq('is_deleted', false)
-        .order('created_at', { ascending: true });
-
-      if (latestMessages) {
-        const formattedMessages = latestMessages.map(msg => ({
-          id: msg.id,
-          content: msg.content,
-          message_type: msg.type,
-          created_at: msg.created_at,
-          sender: (msg.sender === 'assistant' ? 'ai' : msg.sender) as 'user' | 'ai',
-          user_id: msg.user_id
-        }));
-        setMessages(formattedMessages);
-      }
+      // User message and AI response will arrive via real-time subscription
+      // No need to manually fetch messages anymore
 
     } catch (error) {
       console.error('Error sending message:', error);

@@ -15,7 +15,15 @@ export const useFileUpload = () => {
   const { toast } = useToast();
 
   const getFileType = (file: File): 'audio' | 'image' | 'video' | 'document' => {
-    if (file.type.startsWith('audio/')) return 'audio';
+    // Audio types - common formats
+    if (file.type.startsWith('audio/') || 
+        file.type === 'application/ogg' ||
+        file.name.toLowerCase().endsWith('.ogg') ||
+        file.name.toLowerCase().endsWith('.mp3') ||
+        file.name.toLowerCase().endsWith('.m4a') ||
+        file.name.toLowerCase().endsWith('.wav')) {
+      return 'audio';
+    }
     if (file.type.startsWith('image/')) return 'image';
     if (file.type.startsWith('video/')) return 'video';
     return 'document';
@@ -29,6 +37,44 @@ export const useFileUpload = () => {
         variant: "destructive",
       });
       return null;
+    }
+
+    // Validate file size (25MB limit)
+    const maxSize = 25 * 1024 * 1024; // 25MB
+    if (file.size > maxSize) {
+      toast({
+        title: "Erro",
+        description: "Arquivo muito grande. Limite de 25MB.",
+        variant: "destructive",
+      });
+      return null;
+    }
+
+    // Validate audio file types specifically
+    const fileType = getFileType(file);
+    if (fileType === 'audio') {
+      const allowedAudioTypes = [
+        'audio/mpeg', // MP3
+        'audio/mp3',
+        'audio/ogg', // OGG
+        'application/ogg',
+        'audio/wav', // WAV
+        'audio/x-wav',
+        'audio/mp4', // M4A
+        'audio/x-m4a'
+      ];
+      
+      const isValidAudio = allowedAudioTypes.includes(file.type) || 
+                          file.name.toLowerCase().match(/\.(mp3|ogg|wav|m4a)$/);
+      
+      if (!isValidAudio) {
+        toast({
+          title: "Erro",
+          description: "Formato de áudio não suportado. Use MP3, OGG, WAV ou M4A.",
+          variant: "destructive",
+        });
+        return null;
+      }
     }
 
     setUploading(true);

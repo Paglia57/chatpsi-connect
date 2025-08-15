@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { AudioPlayer } from '@/components/ui/AudioPlayer';
 import { 
   Send, 
   Paperclip, 
@@ -35,6 +36,7 @@ interface Message {
   sender: 'user' | 'ai';
   user_id?: string;
   status?: 'pending' | 'sent' | 'failed';
+  media_url?: string;
 }
 
 type ConnectionStatus = 'connected' | 'disconnected' | 'reconnecting';
@@ -114,7 +116,8 @@ const ChatInterface = () => {
         created_at: msg.created_at,
         sender: (msg.sender === 'assistant' ? 'ai' : msg.sender) as 'user' | 'ai',
         user_id: msg.user_id,
-        status: 'sent' as const
+        status: 'sent' as const,
+        media_url: msg.media_url
       }));
       
       setMessages(formattedMessages);
@@ -165,7 +168,8 @@ const ChatInterface = () => {
             created_at: newMessage.created_at,
             sender: (newMessage.sender === 'assistant' ? 'ai' : newMessage.sender) as 'user' | 'ai',
             user_id: newMessage.user_id,
-            status: 'sent' as const
+            status: 'sent' as const,
+            media_url: newMessage.media_url
           };
           
           // Update messages and handle typing indicator
@@ -503,7 +507,13 @@ const ChatInterface = () => {
                         {message.message_type}
                       </div>
                     )}
-                    <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
+                     {message.message_type === 'audio' && message.media_url ? (
+                       <div className="mb-2">
+                         <AudioPlayer url={message.media_url} />
+                       </div>
+                     ) : (
+                       <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
+                     )}
                     <div className="flex items-center justify-between mt-1">
                       <p className={`text-xs ${
                         message.sender === 'user' 
@@ -621,7 +631,7 @@ const ChatInterface = () => {
             <input
               ref={fileInputRef}
               type="file"
-              accept="audio/*,image/*,video/*,.pdf,.doc,.docx"
+              accept="audio/*,.mp3,.ogg,.wav,.m4a,image/*,video/*,.pdf,.doc,.docx"
               onChange={handleFileSelect}
               className="hidden"
             />

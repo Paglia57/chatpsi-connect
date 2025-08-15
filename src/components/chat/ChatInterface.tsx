@@ -27,6 +27,7 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useFileUpload, UploadedFile } from '@/hooks/useFileUpload';
+import { useAudioRecording } from '@/hooks/useAudioRecording';
 
 interface Message {
   id: string;
@@ -59,6 +60,14 @@ const ChatInterface = () => {
   const responseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   const { uploadFile, uploading } = useFileUpload();
+  const { 
+    state: recordingState, 
+    duration: recordingDuration, 
+    formatDuration, 
+    startRecording, 
+    stopRecording, 
+    cancelRecording 
+  } = useAudioRecording();
 
   const scrollToBottom = useCallback(() => {
     setTimeout(() => {
@@ -255,6 +264,66 @@ const ChatInterface = () => {
     setAttachedFile(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
+    }
+  };
+
+  const handleStartRecording = async () => {
+    const started = await startRecording();
+    if (started) {
+      toast({
+        title: "Gravação iniciada",
+        description: "Fale agora. Clique no microfone novamente para parar.",
+      });
+    }
+  };
+
+  const handleStopRecording = async () => {
+    const result = await stopRecording();
+    if (result) {
+      toast({
+        title: "Gravação concluída",
+        description: `Áudio de ${formatDuration(result.duration)} gravado com sucesso.`,
+      });
+      
+      // Upload the recorded audio file
+      const uploadedFile = await uploadFile(result.file);
+      if (uploadedFile) {
+        setAttachedFile(uploadedFile);
+      }
+    }
+  };
+
+  const handleCancelRecording = () => {
+    cancelRecording();
+    toast({
+      title: "Gravação cancelada",
+      description: "O áudio foi descartado.",
+      variant: "destructive",
+    });
+  };
+
+  const getMicrophoneIcon = () => {
+    switch (recordingState) {
+      case 'requesting-permission':
+        return <Mic className="h-4 w-4 animate-pulse" />;
+      case 'recording':
+        return <Mic className="h-4 w-4 text-destructive animate-pulse" />;
+      case 'processing':
+        return <Mic className="h-4 w-4 animate-spin" />;
+      default:
+        return <Mic className="h-4 w-4" />;
+    }
+  };
+
+  const getMicrophoneVariant = () => {
+    switch (recordingState) {
+      case 'recording':
+        return 'destructive' as const;
+      case 'requesting-permission':
+      case 'processing':
+        return 'secondary' as const;
+      default:
+        return 'outline' as const;
     }
   };
 
@@ -591,6 +660,35 @@ const ChatInterface = () => {
                 </Button>
               </div>
             )}
+            {recordingState === 'recording' && (
+              <div className="mb-3 p-3 bg-destructive/10 border border-destructive/20 rounded-md">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-destructive">
+                    <Mic className="h-4 w-4 animate-pulse" />
+                    <span className="text-sm font-medium">Gravando áudio</span>
+                    <span className="text-sm">{formatDuration(recordingDuration)}</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button 
+                      type="button" 
+                      size="sm" 
+                      variant="outline"
+                      onClick={handleCancelRecording}
+                    >
+                      Cancelar
+                    </Button>
+                    <Button 
+                      type="button" 
+                      size="sm" 
+                      variant="default"
+                      onClick={handleStopRecording}
+                    >
+                      Parar
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
             <form onSubmit={handleSendMessage}>
               <div className="flex gap-2">
                 <DropdownMenu>
@@ -599,7 +697,7 @@ const ChatInterface = () => {
                       type="button"
                       size="icon"
                       variant="outline"
-                      disabled={isAssistantTyping || uploading}
+                      disabled={isAssistantTyping || uploading || recordingState !== 'idle'}
                     >
                       <Paperclip className="h-4 w-4" />
                     </Button>
@@ -611,17 +709,43 @@ const ChatInterface = () => {
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
+                
+                {/* Microphone Button */}
+                <Button
+                  type="button"
+                  size="icon"
+                  variant={getMicrophoneVariant()}
+                  disabled={isAssistantTyping || uploading || attachedFile !== null}
+                  onClick={recordingState === 'recording' ? handleStopRecording : handleStartRecording}
+                  title={
+                    recordingState === 'idle' 
+                      ? 'Gravar áudio' 
+                      : recordingState === 'recording'
+                      ? `Parar gravação (${formatDuration(recordingDuration)})`
+                      : recordingState === 'requesting-permission'
+                      ? 'Solicitando permissão...'
+                      : 'Processando áudio...'
+                  }
+                >
+                  {getMicrophoneIcon()}
+                </Button>
                 <div className="flex-1">
                   <Input
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
-                    placeholder={attachedFile ? "Comentário (opcional)" : "Digite sua mensagem..."}
-                    disabled={isAssistantTyping || uploading}
+                    placeholder={
+                      recordingState === 'recording' 
+                        ? `Gravando... ${formatDuration(recordingDuration)}`
+                        : attachedFile 
+                        ? "Comentário (opcional)" 
+                        : "Digite sua mensagem..."
+                    }
+                    disabled={isAssistantTyping || uploading || recordingState !== 'idle'}
                   />
                 </div>
                 <Button 
                   type="submit" 
-                  disabled={isAssistantTyping || uploading || (!newMessage.trim() && !attachedFile)}
+                  disabled={isAssistantTyping || uploading || recordingState !== 'idle' || (!newMessage.trim() && !attachedFile)}
                   size="icon"
                 >
                   <Send className="h-4 w-4" />

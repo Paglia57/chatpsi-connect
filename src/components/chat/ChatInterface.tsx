@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -17,7 +17,10 @@ import {
   Mic,
   Image as ImageIcon,
   Video,
-  File
+  File,
+  Wifi,
+  WifiOff,
+  AlertTriangle
 } from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
@@ -31,72 +34,118 @@ interface Message {
   created_at: string;
   sender: 'user' | 'ai';
   user_id?: string;
+  status?: 'pending' | 'sent' | 'failed';
 }
+
+type ConnectionStatus = 'connected' | 'disconnected' | 'reconnecting';
 
 const ChatInterface = () => {
   const { profile, user } = useAuth();
   const { toast } = useToast();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [isAssistantTyping, setIsAssistantTyping] = useState(false);
   const [fetchingMessages, setFetchingMessages] = useState(true);
   const [attachedFile, setAttachedFile] = useState<UploadedFile | null>(null);
+  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('disconnected');
+  const [realtimeChannel, setRealtimeChannel] = useState<any>(null);
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const responseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
   const { uploadFile, uploading } = useFileUpload();
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  const scrollToBottom = useCallback(() => {
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 100);
+  }, []);
 
   useEffect(() => {
     if (messages.length > 0) {
       scrollToBottom();
     }
-  }, [messages]);
+  }, [messages, scrollToBottom]);
+
+  // Clear typing indicator after timeout
+  useEffect(() => {
+    if (isAssistantTyping) {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+      typingTimeoutRef.current = setTimeout(() => {
+        setIsAssistantTyping(false);
+        console.log('Typing indicator cleared due to timeout');
+      }, 30000); // 30 seconds timeout
+    }
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+    };
+  }, [isAssistantTyping]);
+
+  // Fetch messages from database with fallback
+  const fetchMessages = useCallback(async (showLoading = true) => {
+    if (!user) return;
+    
+    if (showLoading) setFetchingMessages(true);
+    
+    try {
+      const { data, error } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('thread_id', user.id)
+        .eq('is_deleted', false)
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        console.error('Error fetching messages:', error);
+        throw error;
+      }
+
+      const formattedMessages = data.map(msg => ({
+        id: msg.id,
+        content: msg.content,
+        message_type: msg.type,
+        created_at: msg.created_at,
+        sender: (msg.sender === 'assistant' ? 'ai' : msg.sender) as 'user' | 'ai',
+        user_id: msg.user_id,
+        status: 'sent' as const
+      }));
+      
+      setMessages(formattedMessages);
+      return true;
+    } catch (error) {
+      console.error('Error in fetchMessages:', error);
+      toast({
+        title: "Erro ao carregar mensagens",
+        description: "Tentando novamente...",
+        variant: "destructive",
+      });
+      return false;
+    } finally {
+      if (showLoading) setFetchingMessages(false);
+    }
+  }, [user, toast]);
 
   // Fetch messages on component mount
   useEffect(() => {
-    const fetchMessages = async () => {
-      if (!user) return;
-      
-      try {
-        const { data, error } = await supabase
-          .from('messages')
-          .select('*')
-          .eq('thread_id', user.id)
-          .eq('is_deleted', false)
-          .order('created_at', { ascending: true });
-
-        if (error) {
-          console.error('Error fetching messages:', error);
-        } else {
-          const formattedMessages = data.map(msg => ({
-            id: msg.id,
-            content: msg.content,
-            message_type: msg.type,
-            created_at: msg.created_at,
-            sender: (msg.sender === 'assistant' ? 'ai' : msg.sender) as 'user' | 'ai',
-            user_id: msg.user_id
-          }));
-          setMessages(formattedMessages);
-        }
-      } catch (error) {
-        console.error('Error in fetchMessages:', error);
-      } finally {
-        setFetchingMessages(false);
-      }
-    };
-
     fetchMessages();
-  }, [user]);
+  }, [fetchMessages]);
 
-  // Real-time subscription for new messages
-  useEffect(() => {
-    if (!user) return;
+  // Setup real-time subscription with reconnection logic
+  const setupRealtimeConnection = useCallback(() => {
+    if (!user || realtimeChannel) return;
+
+    console.log('Setting up real-time connection...');
+    setConnectionStatus('reconnecting');
 
     const channel = supabase
-      .channel('schema-db-changes')
+      .channel(`messages-${user.id}`)
       .on(
         'postgres_changes',
         {
@@ -115,31 +164,76 @@ const ChatInterface = () => {
             message_type: newMessage.type,
             created_at: newMessage.created_at,
             sender: (newMessage.sender === 'assistant' ? 'ai' : newMessage.sender) as 'user' | 'ai',
-            user_id: newMessage.user_id
+            user_id: newMessage.user_id,
+            status: 'sent' as const
           };
           
-          // Only add if it's not already in the list
+          // Update messages and handle typing indicator
           setMessages(prevMessages => {
             const exists = prevMessages.some(msg => msg.id === formattedMessage.id);
             if (exists) return prevMessages;
             
-            return [...prevMessages, formattedMessage].sort((a, b) => 
+            // Remove pending message with same content if exists
+            const withoutPending = prevMessages.filter(msg => 
+              !(msg.status === 'pending' && msg.content === formattedMessage.content)
+            );
+            
+            return [...withoutPending, formattedMessage].sort((a, b) => 
               new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
             );
           });
 
-          // Stop loading indicator if it's an AI message
+          // Handle AI response
           if (formattedMessage.sender === 'ai') {
-            setLoading(false);
+            setIsAssistantTyping(false);
+            if (typingTimeoutRef.current) {
+              clearTimeout(typingTimeoutRef.current);
+            }
+            if (responseTimeoutRef.current) {
+              clearTimeout(responseTimeoutRef.current);
+            }
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Real-time subscription status:', status);
+        if (status === 'SUBSCRIBED') {
+          setConnectionStatus('connected');
+          setRealtimeChannel(channel);
+        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          setConnectionStatus('disconnected');
+          // Retry connection after delay
+          if (reconnectTimeoutRef.current) {
+            clearTimeout(reconnectTimeoutRef.current);
+          }
+          reconnectTimeoutRef.current = setTimeout(() => {
+            setupRealtimeConnection();
+          }, 5000);
+        }
+      });
+  }, [user, realtimeChannel]);
+
+  // Real-time connection management
+  useEffect(() => {
+    setupRealtimeConnection();
 
     return () => {
-      supabase.removeChannel(channel);
+      if (realtimeChannel) {
+        supabase.removeChannel(realtimeChannel);
+        setRealtimeChannel(null);
+      }
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+      }
+      if (responseTimeoutRef.current) {
+        clearTimeout(responseTimeoutRef.current);
+      }
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+      setConnectionStatus('disconnected');
     };
-  }, [user]);
+  }, [setupRealtimeConnection]);
 
   const canSendMessage = profile?.subscription_active === true;
 
@@ -172,28 +266,56 @@ const ChatInterface = () => {
       return;
     }
 
-    if ((!newMessage.trim() && !attachedFile) || loading || !user) return;
+    if ((!newMessage.trim() && !attachedFile) || isAssistantTyping || !user) return;
 
     const messageType = attachedFile ? attachedFile.type : 'text';
     const messageContent = attachedFile ? attachedFile.name : newMessage.trim();
+    const tempId = `temp-${Date.now()}-${Math.random()}`;
     
+    // Clear form
     setNewMessage('');
     const currentAttachment = attachedFile;
     setAttachedFile(null);
-    setLoading(true);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+
+    // Start typing indicator and timeout
+    setIsAssistantTyping(true);
 
     try {
-      // Add user message to local state immediately
+      // Add user message with pending status
       const userMessage: Message = {
-        id: `temp-${Date.now()}`,
+        id: tempId,
         content: messageContent,
         message_type: messageType,
         created_at: new Date().toISOString(),
         sender: 'user',
-        user_id: user.id
+        user_id: user.id,
+        status: 'pending'
       };
       
       setMessages(prev => [...prev, userMessage]);
+
+      // Set response timeout (30 seconds)
+      if (responseTimeoutRef.current) {
+        clearTimeout(responseTimeoutRef.current);
+      }
+      
+      responseTimeoutRef.current = setTimeout(async () => {
+        console.log('Response timeout - fetching messages from database');
+        setIsAssistantTyping(false);
+        
+        // Fetch latest messages as fallback
+        const success = await fetchMessages(false);
+        if (success) {
+          toast({
+            title: "Resposta demorou mais que o esperado",
+            description: "Mensagens atualizadas automaticamente.",
+            variant: "default",
+          });
+        }
+      }, 30000);
 
       // Send to AI via dispatch-message Edge Function
       const response = await supabase.functions.invoke('dispatch-message', {
@@ -209,18 +331,32 @@ const ChatInterface = () => {
         throw new Error(response.error.message);
       }
 
-      // User message and AI response will arrive via real-time subscription
-      // No need to manually fetch messages anymore
+      // Mark user message as sent
+      setMessages(prev => prev.map(msg => 
+        msg.id === tempId ? { ...msg, status: 'sent' as const } : msg
+      ));
+
+      console.log('Message sent successfully, waiting for AI response...');
 
     } catch (error) {
       console.error('Error sending message:', error);
+      
+      // Mark message as failed
+      setMessages(prev => prev.map(msg => 
+        msg.id === tempId ? { ...msg, status: 'failed' as const } : msg
+      ));
+      
+      setIsAssistantTyping(false);
+      
+      if (responseTimeoutRef.current) {
+        clearTimeout(responseTimeoutRef.current);
+      }
+
       toast({
-        title: "Erro inesperado",
-        description: "Ocorreu um erro ao enviar sua mensagem.",
+        title: "Erro ao enviar mensagem",
+        description: "Tente novamente ou verifique sua conexão.",
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -267,6 +403,36 @@ const ChatInterface = () => {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {/* Connection Status */}
+            <Badge 
+              variant="outline" 
+              className={`text-xs ${
+                connectionStatus === 'connected' 
+                  ? 'bg-success/10 text-success border-success/20' 
+                  : connectionStatus === 'reconnecting'
+                  ? 'bg-warning/10 text-warning border-warning/20'
+                  : 'bg-destructive/10 text-destructive border-destructive/20'
+              }`}
+            >
+              {connectionStatus === 'connected' ? (
+                <>
+                  <Wifi className="h-3 w-3 mr-1" />
+                  Online
+                </>
+              ) : connectionStatus === 'reconnecting' ? (
+                <>
+                  <AlertTriangle className="h-3 w-3 mr-1" />
+                  Reconectando
+                </>
+              ) : (
+                <>
+                  <WifiOff className="h-3 w-3 mr-1" />
+                  Offline
+                </>
+              )}
+            </Badge>
+            
+            {/* Subscription Status */}
             {profile?.subscription_active ? (
               <Badge variant="secondary" className="bg-success/10 text-success border-success/20">
                 <Crown className="h-3 w-3 mr-1" />
@@ -317,14 +483,20 @@ const ChatInterface = () => {
                 
                 <Card className={`max-w-[70%] ${
                   message.sender === 'user' 
-                    ? 'bg-primary text-primary-foreground' 
+                    ? message.status === 'failed'
+                      ? 'bg-destructive/10 border-destructive text-destructive'
+                      : message.status === 'pending'
+                      ? 'bg-primary/70 text-primary-foreground opacity-70'
+                      : 'bg-primary text-primary-foreground'
                     : 'bg-card'
                 }`}>
                   <CardContent className="p-3">
                     {message.message_type !== 'text' && (
                       <div className={`flex items-center gap-2 text-xs mb-2 ${
                         message.sender === 'user' 
-                          ? 'text-primary-foreground/70' 
+                          ? message.status === 'failed'
+                            ? 'text-destructive/70'
+                            : 'text-primary-foreground/70'
                           : 'text-muted-foreground'
                       }`}>
                         {getFileIcon(message.message_type)}
@@ -332,13 +504,30 @@ const ChatInterface = () => {
                       </div>
                     )}
                     <p className="text-sm">{message.content}</p>
-                    <p className={`text-xs mt-1 ${
-                      message.sender === 'user' 
-                        ? 'text-primary-foreground/70' 
-                        : 'text-muted-foreground'
-                    }`}>
-                      {formatTime(message.created_at)}
-                    </p>
+                    <div className="flex items-center justify-between mt-1">
+                      <p className={`text-xs ${
+                        message.sender === 'user' 
+                          ? message.status === 'failed'
+                            ? 'text-destructive/70'
+                            : 'text-primary-foreground/70'
+                          : 'text-muted-foreground'
+                      }`}>
+                        {formatTime(message.created_at)}
+                      </p>
+                      {message.sender === 'user' && message.status && (
+                        <div className={`text-xs ${
+                          message.status === 'failed' 
+                            ? 'text-destructive/70' 
+                            : message.status === 'pending'
+                            ? 'text-primary-foreground/70'
+                            : 'text-primary-foreground/70'
+                        }`}>
+                          {message.status === 'pending' ? 'Enviando...' : 
+                           message.status === 'failed' ? 'Falhou' : 
+                           message.status === 'sent' ? '✓' : ''}
+                        </div>
+                      )}
+                    </div>
                   </CardContent>
                 </Card>
 
@@ -352,19 +541,22 @@ const ChatInterface = () => {
               </div>
             ))
           )}
-          {loading && (
+          {isAssistantTyping && (
             <div className="flex gap-3 justify-start">
               <div className="flex-shrink-0">
                 <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Bot className="h-4 w-4 text-primary" />
+                  <Bot className="h-4 w-4 text-primary animate-pulse" />
                 </div>
               </div>
               <Card className="bg-card">
                 <CardContent className="p-3">
-                  <div className="flex space-x-1">
-                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                  <div className="flex items-center space-x-2">
+                    <div className="flex space-x-1">
+                      <div className="w-2 h-2 bg-primary rounded-full animate-bounce"></div>
+                      <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                      <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                    </div>
+                    <span className="text-xs text-muted-foreground">IA digitando...</span>
                   </div>
                 </CardContent>
               </Card>
@@ -397,7 +589,7 @@ const ChatInterface = () => {
                       type="button"
                       size="icon"
                       variant="outline"
-                      disabled={loading || uploading}
+                      disabled={isAssistantTyping || uploading}
                     >
                       <Paperclip className="h-4 w-4" />
                     </Button>
@@ -414,12 +606,12 @@ const ChatInterface = () => {
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     placeholder={attachedFile ? "Comentário (opcional)" : "Digite sua mensagem..."}
-                    disabled={loading || uploading}
+                    disabled={isAssistantTyping || uploading}
                   />
                 </div>
                 <Button 
                   type="submit" 
-                  disabled={loading || uploading || (!newMessage.trim() && !attachedFile)}
+                  disabled={isAssistantTyping || uploading || (!newMessage.trim() && !attachedFile)}
                   size="icon"
                 >
                   <Send className="h-4 w-4" />

@@ -69,6 +69,7 @@ export type Database = {
           subscription_end: string | null
           subscription_id: string | null
           subscription_tier: string | null
+          TokenCount: number | null
           updated_at: string
           user_id: string
           whatsapp: string | null
@@ -88,6 +89,7 @@ export type Database = {
           subscription_end?: string | null
           subscription_id?: string | null
           subscription_tier?: string | null
+          TokenCount?: number | null
           updated_at?: string
           user_id: string
           whatsapp?: string | null
@@ -107,6 +109,7 @@ export type Database = {
           subscription_end?: string | null
           subscription_id?: string | null
           subscription_tier?: string | null
+          TokenCount?: number | null
           updated_at?: string
           user_id?: string
           whatsapp?: string | null

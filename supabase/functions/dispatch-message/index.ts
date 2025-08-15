@@ -5,6 +5,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.55.0";
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
 serve(async (req) => {
@@ -16,13 +17,15 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    const n8nWebhookUrl = Deno.env.get('N8N_WEBHOOK_URL');
 
     console.log('Environment check:', {
       supabaseUrl: supabaseUrl ? 'Present' : 'Missing',
-      serviceKey: supabaseServiceKey ? 'Present' : 'Missing'
+      serviceKey: supabaseServiceKey ? 'Present' : 'Missing',
+      n8nWebhookUrl: n8nWebhookUrl ? 'Present' : 'Missing'
     });
 
-    if (!supabaseUrl || !supabaseServiceKey) {
+    if (!supabaseUrl || !supabaseServiceKey || !n8nWebhookUrl) {
       console.error('Missing required environment variables');
       return new Response(
         JSON.stringify({ error: 'Configuração de ambiente incompleta' }),
@@ -32,7 +35,14 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { message, userId, messageType = 'text', fileUrl = null } = await req.json();
+    const { 
+      message, 
+      userId, 
+      messageType = 'text', 
+      fileUrl = null,
+      nickname = null,
+      openai_thread_id = null
+    } = await req.json();
 
     // Validate messageType - use only allowed values, default to 'text'
     const validTypes = ['text', 'audio', 'image', 'video', 'document'];
@@ -55,12 +65,15 @@ serve(async (req) => {
       );
     }
 
+    // Determine thread ID - use input parameter or profile's thread_id or userId as fallback
+    const threadId = openai_thread_id || profile.openai_thread_id || userId;
+
     // Save user message first
     const { error: insertError } = await supabase
       .from('messages')
       .insert({
         user_id: userId,
-        thread_id: userId, // Use userId as internal thread_id
+        thread_id: threadId,
         content: message || 'Arquivo enviado',
         type: validatedMessageType,
         sender: 'user',
@@ -88,19 +101,20 @@ serve(async (req) => {
     };
 
     // Include OpenAI thread ID if available
-    if (profile.openai_thread_id) {
-      webhookPayload.openai_thread_id = profile.openai_thread_id;
+    if (threadId !== userId) {
+      webhookPayload.openai_thread_id = threadId;
     }
 
-    // Include nickname if available
-    if (profile.nickname) {
-      webhookPayload.nickname = profile.nickname;
+    // Include nickname if available (from input or profile)
+    const finalNickname = nickname || profile.nickname;
+    if (finalNickname) {
+      webhookPayload.nickname = finalNickname;
     }
 
     console.log('Sending to webhook:', webhookPayload);
 
-    // Send to webhook
-    const webhookResponse = await fetch('https://n8n.seconsult.com.br/webhook-test/chatprincipal', {
+    // Send to webhook and wait for response
+    const webhookResponse = await fetch(n8nWebhookUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -109,14 +123,53 @@ serve(async (req) => {
     });
 
     if (!webhookResponse.ok) {
-      console.error('Webhook error:', await webhookResponse.text());
-      throw new Error(`Webhook failed: ${webhookResponse.status}`);
+      const errorText = await webhookResponse.text();
+      console.error('Webhook error:', errorText);
+      throw new Error(`Webhook failed with status ${webhookResponse.status}: ${errorText}`);
     }
 
-    console.log('Webhook sent successfully');
+    // Parse webhook response
+    const webhookData = await webhookResponse.json();
+    console.log('Webhook response received:', webhookData);
+
+    if (!webhookData.response) {
+      console.error('Invalid webhook response format:', webhookData);
+      throw new Error('Resposta do webhook em formato inválido');
+    }
+
+    // Determine thread ID for assistant message
+    const assistantThreadId = webhookData.openai_thread_id || threadId;
+
+    // Save assistant message
+    const { error: assistantInsertError } = await supabase
+      .from('messages')
+      .insert({
+        user_id: userId,
+        thread_id: assistantThreadId,
+        content: webhookData.response,
+        type: 'text',
+        sender: 'assistant',
+        media_url: null,
+        metadata: {
+          ai_bridge_response: true,
+          openai_thread_id: webhookData.openai_thread_id || null
+        }
+      });
+
+    if (assistantInsertError) {
+      console.error('Error saving assistant message:', assistantInsertError);
+      // Don't fail the request, but log the error
+      console.warn('Assistant message could not be saved, but continuing...');
+    }
+
+    console.log('Flow completed successfully');
 
     return new Response(
-      JSON.stringify({ success: true }),
+      JSON.stringify({ 
+        success: true, 
+        response: webhookData.response,
+        openai_thread_id: webhookData.openai_thread_id || null
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 

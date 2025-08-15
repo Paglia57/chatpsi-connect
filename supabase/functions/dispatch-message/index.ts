@@ -44,6 +44,16 @@ serve(async (req) => {
       openai_thread_id = null
     } = await req.json();
 
+    // Validate userId as UUID
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(userId)) {
+      console.error('Invalid userId format:', userId);
+      return new Response(
+        JSON.stringify({ error: 'userId deve ser um UUID válido' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Validate messageType - use only allowed values, default to 'text'
     const validTypes = ['text', 'audio', 'image', 'video', 'document'];
     const validatedMessageType = validTypes.includes(messageType) ? messageType : 'text';
@@ -65,20 +75,24 @@ serve(async (req) => {
       );
     }
 
-    // Determine thread ID - use input parameter or profile's thread_id or userId as fallback
-    const threadId = openai_thread_id || profile.openai_thread_id || userId;
+    // Always use userId as conversationId for database thread_id
+    const conversationId = userId;
+    console.log('Using conversationId (thread_id):', conversationId);
 
     // Save user message first
     const { error: insertError } = await supabase
       .from('messages')
       .insert({
         user_id: userId,
-        thread_id: threadId,
+        thread_id: conversationId,
         content: message || 'Arquivo enviado',
         type: validatedMessageType,
         sender: 'user',
         media_url: fileUrl,
-        metadata: { original_file_url: fileUrl }
+        metadata: { 
+          original_file_url: fileUrl,
+          openai_thread_id: openai_thread_id || profile.openai_thread_id || null
+        }
       });
 
     if (insertError) {
@@ -100,9 +114,10 @@ serve(async (req) => {
       documento: validatedMessageType === 'document' ? fileUrl : null
     };
 
-    // Include OpenAI thread ID if available
-    if (threadId !== userId) {
-      webhookPayload.openai_thread_id = threadId;
+    // Include OpenAI thread ID for n8n (from input or profile)
+    const openaiThreadForN8n = openai_thread_id || profile.openai_thread_id;
+    if (openaiThreadForN8n) {
+      webhookPayload.openai_thread_id = openaiThreadForN8n;
     }
 
     // Include nickname if available (from input or profile)
@@ -137,22 +152,18 @@ serve(async (req) => {
       throw new Error('Resposta do webhook em formato inválido');
     }
 
-    // Determine thread ID for assistant message
-    const assistantThreadId = webhookData.openai_thread_id || threadId;
-
-    // Save assistant message
+    // Save assistant message using conversationId (always userId)
     const { error: assistantInsertError } = await supabase
       .from('messages')
       .insert({
         user_id: userId,
-        thread_id: assistantThreadId,
+        thread_id: conversationId,
         content: webhookData.response,
         type: 'text',
         sender: 'assistant',
         media_url: null,
         metadata: {
-          ai_bridge_response: true,
-          openai_thread_id: webhookData.openai_thread_id || null
+          ai_bridge_response: true
         }
       });
 
@@ -167,8 +178,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: true, 
-        response: webhookData.response,
-        openai_thread_id: webhookData.openai_thread_id || null
+        response: webhookData.response
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

@@ -15,16 +15,30 @@ export const useFileUpload = () => {
   const { toast } = useToast();
 
   const getFileType = (file: File): 'audio' | 'image' | 'video' | 'document' => {
+    const fileName = file.name.toLowerCase();
+    
+    // Check for HEIC files specifically (MIME type can be inconsistent)
+    if (fileName.endsWith('.heic') || fileName.endsWith('.heif')) {
+      console.log('HEIC file detected:', file.name, 'MIME type:', file.type);
+      return 'image';
+    }
+    
     // Audio types - common formats
     if (file.type.startsWith('audio/') || 
         file.type === 'application/ogg' ||
-        file.name.toLowerCase().endsWith('.ogg') ||
-        file.name.toLowerCase().endsWith('.mp3') ||
-        file.name.toLowerCase().endsWith('.m4a') ||
-        file.name.toLowerCase().endsWith('.wav')) {
+        fileName.endsWith('.ogg') ||
+        fileName.endsWith('.mp3') ||
+        fileName.endsWith('.m4a') ||
+        fileName.endsWith('.wav')) {
       return 'audio';
     }
-    if (file.type.startsWith('image/')) return 'image';
+    
+    // Image types - check extension for better compatibility
+    if (file.type.startsWith('image/') || 
+        fileName.match(/\.(jpg|jpeg|png|webp)$/)) {
+      return 'image';
+    }
+    
     if (file.type.startsWith('video/')) return 'video';
     return 'document';
   };
@@ -81,17 +95,29 @@ export const useFileUpload = () => {
     }
     
     if (fileType === 'image') {
+      const fileName = file.name.toLowerCase();
       const allowedImageTypes = [
         'image/jpeg', // JPG/JPEG
         'image/jpg',
         'image/png', // PNG
         'image/heic', // HEIC
         'image/heif', // HEIF (variante do HEIC)
-        'image/webp' // WEBP
+        'image/webp', // WEBP
+        'application/octet-stream' // Fallback para HEIC em alguns sistemas
       ];
       
+      // For HEIC files, prioritize extension over MIME type
+      const isHEIC = fileName.match(/\.(heic|heif)$/);
       const isValidImage = allowedImageTypes.includes(file.type) || 
-                          file.name.toLowerCase().match(/\.(jpg|jpeg|png|heic|webp)$/);
+                          fileName.match(/\.(jpg|jpeg|png|heic|heif|webp)$/) ||
+                          (isHEIC && file.type === 'application/octet-stream');
+      
+      console.log('Image validation:', {
+        fileName: file.name,
+        fileType: file.type,
+        isHEIC,
+        isValidImage
+      });
       
       if (!isValidImage) {
         toast({

@@ -60,9 +60,11 @@ const AuthPage = () => {
         {/* Hero Section */}
         <div className="space-y-8 text-center lg:text-left">
           <div>
-            <h1 className="text-4xl lg:text-6xl font-bold text-accent-primary mb-4">
-              ChatPsi
-            </h1>
+            <img 
+              src="/logo-chatpsi.png" 
+              alt="ChatPsi" 
+              className="h-16 lg:h-24 mx-auto lg:mx-0 mb-4 object-contain"
+            />
             <p className="text-xl lg:text-2xl text-muted-foreground mb-6">
               Plataforma de apoio para profissionais de saúde mental
             </p>

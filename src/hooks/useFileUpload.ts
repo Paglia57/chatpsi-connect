@@ -50,8 +50,9 @@ export const useFileUpload = () => {
       return null;
     }
 
-    // Validate audio file types specifically
+    // Validate file types specifically
     const fileType = getFileType(file);
+    
     if (fileType === 'audio') {
       const allowedAudioTypes = [
         'audio/mpeg', // MP3
@@ -73,6 +74,29 @@ export const useFileUpload = () => {
         toast({
           title: "Erro",
           description: "Formato de áudio não suportado. Use MP3, OGG, WAV, M4A ou WebM.",
+          variant: "destructive",
+        });
+        return null;
+      }
+    }
+    
+    if (fileType === 'image') {
+      const allowedImageTypes = [
+        'image/jpeg', // JPG/JPEG
+        'image/jpg',
+        'image/png', // PNG
+        'image/heic', // HEIC
+        'image/heif', // HEIF (variante do HEIC)
+        'image/webp' // WEBP
+      ];
+      
+      const isValidImage = allowedImageTypes.includes(file.type) || 
+                          file.name.toLowerCase().match(/\.(jpg|jpeg|png|heic|webp)$/);
+      
+      if (!isValidImage) {
+        toast({
+          title: "Erro",
+          description: "Formato de imagem não suportado. Use JPG, JPEG, PNG, HEIC ou WEBP.",
           variant: "destructive",
         });
         return null;

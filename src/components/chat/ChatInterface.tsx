@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useFileUpload, UploadedFile } from '@/hooks/useFileUpload';
 import { useAudioRecording } from '@/hooks/useAudioRecording';
+import { formatMessageContent } from '@/lib/utils';
 interface Message {
   id: string;
   content: string;
@@ -472,8 +473,8 @@ const ChatInterface = () => {
                         {message.message_type}
                       </div>}
                      {message.message_type === 'audio' && message.media_url ? <div className="mb-2">
-                         <AudioPlayer url={message.media_url} />
-                       </div> : <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>}
+                          <AudioPlayer url={message.media_url} />
+                        </div> : message.sender === 'ai' ? <div className="text-sm whitespace-pre-wrap break-words">{formatMessageContent(message.content)}</div> : <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>}
                     <div className="flex items-center justify-between mt-1">
                       <p className={`text-xs ${message.sender === 'user' ? message.status === 'failed' ? 'text-destructive/70' : 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
                         {formatTime(message.created_at)}

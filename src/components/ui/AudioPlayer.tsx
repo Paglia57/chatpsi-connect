@@ -165,27 +165,61 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
         </CardContent>
       </Card>;
   }
-  return <Card className={cn("w-full max-w-sm", className)}>
-      <CardContent className="p-3">
+  return <Card className={cn("w-full max-w-sm bg-gradient-to-r from-background to-muted/30 border-primary/20", className)}>
+      <CardContent className="p-4">
         <audio ref={audioRef} src={url} preload="metadata" className="hidden" />
         
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           {/* Play/Pause Button */}
-          <Button variant="outline" size="icon" onClick={togglePlayPause} disabled={audioState.isLoading || audioState.hasError} className="flex-shrink-0 h-8 w-8">
-            {audioState.isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : audioState.isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+          <Button 
+            variant="outline" 
+            size="icon" 
+            onClick={togglePlayPause} 
+            disabled={audioState.isLoading || audioState.hasError} 
+            className="flex-shrink-0 h-10 w-10 bg-primary/10 border-primary/30 hover:bg-primary/20 hover:border-primary/50 transition-all duration-200"
+          >
+            {audioState.isLoading ? (
+              <Loader2 className="h-5 w-5 animate-spin text-primary" />
+            ) : audioState.isPlaying ? (
+              <Pause className="h-5 w-5 text-primary" />
+            ) : (
+              <Play className="h-5 w-5 text-primary ml-0.5" />
+            )}
           </Button>
 
           {/* Progress and Time */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <Volume2 className="h-3 w-3 text-muted-foreground flex-shrink-0" />
-              <div className="flex-1">
-                <Slider value={[audioState.currentTime]} max={audioState.duration || 100} step={1} onValueChange={handleSeek} disabled={audioState.isLoading || audioState.hasError || !audioState.isLoaded} className="w-full" />
+          <div className="flex-1 min-w-0 space-y-2">
+            <div className="flex items-center gap-3">
+              <Volume2 className="h-4 w-4 text-primary/70 flex-shrink-0" />
+              <div className="flex-1 relative group">
+                <Slider 
+                  value={[audioState.currentTime]} 
+                  max={audioState.duration || 100} 
+                  step={0.1} 
+                  onValueChange={handleSeek} 
+                  disabled={audioState.isLoading || audioState.hasError || !audioState.isLoaded} 
+                  className="w-full cursor-pointer" 
+                />
+                {/* Progress indicator overlay */}
+                <div className="absolute inset-0 pointer-events-none">
+                  <div 
+                    className="h-2 bg-primary/20 rounded-full absolute top-1/2 transform -translate-y-1/2 transition-all duration-75"
+                    style={{ 
+                      width: `${audioState.duration ? (audioState.currentTime / audioState.duration) * 100 : 0}%` 
+                    }}
+                  />
+                </div>
               </div>
             </div>
-            <div className="flex justify-between text-xs text-muted-foreground mt-1">
-              
-              
+            
+            {/* Time display */}
+            <div className="flex justify-between text-xs font-medium">
+              <span className="text-primary/80 tabular-nums">
+                {formatTime(audioState.currentTime)}
+              </span>
+              <span className="text-muted-foreground/60 tabular-nums">
+                {formatTime(audioState.duration)}
+              </span>
             </div>
           </div>
         </div>

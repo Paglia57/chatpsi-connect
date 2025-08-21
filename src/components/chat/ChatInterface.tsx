@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AudioPlayer } from '@/components/ui/AudioPlayer';
-import { Send, Paperclip, Crown, AlertCircle, Bot, User as UserIcon, Lock, Upload, Mic, Image as ImageIcon, Video, File, Wifi, WifiOff, AlertTriangle } from 'lucide-react';
+import { Send, Paperclip, Crown, AlertCircle, Bot, User as UserIcon, Lock, Upload, Mic, Image as ImageIcon, Video, File, Wifi, WifiOff, AlertTriangle, RefreshCw } from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -284,6 +284,32 @@ const ChatInterface = () => {
         return 'outline' as const;
     }
   };
+  
+  // Handle refresh - interrupt response and reload messages
+  const handleRefresh = async () => {
+    // Clear typing state and timeouts
+    setIsAssistantTyping(false);
+    
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = null;
+    }
+    
+    if (responseTimeoutRef.current) {
+      clearTimeout(responseTimeoutRef.current);
+      responseTimeoutRef.current = null;
+    }
+    
+    // Reload messages
+    await fetchMessages(true);
+    
+    toast({
+      title: "Chat atualizado",
+      description: "Resposta interrompida e mensagens recarregadas.",
+      variant: "default"
+    });
+  };
+  
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!canSendMessage) {
@@ -571,6 +597,21 @@ const ChatInterface = () => {
                 <div className="flex-1">
                   <Input value={newMessage} onChange={e => setNewMessage(e.target.value)} placeholder={recordingState === 'recording' ? `Gravando... ${formatDuration(recordingDuration)}` : attachedFile ? "Comentário (opcional)" : "Digite sua mensagem..."} disabled={isAssistantTyping || uploading || recordingState !== 'idle'} />
                 </div>
+                
+                {/* Refresh Button - only show when AI is typing */}
+                {isAssistantTyping && (
+                  <Button 
+                    type="button" 
+                    size="icon" 
+                    variant="outline" 
+                    onClick={handleRefresh}
+                    title="Interromper e recarregar"
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                  </Button>
+                )}
+                
                 <Button type="submit" disabled={isAssistantTyping || uploading || recordingState !== 'idle' || !newMessage.trim() && !attachedFile} size="icon">
                   <Send className="h-4 w-4" />
                 </Button>

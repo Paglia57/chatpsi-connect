@@ -284,32 +284,28 @@ const ChatInterface = () => {
         return 'outline' as const;
     }
   };
-  
+
   // Handle refresh - interrupt response and reload messages
   const handleRefresh = async () => {
     // Clear typing state and timeouts
     setIsAssistantTyping(false);
-    
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
       typingTimeoutRef.current = null;
     }
-    
     if (responseTimeoutRef.current) {
       clearTimeout(responseTimeoutRef.current);
       responseTimeoutRef.current = null;
     }
-    
+
     // Reload messages
     await fetchMessages(true);
-    
     toast({
       title: "Chat atualizado",
       description: "Resposta interrompida e mensagens recarregadas.",
       variant: "default"
     });
   };
-  
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!canSendMessage) {
@@ -448,18 +444,7 @@ const ChatInterface = () => {
           </div>
           <div className="flex items-center gap-2">
             {/* Connection Status */}
-            <Badge variant="outline" className={`text-xs ${connectionStatus === 'connected' ? 'bg-success/10 text-success border-success/20' : connectionStatus === 'reconnecting' ? 'bg-warning/10 text-warning border-warning/20' : 'bg-destructive/10 text-destructive border-destructive/20'}`}>
-              {connectionStatus === 'connected' ? <>
-                  <Wifi className="h-3 w-3 mr-1" />
-                  Online
-                </> : connectionStatus === 'reconnecting' ? <>
-                  <AlertTriangle className="h-3 w-3 mr-1" />
-                  Reconectando
-                </> : <>
-                  <WifiOff className="h-3 w-3 mr-1" />
-                  Offline
-                </>}
-            </Badge>
+            
             
             {/* Subscription Status */}
             {profile?.subscription_active ? <Badge variant="secondary" className="bg-success/10 text-success border-success/20">
@@ -599,18 +584,9 @@ const ChatInterface = () => {
                 </div>
                 
                 {/* Refresh Button - only show when AI is typing */}
-                {isAssistantTyping && (
-                  <Button 
-                    type="button" 
-                    size="icon" 
-                    variant="outline" 
-                    onClick={handleRefresh}
-                    title="Interromper e recarregar"
-                    className="text-muted-foreground hover:text-foreground"
-                  >
+                {isAssistantTyping && <Button type="button" size="icon" variant="outline" onClick={handleRefresh} title="Interromper e recarregar" className="text-muted-foreground hover:text-foreground">
                     <RefreshCw className="h-4 w-4" />
-                  </Button>
-                )}
+                  </Button>}
                 
                 <Button type="submit" disabled={isAssistantTyping || uploading || recordingState !== 'idle' || !newMessage.trim() && !attachedFile} size="icon">
                   <Send className="h-4 w-4" />

@@ -30,50 +30,89 @@ const ResetPasswordPage = () => {
   const isPasswordValid = hasMinLength && hasUpperCase && hasNumber && hasSpecialChar;
 
   useEffect(() => {
-    // Verificar se há uma sessão de recuperação de senha ativa
-    const checkSession = async () => {
+    const checkRecoverySession = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        // Verificar se há evento de PASSWORD_RECOVERY na URL ou sessão
+        // Verificar parâmetros da URL para tokens de recuperação
         const urlParams = new URLSearchParams(window.location.search);
-        const hasRecoveryToken = urlParams.has('access_token') || urlParams.has('refresh_token');
+        const accessToken = urlParams.get('access_token');
+        const refreshToken = urlParams.get('refresh_token');
+        const type = urlParams.get('type');
         
-        if (session && hasRecoveryToken) {
+        console.log('URL params:', { accessToken: !!accessToken, refreshToken: !!refreshToken, type });
+        
+        // Se há tokens de recuperação na URL
+        if (accessToken && refreshToken && type === 'recovery') {
+          console.log('Recovery tokens found in URL');
+          setIsValidSession(true);
+          setSessionChecked(true);
+          return;
+        }
+        
+        // Verificar sessão atual
+        const { data: { session } } = await supabase.auth.getSession();
+        console.log('Current session:', !!session);
+        
+        // Se há uma sessão ativa, assumir que é válida para recuperação
+        if (session) {
           setIsValidSession(true);
         } else {
           setIsValidSession(false);
         }
       } catch (error) {
-        console.error('Erro ao verificar sessão:', error);
+        console.error('Erro ao verificar sessão de recuperação:', error);
         setIsValidSession(false);
       } finally {
         setSessionChecked(true);
       }
     };
 
-    checkSession();
-
     // Listener para eventos de autenticação
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        console.log('Auth state change:', event, !!session);
+        
         if (event === 'PASSWORD_RECOVERY') {
+          console.log('PASSWORD_RECOVERY event detected');
           setIsValidSession(true);
+          setSessionChecked(true);
+        } else if (event === 'SIGNED_IN' && session) {
+          // Verificar se é um login de recuperação
+          const urlParams = new URLSearchParams(window.location.search);
+          if (urlParams.get('type') === 'recovery') {
+            console.log('Signed in via recovery');
+            setIsValidSession(true);
+            setSessionChecked(true);
+          }
         }
       }
     );
 
+    checkRecoverySession();
+
     return () => subscription.unsubscribe();
   }, []);
 
-  // Redirecionar se já autenticado (não em sessão de recuperação)
-  if (user && !isValidSession && sessionChecked) {
-    return <Navigate to="/chat" replace />;
+  // Aguardar verificação da sessão antes de qualquer redirect
+  if (!sessionChecked) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-light via-background to-accent-light">
+        <div className="text-center space-y-4">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
+          <p className="text-muted-foreground">Verificando sessão de recuperação...</p>
+        </div>
+      </div>
+    );
   }
 
   // Redirecionar se não há sessão de recuperação válida
-  if (!isValidSession && sessionChecked) {
+  if (!isValidSession) {
+    console.log('No valid recovery session, redirecting to auth');
     return <Navigate to="/auth" replace />;
+  }
+
+  // Se já autenticado normalmente (não via recuperação), ir para chat
+  if (user && !window.location.search.includes('type=recovery')) {
+    return <Navigate to="/chat" replace />;
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -136,16 +175,6 @@ const ResetPasswordPage = () => {
     }
   };
 
-  if (!sessionChecked) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-light via-background to-accent-light">
-        <div className="text-center space-y-4">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
-          <p className="text-muted-foreground">Verificando sessão...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-light via-background to-accent-light flex items-center justify-center p-4">

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -61,7 +62,7 @@ const AuthPage = () => {
         <div className="space-y-8 text-center lg:text-left">
           <div>
             <img 
-              src="/lovable-uploads/9d9f81f6-fc3f-4a89-ab09-0c171aa64a09.png" 
+              src="/lovable-uploads/7e6e4afe-0ec2-4edf-9a74-9b17348718bd.png" 
               alt="ChatPsi" 
               className="h-16 lg:h-24 mx-auto lg:mx-0 mb-4 object-contain"
             />

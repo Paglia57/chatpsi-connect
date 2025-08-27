@@ -61,7 +61,7 @@ const AuthPage = () => {
         <div className="space-y-8 text-center lg:text-left">
           <div>
             <img 
-              src="/lovable-uploads/ce209d17-c218-4b7c-89b6-a3222c3e8520.png" 
+              src="/lovable-uploads/9d9f81f6-fc3f-4a89-ab09-0c171aa64a09.png" 
               alt="ChatPsi" 
               className="h-16 lg:h-24 mx-auto lg:mx-0 mb-4 object-contain"
             />

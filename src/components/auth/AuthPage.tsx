@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { useAuth } from './AuthProvider';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Heart, Shield, Users } from 'lucide-react';
+import ForgotPasswordModal from './ForgotPasswordModal';
 
 const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -15,6 +16,7 @@ const AuthPage = () => {
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const { user, signIn, signUp } = useAuth();
   const { toast } = useToast();
 
@@ -152,6 +154,17 @@ const AuthPage = () => {
                   placeholder="Sua senha"
                   minLength={6}
                 />
+                {isLogin && (
+                  <div className="text-right">
+                    <button
+                      type="button"
+                      onClick={() => setShowForgotPassword(true)}
+                      className="text-sm text-primary hover:underline"
+                    >
+                      Esqueci minha senha
+                    </button>
+                  </div>
+                )}
               </div>
 
               <Button 
@@ -180,6 +193,12 @@ const AuthPage = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Modal de recuperação de senha */}
+      <ForgotPasswordModal 
+        open={showForgotPassword}
+        onOpenChange={setShowForgotPassword}
+      />
     </div>
   );
 };

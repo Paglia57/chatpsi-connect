@@ -434,9 +434,12 @@ const ChatInterface = () => {
       <div className="border-b bg-card p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Bot className="h-6 w-6 text-primary" />
+            <img 
+              src="/lovable-uploads/e8ce6c19-f769-4a4f-a8d0-9c93492a7f76.png" 
+              alt="ChatPsi" 
+              className="h-8 w-auto object-contain"
+            />
             <div>
-              <h1 className="font-semibold text-lg">ChatPsi AI</h1>
               <p className="text-sm text-muted-foreground">
                 Assistente especializado em saúde mental
               </p>

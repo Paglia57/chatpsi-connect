@@ -118,7 +118,11 @@ const ChatSidebar = () => {
       <SidebarContent className="p-2">
         {/* Header */}
         <div className={`mb-6 ${collapsed ? 'hidden' : 'block'}`}>
-          <h2 className="text-xl font-bold text-accent-primary px-4">ChatPsi</h2>
+          <img 
+            src="/lovable-uploads/e8ce6c19-f769-4a4f-a8d0-9c93492a7f76.png" 
+            alt="ChatPsi" 
+            className="h-6 w-auto object-contain px-4"
+          />
         </div>
 
         {/* Navigation */}

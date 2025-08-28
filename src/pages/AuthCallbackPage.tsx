@@ -12,24 +12,53 @@ const AuthCallbackPage = () => {
   useEffect(() => {
     const handleCallback = async () => {
       try {
-        // Processar código de autorização do Supabase
-        const { error } = await supabase.auth.exchangeCodeForSession(window.location.href);
+        const urlParams = new URLSearchParams(window.location.search);
+        const type = urlParams.get('type');
+        const nextPath = urlParams.get('next') || '/reset-password';
         
-        if (error) {
-          console.error('Erro na troca de código por sessão:', error);
-          toast({
-            title: "Erro de autenticação",
-            description: "Não foi possível processar o link de recuperação. Tente novamente.",
-            variant: "destructive",
-          });
-          setRedirectTo('/auth');
-        } else {
-          // Ler parâmetro 'next' da URL para saber onde redirecionar
-          const urlParams = new URLSearchParams(window.location.search);
-          const nextPath = urlParams.get('next') || '/reset-password';
+        console.log('Processing callback with type:', type, 'next:', nextPath);
+
+        // Para recuperação de senha, apenas verificar se temos acesso ao hash da URL
+        if (type === 'recovery') {
+          // Para password recovery, o Supabase automaticamente processa o hash
+          // Apenas aguardar um momento para o processamento automático
+          await new Promise(resolve => setTimeout(resolve, 1000));
           
-          console.log('Código processado com sucesso, redirecionando para:', nextPath);
-          setRedirectTo(nextPath);
+          // Verificar se a sessão foi estabelecida
+          const { data: { session }, error } = await supabase.auth.getSession();
+          
+          if (error) {
+            console.error('Erro ao verificar sessão após recovery:', error);
+            toast({
+              title: "Link expirado",
+              description: "O link de recuperação expirou ou é inválido. Solicite um novo link.",
+              variant: "destructive",
+            });
+            setRedirectTo('/auth');
+          } else if (session) {
+            console.log('Sessão estabelecida com sucesso para recovery, redirecionando para:', nextPath);
+            setRedirectTo(nextPath);
+          } else {
+            console.log('Nenhuma sessão após recovery, mas prosseguindo para reset');
+            // Mesmo sem sessão, permite ir para reset-password pois o Supabase pode ter processado o token
+            setRedirectTo(nextPath);
+          }
+        } else {
+          // Para outros tipos de callback (OAuth, magic link, etc.)
+          const { error } = await supabase.auth.exchangeCodeForSession(window.location.href);
+          
+          if (error) {
+            console.error('Erro na troca de código por sessão:', error);
+            toast({
+              title: "Erro de autenticação",
+              description: "Não foi possível processar o link de autenticação. Tente novamente.",
+              variant: "destructive",
+            });
+            setRedirectTo('/auth');
+          } else {
+            console.log('Código processado com sucesso, redirecionando para:', nextPath);
+            setRedirectTo(nextPath);
+          }
         }
       } catch (error) {
         console.error('Erro inesperado no callback:', error);

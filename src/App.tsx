@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import AuthPage from "@/components/auth/AuthPage";
 import ChatPage from "./pages/ChatPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
+import AuthCallbackPage from "./pages/AuthCallbackPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,6 +23,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<AuthPage />} />
+            <Route path="/auth/callback" element={<AuthCallbackPage />} />
             <Route path="/chat" element={<ChatPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

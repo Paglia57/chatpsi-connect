@@ -2,46 +2,47 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ChatPsi Design System - Professional mental health platform
-Paleta: Primária #67ABAE, Destaque #CF007C, Acento #004C80
-Acessibilidade AA compliance
+/* ChatPsi Design System - Modern Mental Health Platform
+Nova Identidade: Primária #004C80 (Azul), Acento #CF007C (Magenta)
+Tipografia: Playfair Display (títulos) + Montserrat (texto)
+Acessibilidade WCAG AA compliance
 */
 
 @layer base {
   :root {
-    /* ChatPsi Color System */
+    /* ChatPsi Modern Color System */
     --background: 0 0% 100%;
-    --foreground: 201 89% 14%;
+    --foreground: 201 89% 6%;
     
-    /* ChatPsi Primary - Calming teal for trust and professionalism */
-    --primary: 184 24% 55%; /* #67ABAE */
+    /* ChatPsi Primary - Professional Blue */
+    --primary: 201 89% 25%; /* #004C80 */
     --primary-foreground: 0 0% 100%;
-    --primary-hover: 184 24% 45%;
-    --primary-light: 184 24% 92%;
+    --primary-hover: 201 89% 20%;
+    --primary-light: 201 89% 95%;
     
-    /* ChatPsi Accent - Professional blue for depth */
+    /* ChatPsi Accent - Vibrant Magenta */
     --accent-primary: 201 89% 25%; /* #004C80 */
     --accent-foreground: 0 0% 100%;
     --accent-light: 201 89% 95%;
     
-    /* ChatPsi CTA - Vibrant magenta for calls-to-action */
-    --cta: 322 100% 60%; /* #CF007C */
+    /* ChatPsi CTA - Dynamic Magenta for actions */
+    --cta: 322 100% 58%; /* #CF007C */
     --cta-foreground: 0 0% 100%;
     --cta-hover: 322 100% 50%;
     --cta-light: 322 100% 95%;
 
     /* Semantic colors */
     --card: 0 0% 100%;
-    --card-foreground: 201 89% 14%;
+    --card-foreground: 201 89% 6%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 201 89% 14%;
+    --popover-foreground: 201 89% 6%;
 
-    --secondary: 184 24% 96%;
-    --secondary-foreground: 201 89% 14%;
+    --secondary: 201 89% 96%;
+    --secondary-foreground: 201 89% 6%;
 
-    --muted: 184 15% 95%;
-    --muted-foreground: 201 20% 45%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
 
     --accent: 201 89% 95%;
     --accent-foreground: 201 89% 25%;
@@ -55,35 +56,38 @@ Acessibilidade AA compliance
     --success: 142 76% 36%;
     --success-foreground: 0 0% 100%;
 
-    --border: 184 15% 88%;
-    --input: 184 15% 88%;
-    --ring: 184 24% 55%;
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 201 89% 25%;
 
     --radius: 0.5rem;
 
-    /* ChatPsi Sidebar System */
-    --sidebar-background: 184 24% 98%;
-    --sidebar-foreground: 201 89% 14%;
-    --sidebar-primary: 184 24% 55%;
+    /* ChatPsi Modern Sidebar System */
+    --sidebar-background: 201 89% 98%;
+    --sidebar-foreground: 201 89% 6%;
+    --sidebar-primary: 201 89% 25%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 184 24% 92%;
-    --sidebar-accent-foreground: 201 89% 14%;
-    --sidebar-border: 184 15% 88%;
-    --sidebar-ring: 184 24% 55%;
+    --sidebar-accent: 201 89% 95%;
+    --sidebar-accent-foreground: 201 89% 6%;
+    --sidebar-border: 0 0% 90%;
+    --sidebar-ring: 201 89% 25%;
     
-    /* Gradients for depth and visual interest */
-    --gradient-primary: linear-gradient(135deg, hsl(184 24% 55%), hsl(184 24% 45%));
-    --gradient-cta: linear-gradient(135deg, hsl(322 100% 60%), hsl(322 100% 50%));
-    --gradient-subtle: linear-gradient(180deg, hsl(184 24% 98%), hsl(184 24% 96%));
+    /* Modern Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(201 89% 25%), hsl(322 100% 58%));
+    --gradient-cta: linear-gradient(135deg, hsl(322 100% 58%), hsl(322 100% 50%));
+    --gradient-subtle: linear-gradient(180deg, hsl(0 0% 100%), hsl(201 89% 98%));
+    --gradient-hero: linear-gradient(135deg, hsl(201 89% 25%) 0%, hsl(322 100% 58%) 100%);
     
-    /* Shadows for depth */
-    --shadow-sm: 0 1px 2px 0 hsl(201 89% 14% / 0.05);
-    --shadow-md: 0 4px 6px -1px hsl(201 89% 14% / 0.1), 0 2px 4px -2px hsl(201 89% 14% / 0.1);
-    --shadow-lg: 0 10px 15px -3px hsl(201 89% 14% / 0.1), 0 4px 6px -4px hsl(201 89% 14% / 0.1);
+    /* Modern Shadows */
+    --shadow-sm: 0 1px 3px 0 hsl(201 89% 6% / 0.1), 0 1px 2px -1px hsl(201 89% 6% / 0.1);
+    --shadow-md: 0 4px 6px -1px hsl(201 89% 6% / 0.1), 0 2px 4px -2px hsl(201 89% 6% / 0.1);
+    --shadow-lg: 0 10px 15px -3px hsl(201 89% 6% / 0.1), 0 4px 6px -4px hsl(201 89% 6% / 0.1);
+    --shadow-xl: 0 20px 25px -5px hsl(201 89% 6% / 0.1), 0 8px 10px -6px hsl(201 89% 6% / 0.1);
     
-    /* Transitions */
+    /* Modern Transitions */
     --transition-base: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-slow: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
   }
 
   .dark {
@@ -131,6 +135,76 @@ Acessibilidade AA compliance
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans antialiased;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display font-semibold;
+  }
+
+  h1 {
+    @apply text-4xl lg:text-5xl;
+  }
+
+  h2 {
+    @apply text-3xl lg:text-4xl;
+  }
+
+  h3 {
+    @apply text-2xl lg:text-3xl;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-muted;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/30 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/50;
+  }
+
+  /* Focus styles */
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
+  }
+}
+
+@layer components {
+  /* Button hover effects */
+  .btn-hover-lift {
+    @apply transition-all duration-200 hover:shadow-md hover:-translate-y-0.5;
+  }
+
+  /* Card hover effects */
+  .card-hover {
+    @apply transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-1;
+  }
+
+  /* Gradient backgrounds */
+  .bg-gradient-hero {
+    background: var(--gradient-hero);
+  }
+
+  .bg-gradient-primary {
+    background: var(--gradient-primary);
+  }
+
+  .bg-gradient-cta {
+    background: var(--gradient-cta);
+  }
+
+  .bg-gradient-subtle {
+    background: var(--gradient-subtle);
   }
 }

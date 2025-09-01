@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from './AuthProvider';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Heart, Shield, Users } from 'lucide-react';
+import { Heart, Shield, Stethoscope } from 'lucide-react';
 import ForgotPasswordModal from './ForgotPasswordModal';
 
 const AuthPage = () => {
@@ -58,137 +58,150 @@ const AuthPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-light via-background to-accent-light flex items-center justify-center p-4">
-      <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-8 items-center">
+    <div className="min-h-screen bg-gradient-hero flex items-center justify-center p-4">
+      <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-12 items-center">
         {/* Hero Section */}
-        <div className="space-y-8 text-center lg:text-left">
-          <div>
+        <div className="text-center lg:text-left space-y-8 text-white">
+          <div className="animate-slide-up">
             <img 
               src="/lovable-uploads/7e6e4afe-0ec2-4edf-9a74-9b17348718bd.png" 
               alt="ChatPsi" 
-              className="h-16 lg:h-24 mx-auto lg:mx-0 mb-4 object-contain"
+              className="h-20 w-auto object-contain mb-8 mx-auto lg:mx-0 filter brightness-0 invert animate-fade-in"
             />
-            <p className="text-xl lg:text-2xl text-muted-foreground mb-6">
-              Plataforma de apoio para profissionais de saúde mental
+            
+            <h1 className="text-5xl lg:text-7xl font-display font-bold mb-6">
+              ChatPsi
+            </h1>
+            
+            <p className="text-xl lg:text-2xl text-white/90 mb-8 leading-relaxed font-light">
+              Plataforma de apoio para profissionais de saúde mental com IA multimodal 
+              para otimizar suas sessões e organização.
             </p>
-            <p className="text-lg text-muted-foreground max-w-2xl">
-              Conecte-se com ferramentas avançadas de chat multimodal, 
-              projetadas especificamente para apoiar sua prática clínica.
-            </p>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="flex flex-col items-center p-4 bg-card rounded-lg shadow-sm">
-              <Heart className="h-8 w-8 text-primary mb-2" />
-              <h3 className="font-semibold text-card-foreground">Cuidado Centrado</h3>
-              <p className="text-sm text-muted-foreground text-center">
-                Ferramentas projetadas para o cuidado em saúde mental
-              </p>
-            </div>
-            <div className="flex flex-col items-center p-4 bg-card rounded-lg shadow-sm">
-              <Shield className="h-8 w-8 text-primary mb-2" />
-              <h3 className="font-semibold text-card-foreground">Seguro</h3>
-              <p className="text-sm text-muted-foreground text-center">
-                Proteção total dos dados dos pacientes
-              </p>
-            </div>
-            <div className="flex flex-col items-center p-4 bg-card rounded-lg shadow-sm">
-              <Users className="h-8 w-8 text-primary mb-2" />
-              <h3 className="font-semibold text-card-foreground">Profissional</h3>
-              <p className="text-sm text-muted-foreground text-center">
-                Criado por e para profissionais de saúde mental
-              </p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
+              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 text-center hover:bg-white/20 transition-all duration-300 hover:scale-105 card-hover">
+                <Heart className="h-10 w-10 text-cta mx-auto mb-4" />
+                <h3 className="font-display font-semibold text-white mb-3 text-lg">Cuidado Centrado</h3>
+                <p className="text-white/80 leading-relaxed">Foque no que importa: seus pacientes</p>
+              </div>
+              
+              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 text-center hover:bg-white/20 transition-all duration-300 hover:scale-105 card-hover">
+                <Shield className="h-10 w-10 text-cta mx-auto mb-4" />
+                <h3 className="font-display font-semibold text-white mb-3 text-lg">Seguro</h3>
+                <p className="text-white/80 leading-relaxed">Proteção total dos dados dos seus pacientes</p>
+              </div>
+              
+              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 text-center hover:bg-white/20 transition-all duration-300 hover:scale-105 card-hover">
+                <Stethoscope className="h-10 w-10 text-cta mx-auto mb-4" />
+                <h3 className="font-display font-semibold text-white mb-3 text-lg">Profissional</h3>
+                <p className="text-white/80 leading-relaxed">Desenvolvido por e para profissionais</p>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Auth Form */}
-        <Card className="w-full max-w-md mx-auto shadow-lg">
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl">
-              {isLogin ? 'Entrar na plataforma' : 'Criar conta'}
+        {/* Auth Card */}
+        <Card className="w-full max-w-md mx-auto shadow-2xl border-0 bg-white/95 backdrop-blur-xl rounded-3xl overflow-hidden card-hover">
+          <CardHeader className="text-center pb-6 pt-8">
+            <CardTitle className="text-3xl font-display font-bold text-primary mb-2">
+              {isLogin ? 'Entrar na sua conta' : 'Criar conta'}
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-muted-foreground text-lg">
               {isLogin 
-                ? 'Acesse sua conta para continuar' 
-                : 'Junte-se à comunidade de profissionais'
+                ? 'Entre com suas credenciais para acessar a plataforma' 
+                : 'Crie sua conta para começar a usar o ChatPsi'
               }
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
+          <CardContent className="space-y-6 px-8 pb-8">
+            <form onSubmit={handleSubmit} className="space-y-5">
               {!isLogin && (
-                <div className="space-y-2">
-                  <Label htmlFor="fullName">Nome completo</Label>
+                <div className="space-y-3">
+                  <Label htmlFor="fullName" className="text-foreground font-medium">Nome completo</Label>
                   <Input
                     id="fullName"
                     type="text"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     required={!isLogin}
-                    placeholder="Seu nome completo"
+                    placeholder="Digite seu nome completo"
+                    disabled={loading}
+                    className="h-12 rounded-xl border-2 focus:border-primary transition-colors"
                   />
                 </div>
               )}
               
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+              <div className="space-y-3">
+                <Label htmlFor="email" className="text-foreground font-medium">Email</Label>
                 <Input
                   id="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  placeholder="seu@email.com"
+                  placeholder="Digite seu email"
+                  disabled={loading}
+                  className="h-12 rounded-xl border-2 focus:border-primary transition-colors"
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="password">Senha</Label>
+              <div className="space-y-3">
+                <Label htmlFor="password" className="text-foreground font-medium">Senha</Label>
                 <Input
                   id="password"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  placeholder="Sua senha"
+                  placeholder="Digite sua senha"
+                  disabled={loading}
                   minLength={6}
+                  className="h-12 rounded-xl border-2 focus:border-primary transition-colors"
                 />
-                {isLogin && (
-                  <div className="text-right">
-                    <button
-                      type="button"
-                      onClick={() => setShowForgotPassword(true)}
-                      className="text-sm text-primary hover:underline"
-                    >
-                      Esqueci minha senha
-                    </button>
-                  </div>
-                )}
               </div>
 
               <Button 
                 type="submit" 
-                className="w-full" 
-                variant="default"
+                className="w-full h-14 bg-primary hover:bg-primary-hover text-primary-foreground font-semibold rounded-xl text-lg btn-hover-lift shadow-lg"
                 disabled={loading}
               >
-                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {isLogin ? 'Entrar' : 'Criar conta'}
+                {loading ? (
+                  <div className="flex items-center gap-3">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    {isLogin ? 'Entrando...' : 'Criando conta...'}
+                  </div>
+                ) : (
+                  isLogin ? 'Entrar' : 'Criar conta'
+                )}
               </Button>
             </form>
 
-            <div className="mt-6 text-center">
-              <button
+            {isLogin && (
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={() => setShowForgotPassword(true)}
+                  className="text-sm text-cta hover:text-cta-hover transition-colors font-medium"
+                  disabled={loading}
+                >
+                  Esqueceu sua senha?
+                </button>
+              </div>
+            )}
+
+            <div className="text-center border-t pt-6 mt-6">
+              <p className="text-muted-foreground mb-4 text-lg">
+                {isLogin ? 'Não tem uma conta?' : 'Já tem uma conta?'}
+              </p>
+              <Button
                 type="button"
+                variant="outline"
                 onClick={() => setIsLogin(!isLogin)}
-                className="text-primary hover:underline text-sm"
+                disabled={loading}
+                className="w-full h-12 border-2 border-cta text-cta hover:bg-cta hover:text-white transition-all duration-200 rounded-xl font-semibold btn-hover-lift"
               >
-                {isLogin 
-                  ? 'Não tem conta? Criar conta' 
-                  : 'Já tem conta? Fazer login'
-                }
-              </button>
+                {isLogin ? 'Criar nova conta' : 'Fazer login'}
+              </Button>
             </div>
           </CardContent>
         </Card>

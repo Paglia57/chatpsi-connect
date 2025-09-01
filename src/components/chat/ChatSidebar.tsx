@@ -119,7 +119,7 @@ const ChatSidebar = () => {
         {/* Header */}
         <div className={`mb-6 ${collapsed ? 'hidden' : 'block'}`}>
           <img 
-            src="/lovable-uploads/e8ce6c19-f769-4a4f-a8d0-9c93492a7f76.png" 
+            src="/lovable-uploads/46df6a94-c160-4eca-a9f7-5c58ff488ff2.png" 
             alt="ChatPsi" 
             className="h-6 w-auto object-contain px-4"
           />

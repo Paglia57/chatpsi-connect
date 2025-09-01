@@ -64,7 +64,7 @@ const AuthPage = () => {
         <div className="text-center lg:text-left space-y-8 text-white">
           <div className="animate-slide-up">
             <img 
-              src="/lovable-uploads/7e6e4afe-0ec2-4edf-9a74-9b17348718bd.png" 
+              src="/lovable-uploads/46df6a94-c160-4eca-a9f7-5c58ff488ff2.png" 
               alt="ChatPsi" 
               className="h-20 w-auto object-contain mb-8 mx-auto lg:mx-0 filter brightness-0 invert animate-fade-in"
             />

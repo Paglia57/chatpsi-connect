@@ -79,7 +79,7 @@ const ChatInterface = () => {
       typingTimeoutRef.current = setTimeout(() => {
         setIsAssistantTyping(false);
         logger.debug('Typing indicator cleared due to timeout');
-      }, 30000); // 30 seconds timeout
+      }, 120000); // 2 minutes timeout
     }
     return () => {
       if (typingTimeoutRef.current) {
@@ -362,7 +362,7 @@ const ChatInterface = () => {
             variant: "default"
           });
         }
-      }, 30000);
+      }, 120000); // 2 minutes timeout
 
       // Send to AI via dispatch-message Edge Function
       const response = await supabase.functions.invoke('dispatch-message', {

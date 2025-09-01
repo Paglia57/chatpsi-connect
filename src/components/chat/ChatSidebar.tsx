@@ -81,7 +81,7 @@ const ChatSidebar = () => {
     icon: MessageCircle,
     description: 'Conversar com IA especializada'
   }];
-  return <Sidebar className={collapsed ? "w-14" : "w-64"} collapsible="icon">
+  return <Sidebar className={collapsed ? "w-24" : "w-64"} collapsible="icon">
       <SidebarTrigger className="m-2 self-end" />
 
       <SidebarContent className="p-2">
@@ -101,10 +101,10 @@ const ChatSidebar = () => {
                   isActive
                 }) => `flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${isActive ? 'bg-primary text-primary-foreground' : 'hover:bg-accent hover:text-accent-foreground'}`}>
                       <item.icon className="h-4 w-4" />
-                      {!collapsed && <div>
-                          <span className="font-medium">{item.title}</span>
-                          <p className="text-xs text-muted-foreground">{item.description}</p>
-                        </div>}
+                      <div>
+                        <span className="font-medium">{item.title}</span>
+                        {!collapsed && <p className="text-xs text-muted-foreground">{item.description}</p>}
+                      </div>
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>)}

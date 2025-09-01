@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,7 +8,6 @@ import { useAuth } from './AuthProvider';
 import { useToast } from '@/hooks/use-toast';
 import { Heart, Shield, Stethoscope } from 'lucide-react';
 import ForgotPasswordModal from './ForgotPasswordModal';
-
 const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
@@ -17,57 +15,54 @@ const AuthPage = () => {
   const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
-  const { user, signIn, signUp } = useAuth();
-  const { toast } = useToast();
+  const {
+    user,
+    signIn,
+    signUp
+  } = useAuth();
+  const {
+    toast
+  } = useToast();
 
   // Redirect if already authenticated
   if (user) {
     return <Navigate to="/chat" replace />;
   }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
     try {
-      const { error } = isLogin 
-        ? await signIn(email, password)
-        : await signUp(email, password, fullName);
-
+      const {
+        error
+      } = isLogin ? await signIn(email, password) : await signUp(email, password, fullName);
       if (error) {
         toast({
           title: "Erro de autenticação",
           description: error.message,
-          variant: "destructive",
+          variant: "destructive"
         });
       } else if (!isLogin) {
         toast({
           title: "Conta criada com sucesso!",
-          description: "Verifique seu email para confirmar sua conta.",
+          description: "Verifique seu email para confirmar sua conta."
         });
       }
     } catch (error) {
       toast({
         title: "Erro inesperado",
         description: "Tente novamente em alguns instantes.",
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setLoading(false);
     }
   };
-
-  return (
-    <div className="min-h-screen bg-gradient-hero flex items-center justify-center p-4">
+  return <div className="min-h-screen bg-gradient-hero flex items-center justify-center p-4">
       <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-12 items-center">
         {/* Hero Section */}
         <div className="text-center lg:text-left space-y-8 text-white">
           <div className="animate-slide-up">
-            <img 
-              src="/lovable-uploads/46df6a94-c160-4eca-a9f7-5c58ff488ff2.png" 
-              alt="ChatPsi" 
-              className="h-20 w-auto object-contain mb-8 mx-auto lg:mx-0 filter brightness-0 invert animate-fade-in"
-            />
+            
             
             <h1 className="text-5xl lg:text-7xl font-display font-bold mb-6">
               ChatPsi
@@ -107,99 +102,45 @@ const AuthPage = () => {
               {isLogin ? 'Entrar na sua conta' : 'Criar conta'}
             </CardTitle>
             <CardDescription className="text-muted-foreground text-lg">
-              {isLogin 
-                ? 'Entre com suas credenciais para acessar a plataforma' 
-                : 'Crie sua conta para começar a usar o ChatPsi'
-              }
+              {isLogin ? 'Entre com suas credenciais para acessar a plataforma' : 'Crie sua conta para começar a usar o ChatPsi'}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6 px-8 pb-8">
             <form onSubmit={handleSubmit} className="space-y-5">
-              {!isLogin && (
-                <div className="space-y-3">
+              {!isLogin && <div className="space-y-3">
                   <Label htmlFor="fullName" className="text-foreground font-medium">Nome completo</Label>
-                  <Input
-                    id="fullName"
-                    type="text"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    required={!isLogin}
-                    placeholder="Digite seu nome completo"
-                    disabled={loading}
-                    className="h-12 rounded-xl border-2 focus:border-primary transition-colors"
-                  />
-                </div>
-              )}
+                  <Input id="fullName" type="text" value={fullName} onChange={e => setFullName(e.target.value)} required={!isLogin} placeholder="Digite seu nome completo" disabled={loading} className="h-12 rounded-xl border-2 focus:border-primary transition-colors" />
+                </div>}
               
               <div className="space-y-3">
                 <Label htmlFor="email" className="text-foreground font-medium">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  placeholder="Digite seu email"
-                  disabled={loading}
-                  className="h-12 rounded-xl border-2 focus:border-primary transition-colors"
-                />
+                <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="Digite seu email" disabled={loading} className="h-12 rounded-xl border-2 focus:border-primary transition-colors" />
               </div>
 
               <div className="space-y-3">
                 <Label htmlFor="password" className="text-foreground font-medium">Senha</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  placeholder="Digite sua senha"
-                  disabled={loading}
-                  minLength={6}
-                  className="h-12 rounded-xl border-2 focus:border-primary transition-colors"
-                />
+                <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} required placeholder="Digite sua senha" disabled={loading} minLength={6} className="h-12 rounded-xl border-2 focus:border-primary transition-colors" />
               </div>
 
-              <Button 
-                type="submit" 
-                className="w-full h-14 bg-primary hover:bg-primary-hover text-primary-foreground font-semibold rounded-xl text-lg btn-hover-lift shadow-lg"
-                disabled={loading}
-              >
-                {loading ? (
-                  <div className="flex items-center gap-3">
+              <Button type="submit" className="w-full h-14 bg-primary hover:bg-primary-hover text-primary-foreground font-semibold rounded-xl text-lg btn-hover-lift shadow-lg" disabled={loading}>
+                {loading ? <div className="flex items-center gap-3">
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
                     {isLogin ? 'Entrando...' : 'Criando conta...'}
-                  </div>
-                ) : (
-                  isLogin ? 'Entrar' : 'Criar conta'
-                )}
+                  </div> : isLogin ? 'Entrar' : 'Criar conta'}
               </Button>
             </form>
 
-            {isLogin && (
-              <div className="text-center">
-                <button
-                  type="button"
-                  onClick={() => setShowForgotPassword(true)}
-                  className="text-sm text-cta hover:text-cta-hover transition-colors font-medium"
-                  disabled={loading}
-                >
+            {isLogin && <div className="text-center">
+                <button type="button" onClick={() => setShowForgotPassword(true)} className="text-sm text-cta hover:text-cta-hover transition-colors font-medium" disabled={loading}>
                   Esqueceu sua senha?
                 </button>
-              </div>
-            )}
+              </div>}
 
             <div className="text-center border-t pt-6 mt-6">
               <p className="text-muted-foreground mb-4 text-lg">
                 {isLogin ? 'Não tem uma conta?' : 'Já tem uma conta?'}
               </p>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setIsLogin(!isLogin)}
-                disabled={loading}
-                className="w-full h-12 border-2 border-cta text-cta hover:bg-cta hover:text-white transition-all duration-200 rounded-xl font-semibold btn-hover-lift"
-              >
+              <Button type="button" variant="outline" onClick={() => setIsLogin(!isLogin)} disabled={loading} className="w-full h-12 border-2 border-cta text-cta hover:bg-cta hover:text-white transition-all duration-200 rounded-xl font-semibold btn-hover-lift">
                 {isLogin ? 'Criar nova conta' : 'Fazer login'}
               </Button>
             </div>
@@ -208,12 +149,7 @@ const AuthPage = () => {
       </div>
 
       {/* Modal de recuperação de senha */}
-      <ForgotPasswordModal 
-        open={showForgotPassword}
-        onOpenChange={setShowForgotPassword}
-      />
-    </div>
-  );
+      <ForgotPasswordModal open={showForgotPassword} onOpenChange={setShowForgotPassword} />
+    </div>;
 };
-
 export default AuthPage;

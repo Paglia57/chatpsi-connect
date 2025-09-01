@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Slider } from '@/components/ui/slider';
 import { Play, Pause, Volume2, AlertCircle, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { logger } from '@/lib/logger';
 interface AudioPlayerProps {
   url: string;
   className?: string;
@@ -132,7 +133,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
         await audio.play();
       }
     } catch (error) {
-      console.error('Error playing audio:', error);
+      logger.error('Audio playback failed', error);
       setAudioState(prev => ({
         ...prev,
         hasError: true

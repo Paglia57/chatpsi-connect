@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useFileUpload, UploadedFile } from '@/hooks/useFileUpload';
 import { useAudioRecording } from '@/hooks/useAudioRecording';
 import { formatMessageContent } from '@/lib/utils';
+import { logger, GENERIC_ERROR_MESSAGES } from '@/lib/logger';
 interface Message {
   id: string;
   content: string;
@@ -77,7 +78,7 @@ const ChatInterface = () => {
       }
       typingTimeoutRef.current = setTimeout(() => {
         setIsAssistantTyping(false);
-        console.log('Typing indicator cleared due to timeout');
+        logger.debug('Typing indicator cleared due to timeout');
       }, 30000); // 30 seconds timeout
     }
     return () => {
@@ -99,7 +100,7 @@ const ChatInterface = () => {
         ascending: true
       });
       if (error) {
-        console.error('Error fetching messages:', error);
+        logger.error('Failed to fetch messages', error);
         throw error;
       }
       const formattedMessages = data.map(msg => ({
@@ -115,10 +116,10 @@ const ChatInterface = () => {
       setMessages(formattedMessages);
       return true;
     } catch (error) {
-      console.error('Error in fetchMessages:', error);
+      logger.error('Error in fetchMessages', error);
       toast({
         title: "Erro ao carregar mensagens",
-        description: "Tentando novamente...",
+        description: GENERIC_ERROR_MESSAGES.NETWORK_ERROR,
         variant: "destructive"
       });
       return false;
@@ -135,7 +136,7 @@ const ChatInterface = () => {
   // Setup real-time subscription with reconnection logic
   const setupRealtimeConnection = useCallback(() => {
     if (!user || realtimeChannel) return;
-    console.log('Setting up real-time connection...');
+    logger.debug('Setting up real-time connection');
     setConnectionStatus('reconnecting');
     const channel = supabase.channel(`messages-${user.id}`).on('postgres_changes', {
       event: 'INSERT',
@@ -143,7 +144,7 @@ const ChatInterface = () => {
       table: 'messages',
       filter: `user_id=eq.${user.id}`
     }, payload => {
-      console.log('New message received via real-time:', payload);
+      logger.debug('New message received via real-time');
       const newMessage = payload.new as any;
       const formattedMessage: Message = {
         id: newMessage.id,
@@ -177,7 +178,7 @@ const ChatInterface = () => {
         }
       }
     }).subscribe(status => {
-      console.log('Real-time subscription status:', status);
+      logger.debug('Real-time subscription status changed', { status });
       if (status === 'SUBSCRIBED') {
         setConnectionStatus('connected');
         setRealtimeChannel(channel);
@@ -349,7 +350,7 @@ const ChatInterface = () => {
         clearTimeout(responseTimeoutRef.current);
       }
       responseTimeoutRef.current = setTimeout(async () => {
-        console.log('Response timeout - fetching messages from database');
+        logger.debug('Response timeout - fetching messages from database');
         setIsAssistantTyping(false);
 
         // Fetch latest messages as fallback
@@ -381,9 +382,9 @@ const ChatInterface = () => {
         ...msg,
         status: 'sent' as const
       } : msg));
-      console.log('Message sent successfully, waiting for AI response...');
+      logger.debug('Message sent successfully, waiting for AI response');
     } catch (error) {
-      console.error('Error sending message:', error);
+      logger.error('Failed to send message', error);
 
       // Mark message as failed
       setMessages(prev => prev.map(msg => msg.id === tempId ? {
@@ -396,7 +397,7 @@ const ChatInterface = () => {
       }
       toast({
         title: "Erro ao enviar mensagem",
-        description: "Tente novamente ou verifique sua conexão.",
+        description: GENERIC_ERROR_MESSAGES.NETWORK_ERROR,
         variant: "destructive"
       });
     }

@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { logger, GENERIC_ERROR_MESSAGES } from '@/lib/logger';
 
 export type RecordingState = 'idle' | 'requesting-permission' | 'recording' | 'processing';
 
@@ -43,7 +44,7 @@ export const useAudioRecording = () => {
       
       return true;
     } catch (error) {
-      console.error('Permission denied:', error);
+      logger.error('Microphone permission denied', error);
       setHasPermission(false);
       setState('idle');
       
@@ -110,12 +111,12 @@ export const useAudioRecording = () => {
       
       return true;
     } catch (error) {
-      console.error('Error starting recording:', error);
+      logger.error('Failed to start audio recording', error);
       setState('idle');
       
       toast({
         title: "Erro ao iniciar gravação",
-        description: "Não foi possível acessar o microfone. Tente novamente.",
+        description: GENERIC_ERROR_MESSAGES.GENERIC,
         variant: "destructive",
       });
       
@@ -159,7 +160,7 @@ export const useAudioRecording = () => {
             duration: recordingDuration
           });
         } catch (error) {
-          console.error('Error processing recording:', error);
+          logger.error('Error processing audio recording', error);
           cleanup();
           resolve(null);
         }

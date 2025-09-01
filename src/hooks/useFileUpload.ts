@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
+import { logger, GENERIC_ERROR_MESSAGES } from '@/lib/logger';
 
 export interface UploadedFile {
   url: string;
@@ -19,7 +20,7 @@ export const useFileUpload = () => {
     
     // Check for HEIC files specifically (MIME type can be inconsistent)
     if (fileName.endsWith('.heic') || fileName.endsWith('.heif')) {
-      console.log('HEIC file detected:', file.name, 'MIME type:', file.type);
+      logger.debug('HEIC file detected', { name: file.name, type: file.type });
       return 'image';
     }
     
@@ -112,7 +113,7 @@ export const useFileUpload = () => {
                           fileName.match(/\.(jpg|jpeg|png|heic|heif|webp)$/) ||
                           (isHEIC && file.type === 'application/octet-stream');
       
-      console.log('Image validation:', {
+      logger.debug('Image validation result', {
         fileName: file.name,
         fileType: file.type,
         isHEIC,
@@ -166,10 +167,10 @@ export const useFileUpload = () => {
 
       return uploadedFile;
     } catch (error) {
-      console.error('Error uploading file:', error);
+      logger.error('File upload failed', error);
       toast({
         title: "Erro",
-        description: "Erro ao enviar arquivo",
+        description: GENERIC_ERROR_MESSAGES.UPLOAD_FAILED,
         variant: "destructive",
       });
       return null;

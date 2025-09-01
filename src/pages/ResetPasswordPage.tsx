@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useToast } from '@/hooks/use-toast';
 import { Eye, EyeOff, Check, X, Loader2, Shield } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { logger, GENERIC_ERROR_MESSAGES } from '@/lib/logger';
 
 const ResetPasswordPage = () => {
   const [password, setPassword] = useState('');
@@ -69,10 +70,10 @@ const ResetPasswordPage = () => {
       }, 2000);
 
     } catch (error: any) {
-      console.error('Erro ao redefinir senha:', error);
+      logger.error('Password reset failed', error);
       toast({
-        title: "Erro ao redefinir senha",
-        description: error.message || "Tente novamente em alguns instantes.",
+        title: "Erro",
+        description: GENERIC_ERROR_MESSAGES.PASSWORD_RESET_FAILED,
         variant: "destructive",
       });
     } finally {

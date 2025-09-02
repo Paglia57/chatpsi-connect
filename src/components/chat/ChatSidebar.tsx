@@ -1,32 +1,26 @@
-import React, { useState, useEffect } from 'react';
-import { NavLink } from 'react-router-dom';
-import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { User, MessageCircle, HeadphonesIcon, LogOut, ExternalLink, Crown, AlertCircle } from 'lucide-react';
+import { MessageSquare, User, MessageCircle, LogOut, Menu, X } from 'lucide-react';
+import { NavLink } from 'react-router-dom';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
+import { useResponsive } from '@/hooks/useResponsive';
+
 const ChatSidebar = () => {
-  const {
-    state
-  } = useSidebar();
-  const collapsed = state === "collapsed";
-  const {
-    user,
-    profile,
-    signOut,
-    updateProfileBasicInfo
-  } = useAuth();
-  const {
-    toast
-  } = useToast();
+  const { collapsed } = useSidebar();
+  const { user, profile, signOut, updateProfileBasicInfo } = useAuth();
+  const { toast } = useToast();
+  const { isMobile } = useResponsive();
+  
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [profileData, setProfileData] = useState({
     full_name: '',
     nickname: '',
-    email: '',
     whatsapp: ''
   });
 
@@ -36,7 +30,6 @@ const ChatSidebar = () => {
       setProfileData({
         full_name: profile.full_name || '',
         nickname: profile.nickname || '',
-        email: profile.email || '',
         whatsapp: profile.whatsapp || ''
       });
     }
@@ -48,16 +41,19 @@ const ChatSidebar = () => {
       setProfileData({
         full_name: profile.full_name || '',
         nickname: profile.nickname || '',
-        email: profile.email || '',
         whatsapp: profile.whatsapp || ''
       });
     }
   }, [isProfileOpen, profile]);
+
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
-    const {
-      error
-    } = await updateProfileBasicInfo(profileData.full_name, profileData.whatsapp, profileData.nickname);
+    const { error } = await updateProfileBasicInfo(
+      profileData.full_name,
+      profileData.whatsapp,
+      profileData.nickname
+    );
+
     if (error) {
       toast({
         title: "Erro ao atualizar perfil",
@@ -72,160 +68,274 @@ const ChatSidebar = () => {
       setIsProfileOpen(false);
     }
   };
+
   const handleSupportClick = () => {
     window.open('https://wa.me/5511942457454', '_blank', 'noopener,noreferrer');
   };
-  const menuItems = [{
-    title: 'Chat',
-    url: '/chat',
-    icon: MessageCircle,
-    description: 'Conversar com IA especializada'
-  }];
-  return <Sidebar className={collapsed ? "w-24" : "w-64"} collapsible="icon">
-      <SidebarTrigger className="m-2 self-end" />
 
-      <SidebarContent className="p-2">
-        {/* Header */}
-        <div className={`mb-6 ${collapsed ? 'hidden' : 'block'}`}>
-          
+  const menuItems = [
+    {
+      title: "Chat",
+      url: "/chat",
+      icon: MessageSquare,
+      description: "Conversar com IA especializada"
+    }
+  ];
+
+  if (isMobile) {
+    return (
+      <Sheet>
+        <SheetTrigger asChild>
+          <Button variant="ghost" size="icon" className="fixed top-4 left-4 z-50 touch-target">
+            <Menu className="h-5 w-5" />
+          </Button>
+        </SheetTrigger>
+        <SheetContent side="left" className="w-80 p-0">
+          <div className="flex flex-col h-full">
+            <div className="p-4 border-b">
+              <div className="flex items-center gap-3">
+                <img 
+                  src="/logo.png" 
+                  alt="ChatPsi" 
+                  className="h-8 w-auto object-contain"
+                />
+                <div>
+                  <h2 className="font-semibold text-lg">ChatPsi</h2>
+                  <p className="text-xs text-muted-foreground">Assistente de IA</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex-1 p-4">
+              <nav className="space-y-2">
+                {menuItems.map((item) => (
+                  <NavLink
+                    key={item.title}
+                    to={item.url}
+                    className={({ isActive }) =>
+                      `flex items-center gap-3 px-3 py-2 rounded-md transition-colors touch-target ${
+                        isActive
+                          ? 'bg-primary text-primary-foreground'
+                          : 'hover:bg-muted'
+                      }`
+                    }
+                  >
+                    <item.icon className="h-5 w-5 flex-shrink-0" />
+                    <div className="min-w-0">
+                      <p className="font-medium truncate">{item.title}</p>
+                      <p className="text-xs text-muted-foreground truncate">{item.description}</p>
+                    </div>
+                  </NavLink>
+                ))}
+              </nav>
+            </div>
+            
+            <div className="p-4 border-t space-y-2">
+              <Dialog open={isProfileOpen} onOpenChange={setIsProfileOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="ghost" className="w-full justify-start touch-target">
+                    <User className="h-4 w-4 mr-2" />
+                    Meu Perfil
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Editar Perfil</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="full_name">Nome completo</Label>
+                      <Input
+                        id="full_name"
+                        value={profileData.full_name}
+                        onChange={(e) => setProfileData(prev => ({ ...prev, full_name: e.target.value }))}
+                        placeholder="Seu nome completo"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="nickname">Apelido</Label>
+                      <Input
+                        id="nickname"
+                        value={profileData.nickname}
+                        onChange={(e) => setProfileData(prev => ({ ...prev, nickname: e.target.value }))}
+                        placeholder="Como gosta de ser chamado"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="whatsapp">WhatsApp</Label>
+                      <Input
+                        id="whatsapp"
+                        value={profileData.whatsapp}
+                        onChange={(e) => setProfileData(prev => ({ ...prev, whatsapp: e.target.value }))}
+                        placeholder="+55 11 99999-9999"
+                      />
+                    </div>
+                    <Button onClick={handleProfileUpdate} className="w-full touch-target">
+                      Salvar Alterações
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+              
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start touch-target"
+                onClick={handleSupportClick}
+              >
+                <MessageCircle className="h-4 w-4 mr-2" />
+                Falar com suporte
+              </Button>
+              
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10 touch-target"
+                onClick={signOut}
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Sair
+              </Button>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
+  return (
+    <Sidebar className={`${collapsed ? 'w-24' : 'w-64'} border-r`} collapsible>
+      <SidebarTrigger className="absolute -right-4 top-6 z-10" />
+      
+      <SidebarHeader className="px-4 py-3">
+        <div className="flex items-center gap-3">
+          <img 
+            src="/logo.png" 
+            alt="ChatPsi" 
+            className="h-8 w-auto object-contain flex-shrink-0"
+          />
+          {!collapsed && (
+            <div className="min-w-0">
+              <h2 className="font-semibold text-lg truncate">ChatPsi</h2>
+              <p className="text-xs text-muted-foreground truncate">Assistente de IA</p>
+            </div>
+          )}
         </div>
+      </SidebarHeader>
 
-        {/* Navigation */}
+      <SidebarContent className="px-2">
         <SidebarGroup>
-          <SidebarGroupLabel>Navegação</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {menuItems.map(item => <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <NavLink to={item.url} className={({
-                  isActive
-                }) => `flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${isActive ? 'bg-primary text-primary-foreground' : 'hover:bg-accent hover:text-accent-foreground'}`}>
-                      <item.icon className="h-4 w-4 flex-shrink-0" />
-                      <div className="min-w-0">
-                        <span className="font-medium block truncate">{item.title}</span>
-                        {!collapsed && <p className="text-xs text-muted-foreground truncate">{item.description}</p>}
-                      </div>
+              {menuItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild tooltip={collapsed ? item.title : undefined}>
+                    <NavLink
+                      to={item.url}
+                      className={({ isActive }) =>
+                        `flex items-center gap-3 ${
+                          isActive ? 'bg-primary text-primary-foreground' : ''
+                        }`
+                      }
+                    >
+                      <item.icon className="h-5 w-5 flex-shrink-0" />
+                      <span>{item.title}</span>
+                      {!collapsed && (
+                        <span className="text-xs text-muted-foreground ml-auto truncate max-w-24">
+                          {item.description}
+                        </span>
+                      )}
                     </NavLink>
                   </SidebarMenuButton>
-                </SidebarMenuItem>)}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        {/* Subscription Status */}
-        {!collapsed && <SidebarGroup>
-            <SidebarGroupLabel>Status da Assinatura</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <div className="px-4 py-3 bg-card rounded-lg border">
-                {profile?.subscription_active ? <div className="flex items-center gap-2 text-success">
-                    <Crown className="h-4 w-4" />
-                    <div>
-                      <p className="text-sm font-medium">Assinatura Ativa</p>
-                      {profile.subscription_tier && <p className="text-xs text-muted-foreground">
-                          Plano: {profile.subscription_tier}
-                        </p>}
-                    </div>
-                  </div> : <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-warning">
-                      <AlertCircle className="h-4 w-4" />
-                      <p className="text-sm font-medium">Assinatura Inativa</p>
-                    </div>
-                    <Button variant="cta" size="sm" className="w-full">
-                      Assinar Agora
-                    </Button>
-                  </div>}
-              </div>
-            </SidebarGroupContent>
-          </SidebarGroup>}
-
-        {/* Profile & Support */}
-        <SidebarGroup>
-          <SidebarGroupLabel>Conta</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {/* Profile */}
-              <SidebarMenuItem>
-                <Dialog open={isProfileOpen} onOpenChange={setIsProfileOpen}>
-                  <DialogTrigger asChild>
-                    <SidebarMenuButton className="flex items-center gap-3">
-                      <User className="h-4 w-4" />
-                      {!collapsed && <span>Meu Perfil</span>}
-                    </SidebarMenuButton>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-md">
-                    <DialogHeader>
-                      <DialogTitle>Editar Perfil</DialogTitle>
-                      <DialogDescription>
-                        Atualize suas informações pessoais
-                      </DialogDescription>
-                    </DialogHeader>
-                    <form onSubmit={handleProfileUpdate} className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="fullName">Nome completo</Label>
-                        <Input id="fullName" value={profileData.full_name} onChange={e => setProfileData(prev => ({
-                        ...prev,
-                        full_name: e.target.value
-                      }))} placeholder="Seu nome completo" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="nickname">Apelido</Label>
-                        <Input id="nickname" value={profileData.nickname} onChange={e => setProfileData(prev => ({
-                        ...prev,
-                        nickname: e.target.value
-                      }))} placeholder="Como gostaria de ser chamado(a)" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="email">Email</Label>
-                        <Input id="email" type="email" value={profileData.email} onChange={e => setProfileData(prev => ({
-                        ...prev,
-                        email: e.target.value
-                      }))} placeholder="seu@email.com" disabled className="bg-muted" />
-                        <p className="text-xs text-muted-foreground">
-                          Para alterar o e-mail, entre em contato com o suporte
-                        </p>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="whatsapp">WhatsApp</Label>
-                        <Input id="whatsapp" value={profileData.whatsapp} onChange={e => setProfileData(prev => ({
-                        ...prev,
-                        whatsapp: e.target.value
-                      }))} placeholder="(11) 99999-9999" />
-                      </div>
-                      <div className="flex gap-2">
-                        <Button type="submit" className="flex-1">
-                          Salvar
-                        </Button>
-                        <Button type="button" variant="outline" onClick={() => setIsProfileOpen(false)}>
-                          Cancelar
-                        </Button>
-                      </div>
-                    </form>
-                  </DialogContent>
-                </Dialog>
-              </SidebarMenuItem>
-
-              {/* Support */}
-              <SidebarMenuItem>
-                <SidebarMenuButton onClick={handleSupportClick} className="flex items-center gap-3 cursor-pointer">
-                  <HeadphonesIcon className="h-4 w-4" />
-                  {!collapsed && <div className="flex items-center justify-between w-full">
-                      <span>Suporte</span>
-                      <ExternalLink className="h-3 w-3" />
-                    </div>}
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-
-              {/* Logout */}
-              <SidebarMenuItem>
-                <SidebarMenuButton onClick={signOut} className="flex items-center gap-3 cursor-pointer text-destructive hover:text-destructive hover:bg-destructive/10">
-                  <LogOut className="h-4 w-4" />
-                  {!collapsed && <span>Sair</span>}
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+                </SidebarMenuItem>
+              ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-    </Sidebar>;
+      
+      <div className="mt-auto p-2 border-t space-y-1">
+        {profile?.subscription_active && (
+          <div className={`px-3 py-2 rounded-md text-xs ${
+            collapsed ? 'text-center' : ''
+          }`}>
+            <div className="flex items-center gap-2 text-success">
+              <div className="w-2 h-2 bg-success rounded-full flex-shrink-0" />
+              {!collapsed && <span>Assinatura ativa</span>}
+            </div>
+          </div>
+        )}
+        
+        <Dialog open={isProfileOpen} onOpenChange={setIsProfileOpen}>
+          <DialogTrigger asChild>
+            <Button 
+              variant="ghost" 
+              className={`w-full ${collapsed ? 'px-2' : 'justify-start'}`}
+              title={collapsed ? "Meu Perfil" : undefined}
+            >
+              <User className="h-4 w-4" />
+              {!collapsed && <span className="ml-2">Meu Perfil</span>}
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Editar Perfil</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="full_name">Nome completo</Label>
+                <Input
+                  id="full_name"
+                  value={profileData.full_name}
+                  onChange={(e) => setProfileData(prev => ({ ...prev, full_name: e.target.value }))}
+                  placeholder="Seu nome completo"
+                />
+              </div>
+              <div>
+                <Label htmlFor="nickname">Apelido</Label>
+                <Input
+                  id="nickname"
+                  value={profileData.nickname}
+                  onChange={(e) => setProfileData(prev => ({ ...prev, nickname: e.target.value }))}
+                  placeholder="Como gosta de ser chamado"
+                />
+              </div>
+              <div>
+                <Label htmlFor="whatsapp">WhatsApp</Label>
+                <Input
+                  id="whatsapp"
+                  value={profileData.whatsapp}
+                  onChange={(e) => setProfileData(prev => ({ ...prev, whatsapp: e.target.value }))}
+                  placeholder="+55 11 99999-9999"
+                />
+              </div>
+              <Button onClick={handleProfileUpdate} className="w-full">
+                Salvar Alterações
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+        
+        <Button 
+          variant="ghost" 
+          className={`w-full ${collapsed ? 'px-2' : 'justify-start'}`}
+          onClick={handleSupportClick}
+          title={collapsed ? "Falar com suporte" : undefined}
+        >
+          <MessageCircle className="h-4 w-4" />
+          {!collapsed && <span className="ml-2">Suporte</span>}
+        </Button>
+        
+        <Button 
+          variant="ghost" 
+          className={`w-full ${collapsed ? 'px-2' : 'justify-start'} text-destructive hover:text-destructive hover:bg-destructive/10`}
+          onClick={signOut}
+          title={collapsed ? "Sair" : undefined}
+        >
+          <LogOut className="h-4 w-4" />
+          {!collapsed && <span className="ml-2">Sair</span>}
+        </Button>
+      </div>
+    </Sidebar>
+  );
 };
+
 export default ChatSidebar;

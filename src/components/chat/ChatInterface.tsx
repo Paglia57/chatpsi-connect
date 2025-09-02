@@ -432,16 +432,16 @@ const ChatInterface = () => {
   }
   return <div className="flex-1 flex flex-col h-full">
       {/* Header */}
-      <div className="border-b bg-card p-4">
+      <div className="border-b bg-primary text-primary-foreground p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img 
-              src="/lovable-uploads/46df6a94-c160-4eca-a9f7-5c58ff488ff2.png" 
+              src="/logo.png" 
               alt="ChatPsi" 
-              className="h-8 w-auto object-contain"
+              className="h-7 sm:h-8 md:h-9 w-auto object-contain drop-shadow-[0_1px_4px_rgba(0,0,0,0.15)]"
             />
             <div>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-primary-foreground/80">
                 Assistente especializado em saúde mental
               </p>
             </div>

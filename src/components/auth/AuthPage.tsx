@@ -58,17 +58,17 @@ const AuthPage = () => {
     }
   };
   return <div className="min-h-screen bg-gradient-hero flex items-center justify-center p-4">
-      <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-12 items-center">
+      <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-10 xl:gap-12 items-center">
         {/* Hero Section */}
-        <div className="text-center lg:text-left space-y-8 text-white">
+        <div className="text-center lg:text-left space-y-5 text-white flex flex-col justify-center">
           <div className="animate-slide-up">
+            <img 
+              src="/logo.png" 
+              alt="ChatPsi" 
+              className="h-24 lg:h-28 xl:h-32 w-auto mx-auto lg:mx-0 mb-3 object-contain filter brightness-0 invert drop-shadow-[0_2px_8px_rgba(255,255,255,0.25)]"
+            />
             
-            
-            <h1 className="text-5xl lg:text-7xl font-display font-bold mb-6">
-              ChatPsi
-            </h1>
-            
-            <p className="text-xl lg:text-2xl text-white/90 mb-8 leading-relaxed font-light">
+            <p className="text-xl lg:text-2xl text-white/90 mb-4 leading-relaxed font-light">
               Plataforma de apoio para profissionais de saúde mental com IA multimodal 
               para otimizar suas sessões e organização.
             </p>
@@ -96,12 +96,12 @@ const AuthPage = () => {
         </div>
 
         {/* Auth Card */}
-        <Card className="w-full max-w-md mx-auto shadow-2xl border-0 bg-white/95 backdrop-blur-xl rounded-3xl overflow-hidden card-hover">
+        <Card className="w-full max-w-md mx-auto place-self-center shadow-xl border border-border/60 bg-white/95 backdrop-blur-xl rounded-3xl overflow-hidden card-hover ring-1 ring-primary/10">
           <CardHeader className="text-center pb-6 pt-8">
             <CardTitle className="text-3xl font-display font-bold text-primary mb-2">
               {isLogin ? 'Entrar na sua conta' : 'Criar conta'}
             </CardTitle>
-            <CardDescription className="text-muted-foreground text-lg">
+            <CardDescription className="text-muted-foreground/90 text-lg">
               {isLogin ? 'Entre com suas credenciais para acessar a plataforma' : 'Crie sua conta para começar a usar o ChatPsi'}
             </CardDescription>
           </CardHeader>

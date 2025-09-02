@@ -11,7 +11,7 @@ const Index = () => {
         <div className="text-center space-y-6">
           <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-white mx-auto"></div>
           <img 
-            src="/lovable-uploads/46df6a94-c160-4eca-a9f7-5c58ff488ff2.png" 
+            src="/logo.png" 
             alt="ChatPsi" 
             className="h-12 w-auto object-contain mx-auto filter brightness-0 invert"
           />

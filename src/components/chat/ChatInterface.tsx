@@ -457,7 +457,8 @@ const ChatInterface = () => {
         </div>
       </div>;
   }
-  return <div className="flex-1 flex flex-col h-full min-h-0 no-horizontal-scroll">
+  return (
+    <div className="flex-1 flex flex-col h-full min-h-0 no-horizontal-scroll">
       {/* Header */}
       <div className="chat-header p-3 sm:p-4 flex-shrink-0">
         <div className="flex items-center justify-between">

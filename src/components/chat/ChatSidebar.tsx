@@ -12,7 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useResponsive } from '@/hooks/useResponsive';
 
 const ChatSidebar = () => {
-  const { collapsed } = useSidebar();
+  const { open } = useSidebar();
   const { user, profile, signOut, updateProfileBasicInfo } = useAuth();
   const { toast } = useToast();
   const { isMobile } = useResponsive();
@@ -202,7 +202,7 @@ const ChatSidebar = () => {
   }
 
   return (
-    <Sidebar className={`${collapsed ? 'w-24' : 'w-64'} border-r`} collapsible>
+    <Sidebar className={`${!open ? 'w-24' : 'w-64'} border-r`} collapsible="icon">
       <SidebarTrigger className="absolute -right-4 top-6 z-10" />
       
       <SidebarHeader className="px-4 py-3">
@@ -212,7 +212,7 @@ const ChatSidebar = () => {
             alt="ChatPsi" 
             className="h-8 w-auto object-contain flex-shrink-0"
           />
-          {!collapsed && (
+          {open && (
             <div className="min-w-0">
               <h2 className="font-semibold text-lg truncate">ChatPsi</h2>
               <p className="text-xs text-muted-foreground truncate">Assistente de IA</p>
@@ -227,7 +227,7 @@ const ChatSidebar = () => {
             <SidebarMenu>
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild tooltip={collapsed ? item.title : undefined}>
+                  <SidebarMenuButton asChild tooltip={!open ? item.title : undefined}>
                     <NavLink
                       to={item.url}
                       className={({ isActive }) =>
@@ -238,7 +238,7 @@ const ChatSidebar = () => {
                     >
                       <item.icon className="h-5 w-5 flex-shrink-0" />
                       <span>{item.title}</span>
-                      {!collapsed && (
+                      {open && (
                         <span className="text-xs text-muted-foreground ml-auto truncate max-w-24">
                           {item.description}
                         </span>
@@ -255,11 +255,11 @@ const ChatSidebar = () => {
       <div className="mt-auto p-2 border-t space-y-1">
         {profile?.subscription_active && (
           <div className={`px-3 py-2 rounded-md text-xs ${
-            collapsed ? 'text-center' : ''
+            !open ? 'text-center' : ''
           }`}>
             <div className="flex items-center gap-2 text-success">
               <div className="w-2 h-2 bg-success rounded-full flex-shrink-0" />
-              {!collapsed && <span>Assinatura ativa</span>}
+              {open && <span>Assinatura ativa</span>}
             </div>
           </div>
         )}
@@ -268,11 +268,11 @@ const ChatSidebar = () => {
           <DialogTrigger asChild>
             <Button 
               variant="ghost" 
-              className={`w-full ${collapsed ? 'px-2' : 'justify-start'}`}
-              title={collapsed ? "Meu Perfil" : undefined}
+              className={`w-full ${!open ? 'px-2' : 'justify-start'}`}
+              title={!open ? "Meu Perfil" : undefined}
             >
               <User className="h-4 w-4" />
-              {!collapsed && <span className="ml-2">Meu Perfil</span>}
+              {open && <span className="ml-2">Meu Perfil</span>}
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-md">
@@ -316,22 +316,22 @@ const ChatSidebar = () => {
         
         <Button 
           variant="ghost" 
-          className={`w-full ${collapsed ? 'px-2' : 'justify-start'}`}
+          className={`w-full ${!open ? 'px-2' : 'justify-start'}`}
           onClick={handleSupportClick}
-          title={collapsed ? "Falar com suporte" : undefined}
+          title={!open ? "Falar com suporte" : undefined}
         >
           <MessageCircle className="h-4 w-4" />
-          {!collapsed && <span className="ml-2">Suporte</span>}
+          {open && <span className="ml-2">Suporte</span>}
         </Button>
         
         <Button 
           variant="ghost" 
-          className={`w-full ${collapsed ? 'px-2' : 'justify-start'} text-destructive hover:text-destructive hover:bg-destructive/10`}
+          className={`w-full ${!open ? 'px-2' : 'justify-start'} text-destructive hover:text-destructive hover:bg-destructive/10`}
           onClick={signOut}
-          title={collapsed ? "Sair" : undefined}
+          title={!open ? "Sair" : undefined}
         >
           <LogOut className="h-4 w-4" />
-          {!collapsed && <span className="ml-2">Sair</span>}
+          {open && <span className="ml-2">Sair</span>}
         </Button>
       </div>
     </Sidebar>

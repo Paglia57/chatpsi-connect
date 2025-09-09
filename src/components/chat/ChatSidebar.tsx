@@ -11,13 +11,22 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
 import { useResponsive } from '@/hooks/useResponsive';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-
 const ChatSidebar = () => {
-  const { open } = useSidebar();
-  const { user, profile, signOut, updateProfileBasicInfo } = useAuth();
-  const { toast } = useToast();
-  const { isMobile } = useResponsive();
-  
+  const {
+    open
+  } = useSidebar();
+  const {
+    user,
+    profile,
+    signOut,
+    updateProfileBasicInfo
+  } = useAuth();
+  const {
+    toast
+  } = useToast();
+  const {
+    isMobile
+  } = useResponsive();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [profileData, setProfileData] = useState({
     full_name: '',
@@ -46,15 +55,11 @@ const ChatSidebar = () => {
       });
     }
   }, [isProfileOpen, profile]);
-
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { error } = await updateProfileBasicInfo(
-      profileData.full_name,
-      profileData.whatsapp,
-      profileData.nickname
-    );
-
+    const {
+      error
+    } = await updateProfileBasicInfo(profileData.full_name, profileData.whatsapp, profileData.nickname);
     if (error) {
       toast({
         title: "Erro ao atualizar perfil",
@@ -69,36 +74,26 @@ const ChatSidebar = () => {
       setIsProfileOpen(false);
     }
   };
-
   const handleSupportClick = () => {
     window.open('https://wa.me/5511942457454', '_blank', 'noopener,noreferrer');
   };
-
-  const menuItems = [
-    {
-      title: "Chat",
-      url: "/chat",
-      icon: MessageSquare,
-      description: "Conversar com IA especializada",
-      gradient: "from-primary to-cta"
-    }
-  ];
+  const menuItems = [{
+    title: "Chat",
+    url: "/chat",
+    icon: MessageSquare,
+    description: "Conversar com IA especializada",
+    gradient: "from-primary to-cta"
+  }];
 
   // Generate avatar from user name/nickname
   const getAvatarText = () => {
     const name = profile?.nickname || profile?.full_name || user?.email || 'U';
     return name.charAt(0).toUpperCase();
   };
-
   if (isMobile) {
-    return (
-      <Sheet>
+    return <Sheet>
         <SheetTrigger asChild>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="fixed top-4 left-4 z-50 touch-target bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 transition-all duration-200 shadow-lg"
-          >
+          <Button variant="ghost" size="icon" className="fixed top-4 left-4 z-50 touch-target bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 transition-all duration-200 shadow-lg">
             <Menu className="h-5 w-5 text-white" />
           </Button>
         </SheetTrigger>
@@ -124,25 +119,17 @@ const ChatSidebar = () => {
                       {profile?.nickname || profile?.full_name || 'Usuário'}
                     </h2>
                     <div className="flex items-center gap-2 mt-1">
-                      {profile?.subscription_active ? (
-                        <>
+                      {profile?.subscription_active ? <>
                           <Star className="h-3 w-3 text-yellow-300" />
                           <span className="text-xs text-white/90">Premium Ativo</span>
-                        </>
-                      ) : (
-                        <span className="text-xs text-white/70">Conta Gratuita</span>
-                      )}
+                        </> : <span className="text-xs text-white/70">Conta Gratuita</span>}
                     </div>
                   </div>
                 </div>
                 
                 <div className="flex items-center gap-2">
-                  <img 
-                    src="/logo.png" 
-                    alt="ChatPsi" 
-                    className="h-6 w-auto object-contain opacity-90"
-                  />
-                  <span className="text-sm font-semibold text-white/90">ChatPsi</span>
+                  <img src="/logo.png" alt="ChatPsi" className="h-6 w-auto object-contain opacity-90" />
+                  
                   <div className="ml-auto flex items-center gap-1">
                     <Sparkles className="h-4 w-4 text-yellow-300" />
                     <span className="text-xs text-white/80">IA Especializada</span>
@@ -157,20 +144,12 @@ const ChatSidebar = () => {
                 <h3 className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
                   Navegação
                 </h3>
-                {menuItems.map((item) => (
-                  <NavLink
-                    key={item.title}
-                    to={item.url}
-                    className={({ isActive }) =>
-                      `group flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 touch-target ${
-                        isActive
-                          ? 'bg-gradient-primary text-white shadow-md'
-                          : 'hover:bg-muted/60 hover:shadow-sm hover:scale-[1.02]'
-                      }`
-                    }
-                  >
-                    {({ isActive }) => (
-                      <>
+                {menuItems.map(item => <NavLink key={item.title} to={item.url} className={({
+                isActive
+              }) => `group flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 touch-target ${isActive ? 'bg-gradient-primary text-white shadow-md' : 'hover:bg-muted/60 hover:shadow-sm hover:scale-[1.02]'}`}>
+                    {({
+                  isActive
+                }) => <>
                         <div className={`p-2 rounded-md ${isActive ? 'bg-white/20' : 'bg-primary/10'}`}>
                           <item.icon className={`h-5 w-5 ${isActive ? 'text-white' : 'text-primary'}`} />
                         </div>
@@ -182,13 +161,9 @@ const ChatSidebar = () => {
                             {item.description}
                           </p>
                         </div>
-                        {isActive && (
-                          <div className="w-2 h-2 rounded-full bg-white/80 animate-pulse"></div>
-                        )}
-                      </>
-                    )}
-                  </NavLink>
-                ))}
+                        {isActive && <div className="w-2 h-2 rounded-full bg-white/80 animate-pulse"></div>}
+                      </>}
+                  </NavLink>)}
               </div>
             </div>
             
@@ -200,10 +175,7 @@ const ChatSidebar = () => {
               
               <Dialog open={isProfileOpen} onOpenChange={setIsProfileOpen}>
                 <DialogTrigger asChild>
-                  <Button 
-                    variant="ghost" 
-                    className="w-full justify-start touch-target group hover:bg-white hover:shadow-md transition-all duration-200"
-                  >
+                  <Button variant="ghost" className="w-full justify-start touch-target group hover:bg-white hover:shadow-md transition-all duration-200">
                     <div className="p-1.5 rounded-md bg-primary/10 group-hover:bg-primary/20 transition-colors">
                       <User className="h-4 w-4 text-primary" />
                     </div>
@@ -223,38 +195,26 @@ const ChatSidebar = () => {
                   <div className="space-y-4">
                     <div>
                       <Label htmlFor="full_name">Nome completo</Label>
-                      <Input
-                        id="full_name"
-                        value={profileData.full_name}
-                        onChange={(e) => setProfileData(prev => ({ ...prev, full_name: e.target.value }))}
-                        placeholder="Seu nome completo"
-                        className="focus-visible:ring-primary"
-                      />
+                      <Input id="full_name" value={profileData.full_name} onChange={e => setProfileData(prev => ({
+                      ...prev,
+                      full_name: e.target.value
+                    }))} placeholder="Seu nome completo" className="focus-visible:ring-primary" />
                     </div>
                     <div>
                       <Label htmlFor="nickname">Apelido</Label>
-                      <Input
-                        id="nickname"
-                        value={profileData.nickname}
-                        onChange={(e) => setProfileData(prev => ({ ...prev, nickname: e.target.value }))}
-                        placeholder="Como gosta de ser chamado"
-                        className="focus-visible:ring-primary"
-                      />
+                      <Input id="nickname" value={profileData.nickname} onChange={e => setProfileData(prev => ({
+                      ...prev,
+                      nickname: e.target.value
+                    }))} placeholder="Como gosta de ser chamado" className="focus-visible:ring-primary" />
                     </div>
                     <div>
                       <Label htmlFor="whatsapp">WhatsApp</Label>
-                      <Input
-                        id="whatsapp"
-                        value={profileData.whatsapp}
-                        onChange={(e) => setProfileData(prev => ({ ...prev, whatsapp: e.target.value }))}
-                        placeholder="+55 11 99999-9999"
-                        className="focus-visible:ring-primary"
-                      />
+                      <Input id="whatsapp" value={profileData.whatsapp} onChange={e => setProfileData(prev => ({
+                      ...prev,
+                      whatsapp: e.target.value
+                    }))} placeholder="+55 11 99999-9999" className="focus-visible:ring-primary" />
                     </div>
-                    <Button 
-                      onClick={handleProfileUpdate} 
-                      className="w-full touch-target bg-gradient-primary hover:shadow-lg transition-all duration-200"
-                    >
+                    <Button onClick={handleProfileUpdate} className="w-full touch-target bg-gradient-primary hover:shadow-lg transition-all duration-200">
                       <Sparkles className="h-4 w-4 mr-2" />
                       Salvar Alterações
                     </Button>
@@ -262,11 +222,7 @@ const ChatSidebar = () => {
                 </DialogContent>
               </Dialog>
               
-              <Button 
-                variant="ghost" 
-                className="w-full justify-start touch-target group hover:bg-success/10 hover:shadow-md transition-all duration-200"
-                onClick={handleSupportClick}
-              >
+              <Button variant="ghost" className="w-full justify-start touch-target group hover:bg-success/10 hover:shadow-md transition-all duration-200" onClick={handleSupportClick}>
                 <div className="p-1.5 rounded-md bg-success/10 group-hover:bg-success/20 transition-colors">
                   <MessageCircle className="h-4 w-4 text-success" />
                 </div>
@@ -276,11 +232,7 @@ const ChatSidebar = () => {
                 </div>
               </Button>
               
-              <Button 
-                variant="ghost" 
-                className="w-full justify-start touch-target group hover:bg-destructive/10 hover:shadow-md transition-all duration-200"
-                onClick={signOut}
-              >
+              <Button variant="ghost" className="w-full justify-start touch-target group hover:bg-destructive/10 hover:shadow-md transition-all duration-200" onClick={signOut}>
                 <div className="p-1.5 rounded-md bg-destructive/10 group-hover:bg-destructive/20 transition-colors">
                   <LogOut className="h-4 w-4 text-destructive" />
                 </div>
@@ -292,27 +244,18 @@ const ChatSidebar = () => {
             </div>
           </div>
         </SheetContent>
-      </Sheet>
-    );
+      </Sheet>;
   }
-
-  return (
-    <Sidebar className={`${!open ? 'w-24' : 'w-64'} border-r`} collapsible="icon">
+  return <Sidebar className={`${!open ? 'w-24' : 'w-64'} border-r`} collapsible="icon">
       <SidebarTrigger className="absolute -right-4 top-6 z-10" />
       
       <SidebarHeader className="px-4 py-3">
         <div className="flex items-center gap-3">
-          <img 
-            src="/logo.png" 
-            alt="ChatPsi" 
-            className="h-8 w-auto object-contain flex-shrink-0"
-          />
-          {open && (
-            <div className="min-w-0">
+          <img src="/logo.png" alt="ChatPsi" className="h-8 w-auto object-contain flex-shrink-0" />
+          {open && <div className="min-w-0">
               <h2 className="font-semibold text-lg truncate">ChatPsi</h2>
               <p className="text-xs text-muted-foreground truncate">Assistente de IA</p>
-            </div>
-          )}
+            </div>}
         </div>
       </SidebarHeader>
 
@@ -320,52 +263,35 @@ const ChatSidebar = () => {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {menuItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
+              {menuItems.map(item => <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild tooltip={!open ? item.title : undefined}>
-                    <NavLink
-                      to={item.url}
-                      className={({ isActive }) =>
-                        `flex items-center gap-3 ${
-                          isActive ? 'bg-primary text-primary-foreground' : ''
-                        }`
-                      }
-                    >
+                    <NavLink to={item.url} className={({
+                  isActive
+                }) => `flex items-center gap-3 ${isActive ? 'bg-primary text-primary-foreground' : ''}`}>
                       <item.icon className="h-5 w-5 flex-shrink-0" />
                       <span>{item.title}</span>
-                      {open && (
-                        <span className="text-xs text-muted-foreground ml-auto truncate max-w-24">
+                      {open && <span className="text-xs text-muted-foreground ml-auto truncate max-w-24">
                           {item.description}
-                        </span>
-                      )}
+                        </span>}
                     </NavLink>
                   </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+                </SidebarMenuItem>)}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
       
       <div className="mt-auto p-2 border-t space-y-1">
-        {profile?.subscription_active && (
-          <div className={`px-3 py-2 rounded-md text-xs ${
-            !open ? 'text-center' : ''
-          }`}>
+        {profile?.subscription_active && <div className={`px-3 py-2 rounded-md text-xs ${!open ? 'text-center' : ''}`}>
             <div className="flex items-center gap-2 text-success">
               <div className="w-2 h-2 bg-success rounded-full flex-shrink-0" />
               {open && <span>Assinatura ativa</span>}
             </div>
-          </div>
-        )}
+          </div>}
         
         <Dialog open={isProfileOpen} onOpenChange={setIsProfileOpen}>
           <DialogTrigger asChild>
-            <Button 
-              variant="ghost" 
-              className={`w-full ${!open ? 'px-2' : 'justify-start'}`}
-              title={!open ? "Meu Perfil" : undefined}
-            >
+            <Button variant="ghost" className={`w-full ${!open ? 'px-2' : 'justify-start'}`} title={!open ? "Meu Perfil" : undefined}>
               <User className="h-4 w-4" />
               {open && <span className="ml-2">Meu Perfil</span>}
             </Button>
@@ -377,30 +303,24 @@ const ChatSidebar = () => {
             <div className="space-y-4">
               <div>
                 <Label htmlFor="full_name">Nome completo</Label>
-                <Input
-                  id="full_name"
-                  value={profileData.full_name}
-                  onChange={(e) => setProfileData(prev => ({ ...prev, full_name: e.target.value }))}
-                  placeholder="Seu nome completo"
-                />
+                <Input id="full_name" value={profileData.full_name} onChange={e => setProfileData(prev => ({
+                ...prev,
+                full_name: e.target.value
+              }))} placeholder="Seu nome completo" />
               </div>
               <div>
                 <Label htmlFor="nickname">Apelido</Label>
-                <Input
-                  id="nickname"
-                  value={profileData.nickname}
-                  onChange={(e) => setProfileData(prev => ({ ...prev, nickname: e.target.value }))}
-                  placeholder="Como gosta de ser chamado"
-                />
+                <Input id="nickname" value={profileData.nickname} onChange={e => setProfileData(prev => ({
+                ...prev,
+                nickname: e.target.value
+              }))} placeholder="Como gosta de ser chamado" />
               </div>
               <div>
                 <Label htmlFor="whatsapp">WhatsApp</Label>
-                <Input
-                  id="whatsapp"
-                  value={profileData.whatsapp}
-                  onChange={(e) => setProfileData(prev => ({ ...prev, whatsapp: e.target.value }))}
-                  placeholder="+55 11 99999-9999"
-                />
+                <Input id="whatsapp" value={profileData.whatsapp} onChange={e => setProfileData(prev => ({
+                ...prev,
+                whatsapp: e.target.value
+              }))} placeholder="+55 11 99999-9999" />
               </div>
               <Button onClick={handleProfileUpdate} className="w-full">
                 Salvar Alterações
@@ -409,28 +329,16 @@ const ChatSidebar = () => {
           </DialogContent>
         </Dialog>
         
-        <Button 
-          variant="ghost" 
-          className={`w-full ${!open ? 'px-2' : 'justify-start'}`}
-          onClick={handleSupportClick}
-          title={!open ? "Falar com suporte" : undefined}
-        >
+        <Button variant="ghost" className={`w-full ${!open ? 'px-2' : 'justify-start'}`} onClick={handleSupportClick} title={!open ? "Falar com suporte" : undefined}>
           <MessageCircle className="h-4 w-4" />
           {open && <span className="ml-2">Suporte</span>}
         </Button>
         
-        <Button 
-          variant="ghost" 
-          className={`w-full ${!open ? 'px-2' : 'justify-start'} text-destructive hover:text-destructive hover:bg-destructive/10`}
-          onClick={signOut}
-          title={!open ? "Sair" : undefined}
-        >
+        <Button variant="ghost" className={`w-full ${!open ? 'px-2' : 'justify-start'} text-destructive hover:text-destructive hover:bg-destructive/10`} onClick={signOut} title={!open ? "Sair" : undefined}>
           <LogOut className="h-4 w-4" />
           {open && <span className="ml-2">Sair</span>}
         </Button>
       </div>
-    </Sidebar>
-  );
+    </Sidebar>;
 };
-
 export default ChatSidebar;

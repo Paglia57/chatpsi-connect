@@ -11,6 +11,7 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
 import { useResponsive } from '@/hooks/useResponsive';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+
 const ChatSidebar = () => {
   const {
     open
@@ -55,6 +56,7 @@ const ChatSidebar = () => {
       });
     }
   }, [isProfileOpen, profile]);
+  
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     const {
@@ -74,9 +76,11 @@ const ChatSidebar = () => {
       setIsProfileOpen(false);
     }
   };
+  
   const handleSupportClick = () => {
     window.open('https://wa.me/5511942457454', '_blank', 'noopener,noreferrer');
   };
+  
   const menuItems = [{
     title: "Chat",
     url: "/chat",
@@ -90,6 +94,7 @@ const ChatSidebar = () => {
     const name = profile?.nickname || profile?.full_name || user?.email || 'U';
     return name.charAt(0).toUpperCase();
   };
+
   if (isMobile) {
     return <Sheet>
         <SheetTrigger asChild>
@@ -246,99 +251,236 @@ const ChatSidebar = () => {
         </SheetContent>
       </Sheet>;
   }
-  return <Sidebar className={`${!open ? 'w-24' : 'w-64'} border-r`} collapsible="icon">
+
+  // Desktop sidebar with mobile-style design
+  return <Sidebar className={`${!open ? 'w-16' : 'w-80'} border-r bg-background`} collapsible="icon">
       <SidebarTrigger className="absolute -right-4 top-6 z-10" />
       
-      <SidebarHeader className="px-4 py-3">
-        <div className="flex items-center gap-3">
-          <img src="/logo.png" alt="ChatPsi" className="h-8 w-auto object-contain flex-shrink-0" />
-          {open && <div className="min-w-0">
-              <h2 className="font-semibold text-lg truncate">ChatPsi</h2>
-              <p className="text-xs text-muted-foreground truncate">Assistente de IA</p>
-            </div>}
+      <div className="flex flex-col h-full">
+        {/* Hero Header with Gradient */}
+        <div className={`relative bg-gradient-hero text-white overflow-hidden ${!open ? 'p-2' : 'p-6'}`}>
+          {open && (
+            <div className="absolute inset-0 opacity-10">
+              <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-white/10 -translate-y-16 translate-x-16"></div>
+              <div className="absolute bottom-0 left-0 w-24 h-24 rounded-full bg-white/10 translate-y-12 -translate-x-12"></div>
+            </div>
+          )}
+          
+          <div className="relative z-10">
+            <div className={`flex items-center ${!open ? 'justify-center' : 'gap-4 mb-4'}`}>
+              <Avatar className={`${!open ? 'h-8 w-8' : 'h-12 w-12'} ring-2 ring-white/30 shadow-lg`}>
+                <AvatarFallback className="bg-white/20 text-white font-semibold backdrop-blur-sm">
+                  {getAvatarText()}
+                </AvatarFallback>
+              </Avatar>
+              {open && (
+                <div className="flex-1 min-w-0">
+                  <h2 className="font-display font-semibold text-lg text-white truncate">
+                    {profile?.nickname || profile?.full_name || 'Usuário'}
+                  </h2>
+                  <div className="flex items-center gap-2 mt-1">
+                    {profile?.subscription_active ? (
+                      <>
+                        <Star className="h-3 w-3 text-yellow-300" />
+                        <span className="text-xs text-white/90">Premium Ativo</span>
+                      </>
+                    ) : (
+                      <span className="text-xs text-white/70">Conta Gratuita</span>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            {open && (
+              <div className="flex items-center gap-2">
+                <img src="/logo.png" alt="ChatPsi" className="h-6 w-auto object-contain opacity-90" />
+                
+                <div className="ml-auto flex items-center gap-1">
+                  <Sparkles className="h-4 w-4 text-yellow-300" />
+                  <span className="text-xs text-white/80">IA Especializada</span>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
-      </SidebarHeader>
-
-      <SidebarContent className="px-2">
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {menuItems.map(item => <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild tooltip={!open ? item.title : undefined}>
-                    <NavLink to={item.url} className={({
-                  isActive
-                }) => `flex items-center gap-3 ${isActive ? 'bg-primary text-primary-foreground' : ''}`}>
-                      <item.icon className="h-5 w-5 flex-shrink-0" />
-                      <span>{item.title}</span>
-                      {open && <span className="text-xs text-muted-foreground ml-auto truncate max-w-24">
-                          {item.description}
-                        </span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>)}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
-      
-      <div className="mt-auto p-2 border-t space-y-1">
-        {profile?.subscription_active && <div className={`px-3 py-2 rounded-md text-xs ${!open ? 'text-center' : ''}`}>
-            <div className="flex items-center gap-2 text-success">
-              <div className="w-2 h-2 bg-success rounded-full flex-shrink-0" />
-              {open && <span>Assinatura ativa</span>}
-            </div>
-          </div>}
         
-        <Dialog open={isProfileOpen} onOpenChange={setIsProfileOpen}>
-          <DialogTrigger asChild>
-            <Button variant="ghost" className={`w-full ${!open ? 'px-2' : 'justify-start'}`} title={!open ? "Meu Perfil" : undefined}>
-              <User className="h-4 w-4" />
-              {open && <span className="ml-2">Meu Perfil</span>}
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Editar Perfil</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="full_name">Nome completo</Label>
-                <Input id="full_name" value={profileData.full_name} onChange={e => setProfileData(prev => ({
-                ...prev,
-                full_name: e.target.value
-              }))} placeholder="Seu nome completo" />
-              </div>
-              <div>
-                <Label htmlFor="nickname">Apelido</Label>
-                <Input id="nickname" value={profileData.nickname} onChange={e => setProfileData(prev => ({
-                ...prev,
-                nickname: e.target.value
-              }))} placeholder="Como gosta de ser chamado" />
-              </div>
-              <div>
-                <Label htmlFor="whatsapp">WhatsApp</Label>
-                <Input id="whatsapp" value={profileData.whatsapp} onChange={e => setProfileData(prev => ({
-                ...prev,
-                whatsapp: e.target.value
-              }))} placeholder="+55 11 99999-9999" />
-              </div>
-              <Button onClick={handleProfileUpdate} className="w-full">
-                Salvar Alterações
+        {/* Navigation Section */}
+        <div className={`flex-1 ${!open ? 'p-2' : 'p-4'}`}>
+          <div className="space-y-1">
+            {open && (
+              <h3 className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                Navegação
+              </h3>
+            )}
+            
+            {menuItems.map(item => (
+              <NavLink 
+                key={item.title} 
+                to={item.url} 
+                title={!open ? item.title : undefined}
+                className={({ isActive }) => 
+                  `group flex items-center ${!open ? 'justify-center p-2' : 'gap-3 px-3 py-3'} rounded-lg transition-all duration-200 ${
+                    isActive 
+                      ? 'bg-gradient-primary text-white shadow-md' 
+                      : 'hover:bg-muted/60 hover:shadow-sm hover:scale-[1.02]'
+                  }`
+                }
+              >
+                {({ isActive }) => (
+                  <>
+                    <div className={`${!open ? 'p-1.5' : 'p-2'} rounded-md ${isActive ? 'bg-white/20' : 'bg-primary/10'}`}>
+                      <item.icon className={`${!open ? 'h-4 w-4' : 'h-5 w-5'} ${isActive ? 'text-white' : 'text-primary'}`} />
+                    </div>
+                    {open && (
+                      <>
+                        <div className="min-w-0 flex-1">
+                          <p className={`font-medium truncate ${isActive ? 'text-white' : 'text-foreground'}`}>
+                            {item.title}
+                          </p>
+                          <p className={`text-xs truncate ${isActive ? 'text-white/80' : 'text-muted-foreground'}`}>
+                            {item.description}
+                          </p>
+                        </div>
+                        {isActive && <div className="w-2 h-2 rounded-full bg-white/80 animate-pulse"></div>}
+                      </>
+                    )}
+                  </>
+                )}
+              </NavLink>
+            ))}
+          </div>
+        </div>
+        
+        {/* Account Section */}
+        <div className={`border-t bg-muted/30 space-y-2 ${!open ? 'p-2' : 'p-4'}`}>
+          {open && (
+            <h3 className="px-1 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+              Conta
+            </h3>
+          )}
+          
+          <Dialog open={isProfileOpen} onOpenChange={setIsProfileOpen}>
+            <DialogTrigger asChild>
+              <Button 
+                variant="ghost" 
+                className={`w-full group hover:bg-white hover:shadow-md transition-all duration-200 ${
+                  !open ? 'px-2 py-2' : 'justify-start'
+                }`}
+                title={!open ? "Meu Perfil" : undefined}
+              >
+                <div className={`${!open ? 'p-1' : 'p-1.5'} rounded-md bg-primary/10 group-hover:bg-primary/20 transition-colors`}>
+                  <User className={`${!open ? 'h-3 w-3' : 'h-4 w-4'} text-primary`} />
+                </div>
+                {open && (
+                  <>
+                    <span className="ml-3 font-medium">Meu Perfil</span>
+                    <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Heart className="h-3 w-3 text-primary" />
+                    </div>
+                  </>
+                )}
               </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <User className="h-5 w-5 text-primary" />
+                  Editar Perfil
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="full_name">Nome completo</Label>
+                  <Input 
+                    id="full_name" 
+                    value={profileData.full_name} 
+                    onChange={e => setProfileData(prev => ({
+                      ...prev,
+                      full_name: e.target.value
+                    }))} 
+                    placeholder="Seu nome completo" 
+                    className="focus-visible:ring-primary" 
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="nickname">Apelido</Label>
+                  <Input 
+                    id="nickname" 
+                    value={profileData.nickname} 
+                    onChange={e => setProfileData(prev => ({
+                      ...prev,
+                      nickname: e.target.value
+                    }))} 
+                    placeholder="Como gosta de ser chamado" 
+                    className="focus-visible:ring-primary" 
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="whatsapp">WhatsApp</Label>
+                  <Input 
+                    id="whatsapp" 
+                    value={profileData.whatsapp} 
+                    onChange={e => setProfileData(prev => ({
+                      ...prev,
+                      whatsapp: e.target.value
+                    }))} 
+                    placeholder="+55 11 99999-9999" 
+                    className="focus-visible:ring-primary" 
+                  />
+                </div>
+                <Button onClick={handleProfileUpdate} className="w-full bg-gradient-primary hover:shadow-lg transition-all duration-200">
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  Salvar Alterações
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+          
+          <Button 
+            variant="ghost" 
+            className={`w-full group hover:bg-success/10 hover:shadow-md transition-all duration-200 ${
+              !open ? 'px-2 py-2' : 'justify-start'
+            }`} 
+            onClick={handleSupportClick}
+            title={!open ? "Falar com suporte" : undefined}
+          >
+            <div className={`${!open ? 'p-1' : 'p-1.5'} rounded-md bg-success/10 group-hover:bg-success/20 transition-colors`}>
+              <MessageCircle className={`${!open ? 'h-3 w-3' : 'h-4 w-4'} text-success`} />
             </div>
-          </DialogContent>
-        </Dialog>
-        
-        <Button variant="ghost" className={`w-full ${!open ? 'px-2' : 'justify-start'}`} onClick={handleSupportClick} title={!open ? "Falar com suporte" : undefined}>
-          <MessageCircle className="h-4 w-4" />
-          {open && <span className="ml-2">Suporte</span>}
-        </Button>
-        
-        <Button variant="ghost" className={`w-full ${!open ? 'px-2' : 'justify-start'} text-destructive hover:text-destructive hover:bg-destructive/10`} onClick={signOut} title={!open ? "Sair" : undefined}>
-          <LogOut className="h-4 w-4" />
-          {open && <span className="ml-2">Sair</span>}
-        </Button>
+            {open && (
+              <>
+                <span className="ml-3 font-medium">Falar com suporte</span>
+                <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Heart className="h-3 w-3 text-success" />
+                </div>
+              </>
+            )}
+          </Button>
+          
+          <Button 
+            variant="ghost" 
+            className={`w-full group hover:bg-destructive/10 hover:shadow-md transition-all duration-200 ${
+              !open ? 'px-2 py-2' : 'justify-start'
+            }`} 
+            onClick={signOut}
+            title={!open ? "Sair" : undefined}
+          >
+            <div className={`${!open ? 'p-1' : 'p-1.5'} rounded-md bg-destructive/10 group-hover:bg-destructive/20 transition-colors`}>
+              <LogOut className={`${!open ? 'h-3 w-3' : 'h-4 w-4'} text-destructive`} />
+            </div>
+            {open && (
+              <>
+                <span className="ml-3 font-medium text-destructive">Sair</span>
+                <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
+                  <X className="h-3 w-3 text-destructive" />
+                </div>
+              </>
+            )}
+          </Button>
+        </div>
       </div>
     </Sidebar>;
 };
+
 export default ChatSidebar;

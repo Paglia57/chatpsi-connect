@@ -253,8 +253,8 @@ const ChatSidebar = () => {
   }
 
   // Desktop sidebar with mobile-style design
-  return <Sidebar className={`${!open ? 'w-16' : 'w-80'} border-r bg-background`} collapsible="icon">
-      <SidebarTrigger className="absolute -right-4 top-6 z-10" />
+  return <Sidebar className={`${!open ? 'w-16' : 'w-80'} border-r bg-background z-30`} collapsible="icon">
+      <SidebarTrigger className="absolute -right-4 top-6 z-40" />
       
       <div className="flex flex-col h-full">
         {/* Hero Header with Gradient */}

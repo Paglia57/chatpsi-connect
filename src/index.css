@@ -238,7 +238,7 @@ Acessibilidade WCAG AA compliance
 
   /* Responsive header */
   .chat-header {
-    @apply sticky top-0 z-10 bg-primary text-primary-foreground border-b pt-safe;
+    @apply sticky top-0 z-40 bg-primary text-primary-foreground border-b pt-safe;
   }
 
   /* No horizontal scroll */

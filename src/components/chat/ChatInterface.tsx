@@ -460,11 +460,11 @@ const ChatInterface = () => {
   return (
     <div className="flex-1 flex flex-col h-full min-h-0 no-horizontal-scroll">
       {/* Header */}
-      <div className="chat-header p-3 sm:p-4 flex-shrink-0">
+      <div className="chat-header p-3 sm:p-4 flex-shrink-0 z-40 relative">
         <div className="grid grid-cols-3 items-center w-full">
-          {/* Left spacer */}
+          {/* Left spacer - add padding on mobile to avoid menu button */}
           <div className="flex justify-start">
-            {/* Empty for spacing */}
+            {isMobile && <div className="w-12"></div>} {/* Space for mobile menu button */}
           </div>
           
           {/* Center content */}

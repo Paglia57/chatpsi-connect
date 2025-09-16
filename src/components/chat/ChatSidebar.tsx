@@ -98,7 +98,7 @@ const ChatSidebar = () => {
   if (isMobile) {
     return <Sheet>
         <SheetTrigger asChild>
-          <Button variant="ghost" size="icon" className="fixed top-4 left-4 z-50 touch-target bg-primary hover:bg-primary/90 border border-primary/30 transition-all duration-200 shadow-lg hover:shadow-xl">
+          <Button variant="ghost" size="icon" className="fixed top-3 left-3 z-50 touch-target bg-primary hover:bg-primary/90 border border-primary/30 transition-all duration-200 shadow-lg hover:shadow-xl">
             <Menu className="h-5 w-5 text-white" />
           </Button>
         </SheetTrigger>

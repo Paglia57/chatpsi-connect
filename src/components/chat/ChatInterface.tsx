@@ -461,22 +461,26 @@ const ChatInterface = () => {
     <div className="flex-1 flex flex-col h-full min-h-0 no-horizontal-scroll">
       {/* Header */}
       <div className="chat-header p-3 sm:p-4 flex-shrink-0">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+        <div className="grid grid-cols-3 items-center w-full">
+          {/* Left spacer */}
+          <div className="flex justify-start">
+            {/* Empty for spacing */}
+          </div>
+          
+          {/* Center content */}
+          <div className="flex flex-col items-center justify-center text-center">
             <img 
               src="/logo.png" 
               alt="ChatPsi" 
-              className="h-6 sm:h-7 md:h-8 w-auto object-contain drop-shadow-[0_1px_4px_rgba(0,0,0,0.15)] flex-shrink-0"
+              className="h-6 sm:h-7 md:h-8 w-auto object-contain drop-shadow-[0_1px_4px_rgba(0,0,0,0.15)] mb-1"
             />
-            <div className="min-w-0">
-              {!isMobile && (
-                <p className="text-xs sm:text-sm text-primary-foreground/80 truncate">
-                  Assistente especializado em saúde mental
-                </p>
-              )}
-            </div>
+            <p className="text-xs sm:text-sm text-primary-foreground/80">
+              Assistente especializado em saúde mental
+            </p>
           </div>
-          <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+          
+          {/* Right side - Status badges */}
+          <div className="flex items-center justify-end gap-1 sm:gap-2">
             {/* Connection Status - Hidden on mobile */}
             {!isMobile && connectionStatus !== 'connected' && (
               <Badge variant="secondary" className="bg-warning/10 text-warning border-warning/20 text-xs">

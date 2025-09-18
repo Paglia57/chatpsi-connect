@@ -116,6 +116,27 @@ export type Database = {
         }
         Relationships: []
       }
+      userinativos: {
+        Row: {
+          created_at: string
+          nome: string | null
+          thread: string | null
+          whatsapp: string
+        }
+        Insert: {
+          created_at?: string
+          nome?: string | null
+          thread?: string | null
+          whatsapp: string
+        }
+        Update: {
+          created_at?: string
+          nome?: string | null
+          thread?: string | null
+          whatsapp?: string
+        }
+        Relationships: []
+      }
       webhook_events: {
         Row: {
           created_at: string | null

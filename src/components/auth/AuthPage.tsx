@@ -57,7 +57,7 @@ const AuthPage = () => {
       setLoading(false);
     }
   };
-  return <div className="min-h-screen bg-gradient-hero flex items-center justify-center p-4">
+  return <div className="min-h-screen bg-hero flex items-center justify-center p-4">
       <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-10 xl:gap-12 items-center">
         {/* Hero Section */}
         <div className="text-center lg:text-left space-y-5 text-white flex flex-col justify-center">
@@ -96,7 +96,7 @@ const AuthPage = () => {
         </div>
 
         {/* Auth Card */}
-        <Card className="w-full max-w-md mx-auto place-self-center shadow-xl border border-border/60 bg-white/95 backdrop-blur-xl rounded-3xl overflow-hidden card-hover ring-1 ring-primary/10">
+        <Card className="w-full max-w-md mx-auto place-self-center shadow-xl border border-border/60 bg-white/95 backdrop-blur-xl rounded-3xl overflow-hidden card-hover card-decorated relative">
           <CardHeader className="text-center pb-6 pt-8">
             <CardTitle className="text-3xl font-display font-bold text-primary mb-2">
               {isLogin ? 'Entrar na sua conta' : 'Criar conta'}

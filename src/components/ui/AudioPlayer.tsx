@@ -166,7 +166,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
         </CardContent>
       </Card>;
   }
-  return <Card className={cn("w-full max-w-sm bg-gradient-to-r from-background to-muted/30 border-primary/20", className)}>
+  return <Card className={cn("w-full max-w-sm bg-card border-primary/20 shadow-md ring-1 ring-primary/5", className)}>
       <CardContent className="p-4">
         <audio ref={audioRef} src={url} preload="metadata" className="hidden" />
         

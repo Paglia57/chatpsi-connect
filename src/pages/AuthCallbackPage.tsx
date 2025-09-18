@@ -79,8 +79,9 @@ const AuthCallbackPage = () => {
 
   if (processing) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-light via-background to-accent-light">
-        <div className="text-center space-y-4">
+      <div className="min-h-screen flex items-center justify-center bg-accent-light/30 relative">
+        <div className="absolute inset-0 bg-pattern-grid opacity-10 bg-[length:30px_30px]"></div>
+        <div className="text-center space-y-4 relative z-10">
           <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
           <p className="text-muted-foreground">Processando autenticação...</p>
         </div>

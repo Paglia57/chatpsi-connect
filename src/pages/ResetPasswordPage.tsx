@@ -82,8 +82,9 @@ const ResetPasswordPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-light via-background to-accent-light flex items-center justify-center p-4">
-      <Card className="w-full max-w-md mx-auto shadow-lg">
+    <div className="min-h-screen bg-accent-light/30 flex items-center justify-center p-4 relative">
+      <div className="absolute inset-0 bg-pattern-grid opacity-10 bg-[length:30px_30px]"></div>
+      <Card className="w-full max-w-md mx-auto shadow-lg relative z-10 card-decorated">
         <CardHeader className="text-center">
           <div className="flex items-center justify-center mb-4">
             <Shield className="h-12 w-12 text-primary" />

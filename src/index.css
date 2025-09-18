@@ -72,11 +72,12 @@ Acessibilidade WCAG AA compliance
     --sidebar-border: 0 0% 90%;
     --sidebar-ring: 201 89% 25%;
     
-    /* Modern Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(201 89% 25%), hsl(322 100% 58%));
-    --gradient-cta: linear-gradient(135deg, hsl(322 100% 58%), hsl(322 100% 50%));
-    --gradient-subtle: linear-gradient(180deg, hsl(0 0% 100%), hsl(201 89% 98%));
-    --gradient-hero: linear-gradient(135deg, hsl(201 89% 25%) 0%, hsl(322 100% 58%) 100%);
+    /* Decorative patterns and elements */
+    --pattern-dots: radial-gradient(circle at 1px 1px, hsl(var(--primary) / 0.1) 1px, transparent 0);
+    --pattern-grid: linear-gradient(hsl(var(--primary) / 0.05) 1px, transparent 1px),
+                    linear-gradient(90deg, hsl(var(--primary) / 0.05) 1px, transparent 1px);
+    --hero-bg: hsl(var(--primary));
+    --hero-accent: hsl(var(--cta) / 0.1);
     
     /* Modern Shadows */
     --shadow-sm: 0 1px 3px 0 hsl(201 89% 6% / 0.1), 0 1px 2px -1px hsl(201 89% 6% / 0.1);
@@ -247,21 +248,55 @@ Acessibilidade WCAG AA compliance
     max-width: 100vw;
   }
 
-  /* Gradient backgrounds */
-  .bg-gradient-hero {
-    background: var(--gradient-hero);
+  /* Hero backgrounds with patterns */
+  .bg-hero {
+    @apply bg-primary relative overflow-hidden;
   }
-
-  .bg-gradient-primary {
-    background: var(--gradient-primary);
+  
+  .bg-hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: var(--pattern-dots);
+    background-size: 20px 20px;
+    opacity: 0.3;
+    pointer-events: none;
   }
-
-  .bg-gradient-cta {
-    background: var(--gradient-cta);
+  
+  .bg-hero::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 200px;
+    height: 200px;
+    background: hsl(var(--cta) / 0.15);
+    border-radius: 50%;
+    transform: translate(50%, -50%);
+    pointer-events: none;
   }
-
-  .bg-gradient-subtle {
-    background: var(--gradient-subtle);
+  
+  /* Solid accent backgrounds */
+  .bg-accent-decorated {
+    @apply bg-accent-light/50 border-l-4 border-cta;
+  }
+  
+  /* Card decorations */
+  .card-decorated {
+    @apply border-primary/20 bg-card shadow-lg ring-1 ring-primary/10 relative overflow-hidden;
+  }
+  
+  .card-decorated::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, hsl(var(--cta)), hsl(var(--primary)));
   }
 
   /* Micro-interactions */

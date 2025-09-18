@@ -104,12 +104,13 @@ const ChatSidebar = () => {
         </SheetTrigger>
         <SheetContent side="left" className="w-80 p-0 bg-background">
           <div className="flex flex-col h-full animate-slide-in-right">
-            {/* Hero Header with Gradient */}
-            <div className="relative bg-gradient-hero p-6 text-white overflow-hidden">
-              {/* Background pattern */}
+            {/* Hero Header with Solid Background */}
+            <div className="relative bg-primary p-6 text-white overflow-hidden border-b-2 border-cta/20">
+              {/* Decorative elements */}
               <div className="absolute inset-0 opacity-10">
                 <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-white/10 -translate-y-16 translate-x-16"></div>
-                <div className="absolute bottom-0 left-0 w-24 h-24 rounded-full bg-white/10 translate-y-12 -translate-x-12"></div>
+                <div className="absolute bottom-0 left-0 w-24 h-24 rounded-full bg-cta/30 translate-y-12 -translate-x-12"></div>
+                <div className="absolute inset-0" style={{ backgroundImage: 'var(--pattern-dots)', backgroundSize: '15px 15px', opacity: 0.2 }}></div>
               </div>
               
               <div className="relative z-10">
@@ -151,7 +152,7 @@ const ChatSidebar = () => {
                 </h3>
                 {menuItems.map(item => <NavLink key={item.title} to={item.url} className={({
                 isActive
-              }) => `group flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 touch-target ${isActive ? 'bg-gradient-primary text-white shadow-md' : 'hover:bg-muted/60 hover:shadow-sm hover:scale-[1.02]'}`}>
+              }) => `group flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 touch-target ${isActive ? 'bg-primary text-primary-foreground shadow-md hover:shadow-lg border-l-4 border-cta' : 'hover:bg-muted/60 hover:shadow-sm hover:scale-[1.02]'}`}>
                     {({
                   isActive
                 }) => <>
@@ -219,7 +220,7 @@ const ChatSidebar = () => {
                       whatsapp: e.target.value
                     }))} placeholder="+55 11 99999-9999" className="focus-visible:ring-primary" />
                     </div>
-                    <Button onClick={handleProfileUpdate} className="w-full touch-target bg-gradient-primary hover:shadow-lg transition-all duration-200">
+                    <Button onClick={handleProfileUpdate} className="w-full touch-target bg-primary hover:bg-primary-hover hover:shadow-lg transition-all duration-200 border border-primary-hover/20">
                       <Sparkles className="h-4 w-4 mr-2" />
                       Salvar Alterações
                     </Button>
@@ -257,12 +258,13 @@ const ChatSidebar = () => {
       <SidebarTrigger className="absolute -right-4 top-6 z-40" />
       
       <div className="flex flex-col h-full">
-        {/* Hero Header with Gradient */}
-        <div className={`relative bg-gradient-hero text-white overflow-hidden ${!open ? 'p-2' : 'p-6'}`}>
+        {/* Hero Header with Solid Background */}
+        <div className={`relative bg-primary text-white overflow-hidden border-b-2 border-cta/20 ${!open ? 'p-2' : 'p-6'}`}>
           {open && (
             <div className="absolute inset-0 opacity-10">
               <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-white/10 -translate-y-16 translate-x-16"></div>
-              <div className="absolute bottom-0 left-0 w-24 h-24 rounded-full bg-white/10 translate-y-12 -translate-x-12"></div>
+              <div className="absolute bottom-0 left-0 w-24 h-24 rounded-full bg-cta/30 translate-y-12 -translate-x-12"></div>
+              <div className="absolute inset-0" style={{ backgroundImage: 'var(--pattern-dots)', backgroundSize: '15px 15px', opacity: 0.2 }}></div>
             </div>
           )}
           
@@ -322,7 +324,7 @@ const ChatSidebar = () => {
                 className={({ isActive }) => 
                   `group flex items-center ${!open ? 'justify-center p-2' : 'gap-3 px-3 py-3'} rounded-lg transition-all duration-200 ${
                     isActive 
-                      ? 'bg-gradient-primary text-white shadow-md' 
+                      ? 'bg-primary text-primary-foreground shadow-md hover:shadow-lg border-l-4 border-cta' 
                       : 'hover:bg-muted/60 hover:shadow-sm hover:scale-[1.02]'
                   }`
                 }
@@ -429,7 +431,7 @@ const ChatSidebar = () => {
                     className="focus-visible:ring-primary" 
                   />
                 </div>
-                <Button onClick={handleProfileUpdate} className="w-full bg-gradient-primary hover:shadow-lg transition-all duration-200">
+                <Button onClick={handleProfileUpdate} className="w-full bg-primary hover:bg-primary-hover hover:shadow-lg transition-all duration-200 border border-primary-hover/20">
                   <Sparkles className="h-4 w-4 mr-2" />
                   Salvar Alterações
                 </Button>

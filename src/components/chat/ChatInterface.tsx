@@ -467,25 +467,12 @@ const ChatInterface = () => {
   }
   return <div className="flex-1 flex flex-col h-full min-h-0 no-horizontal-scroll">
       {/* Header */}
-      <div className="chat-header p-3 sm:p-4 flex-shrink-0 z-40 relative">
-        <div className="grid grid-cols-3 items-center w-full">
-          {/* Left spacer - add padding on mobile to avoid menu button */}
-          <div className="flex justify-start">
-            {isMobile && <div className="w-12"></div>} {/* Space for mobile menu button */}
-          </div>
-          
-          {/* Center content */}
-          <div className="flex flex-col items-center justify-center text-center">
-            <img src="/logo.png" alt="ChatPsi" className="h-6 sm:h-7 md:h-8 w-auto object-contain drop-shadow-[0_1px_4px_rgba(0,0,0,0.15)] mb-1" />
-            <p className="text-xs sm:text-sm text-primary-foreground/80">
-              Assistente especializado em saúde mental
-            </p>
-          </div>
-          
-          {/* Right side - Status badges */}
-          
+      <header className="app-header">
+        <span className="beta-badge">Versão Beta</span>
+        <div className="header-center">
+          <img src="/logo.png" alt="ChatPsi" className="brand-logo" />
         </div>
-      </div>
+      </header>
 
       {/* Messages */}
       <div className="flex-1 relative min-h-0">

@@ -89,6 +89,11 @@ Acessibilidade WCAG AA compliance
     --transition-base: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-slow: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-bounce: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    /* App shell layout vars */
+    --app-header-h: 64px;
+    --sidebar-w-collapsed: 72px;
+    --sidebar-w-open: 280px;
+    --sidebar-gap: 16px;
   }
 
   .dark {
@@ -237,9 +242,54 @@ Acessibilidade WCAG AA compliance
     @apply sticky bottom-0 border-t bg-background/95 backdrop-blur-sm pb-safe;
   }
 
-  /* Responsive header */
-  .chat-header {
-    @apply sticky top-0 z-20 bg-primary text-primary-foreground border-b pt-safe;
+  /* New app header */
+  .app-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    height: var(--app-header-h);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+    border-bottom: 1px solid hsl(var(--border));
+  }
+  .header-center { width: 100%; display: flex; align-items: center; justify-content: center; }
+  .brand-logo { height: 28px; width: auto; object-fit: contain; filter: drop-shadow(0 1px 4px rgba(0,0,0,.15)); }
+  .app-header .brand-text, .app-header .tagline, .app-header h1 { display: none !important; }
+  /* App shell roles (non-breaking for current layout) */
+  .app-main { padding-top: var(--app-header-h); }
+  .app-sidebar { position: sticky; top: var(--app-header-h); z-index: 200; }
+
+  /* Beta badge style */
+  .beta-badge {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    left: calc(var(--sidebar-w-collapsed) + var(--sidebar-gap));
+    padding: 4px 10px;
+    border-radius: 999px;
+    line-height: 1;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    background: rgba(255,255,255,.18);
+    border: 1px solid rgba(255,255,255,.25);
+    backdrop-filter: saturate(150%) blur(2px);
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+  }
+  .sidebar-open .beta-badge { left: calc(var(--sidebar-w-open) + var(--sidebar-gap)); }
+
+  @media (max-width: 768px){
+    :root { --sidebar-w-open: 240px; --sidebar-w-collapsed: 64px; }
+    .brand-logo { height: 24px; }
+  }
+  @media (max-width: 560px){
+    .sidebar-open .beta-badge { left: calc(var(--sidebar-w-open) + 8px); }
   }
 
   /* No horizontal scroll */

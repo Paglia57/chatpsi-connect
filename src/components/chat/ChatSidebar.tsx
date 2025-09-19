@@ -80,6 +80,32 @@ const ChatSidebar = () => {
   const handleSupportClick = () => {
     window.open('https://wa.me/5511942457454', '_blank', 'noopener,noreferrer');
   };
+
+  // Toggle body class when sidebar state changes (desktop only)
+  useEffect(() => {
+    const root = document.body;
+    if (!root) return;
+    if (open) {
+      root.classList.add('sidebar-open');
+    } else {
+      root.classList.remove('sidebar-open');
+    }
+  }, [open]);
+
+  // Sync CSS variable with actual sidebar width
+  useEffect(() => {
+    const root = document.documentElement;
+    const el = document.querySelector('.app-sidebar') as HTMLElement | null;
+    if (!el || !root) return;
+    const sync = () => {
+      const w = el.getBoundingClientRect().width || 0;
+      root.style.setProperty('--sidebar-w-open', `${Math.round(w)}px`);
+    };
+    sync();
+    const ro = new ResizeObserver(sync);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [open]);
   
   const menuItems = [{
     title: "Chat",
@@ -102,7 +128,7 @@ const ChatSidebar = () => {
             <Menu className="h-5 w-5 text-white" />
           </Button>
         </SheetTrigger>
-        <SheetContent side="left" className="w-80 p-0 bg-background">
+        <SheetContent side="left" className="w-80 p-0 bg-background app-sidebar">
           <div className="flex flex-col h-full animate-slide-in-right">
             {/* Hero Header with Solid Background */}
             <div className="relative bg-primary p-6 text-white overflow-hidden border-b-2 border-cta/20">
@@ -254,7 +280,7 @@ const ChatSidebar = () => {
   }
 
   // Desktop sidebar with mobile-style design
-  return <Sidebar className={`${!open ? 'w-16' : 'w-80'} border-r bg-background z-30`} collapsible="icon">
+  return <Sidebar className={`${!open ? 'w-16' : 'w-80'} border-r bg-background z-30 app-sidebar`} collapsible="icon">
       <SidebarTrigger className="absolute -right-4 top-6 z-40" />
       
       <div className="flex flex-col h-full">

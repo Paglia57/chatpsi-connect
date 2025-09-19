@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { MessageSquare, User, MessageCircle, LogOut, Menu, X, Sparkles, Star, Heart } from 'lucide-react';
+import BetaChip from '@/components/ui/BetaChip';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
@@ -159,13 +160,8 @@ const ChatSidebar = () => {
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-2">
-                  <img src="/logo.png" alt="ChatPsi" className="h-6 w-auto object-contain opacity-90" />
-                  
-                  <div className="ml-auto flex items-center gap-1">
-                    <Sparkles className="h-4 w-4 text-yellow-300" />
-                    <span className="text-xs text-white/80">IA Especializada</span>
-                  </div>
+                <div className="flex items-center justify-center">
+                  <BetaChip variant="normal" />
                 </div>
               </div>
             </div>
@@ -320,14 +316,13 @@ const ChatSidebar = () => {
               )}
             </div>
             
-            {open && (
-              <div className="flex items-center gap-2">
-                <img src="/logo.png" alt="ChatPsi" className="h-6 w-auto object-contain opacity-90" />
-                
-                <div className="ml-auto flex items-center gap-1">
-                  <Sparkles className="h-4 w-4 text-yellow-300" />
-                  <span className="text-xs text-white/80">IA Especializada</span>
-                </div>
+            {open ? (
+              <div className="flex items-center justify-center mt-2">
+                <BetaChip variant="normal" />
+              </div>
+            ) : (
+              <div className="flex items-center justify-center mt-1">
+                <BetaChip variant="compact" />
               </div>
             )}
           </div>

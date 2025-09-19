@@ -262,27 +262,10 @@ Acessibilidade WCAG AA compliance
   .app-main { padding-top: var(--app-header-h); }
   .app-sidebar { position: sticky; top: var(--app-header-h); z-index: 200; }
 
-  /* Beta badge style */
-  .beta-badge {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    left: calc(var(--sidebar-w-collapsed) + var(--sidebar-gap));
-    padding: 4px 10px;
-    border-radius: 999px;
-    line-height: 1;
-    font-size: 12px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: .06em;
-    background: rgba(255,255,255,.18);
-    border: 1px solid rgba(255,255,255,.25);
-    backdrop-filter: saturate(150%) blur(2px);
-    white-space: nowrap;
-    display: inline-flex;
-    align-items: center;
+  /* Sidebar beta chip styles */
+  .sidebar-beta-chip {
+    font-family: inherit;
   }
-  .sidebar-open .beta-badge { left: calc(var(--sidebar-w-open) + var(--sidebar-gap)); }
 
   @media (max-width: 768px){
     :root { --sidebar-w-open: 240px; --sidebar-w-collapsed: 64px; }

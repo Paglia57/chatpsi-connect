@@ -256,7 +256,7 @@ Acessibilidade WCAG AA compliance
     border-bottom: 1px solid hsl(var(--border));
   }
   .header-center { width: 100%; display: flex; align-items: center; justify-content: center; }
-  .brand-logo { height: 28px; width: auto; object-fit: contain; filter: drop-shadow(0 1px 4px rgba(0,0,0,.15)); }
+  .brand-logo { height: 36px; width: auto; object-fit: contain; filter: drop-shadow(0 1px 4px rgba(0,0,0,.15)); }
   .app-header .brand-text, .app-header .tagline, .app-header h1 { display: none !important; }
   /* App shell roles (non-breaking for current layout) */
   .app-main { padding-top: var(--app-header-h); }
@@ -269,7 +269,7 @@ Acessibilidade WCAG AA compliance
 
   @media (max-width: 768px){
     :root { --sidebar-w-open: 240px; --sidebar-w-collapsed: 64px; }
-    .brand-logo { height: 24px; }
+    .brand-logo { height: 30px; }
   }
   @media (max-width: 560px){
     .sidebar-open .beta-badge { left: calc(var(--sidebar-w-open) + 8px); }

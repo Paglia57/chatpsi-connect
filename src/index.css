@@ -281,20 +281,6 @@ Acessibilidade WCAG AA compliance
     max-width: 100vw;
   }
 
-  /* Composer responsive to sidebar state with smooth transition */
-  @media (min-width: 768px) {
-    .composer-container {
-      transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
-                  width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      margin-left: var(--sidebar-w-collapsed);
-      width: calc(100% - var(--sidebar-w-collapsed));
-    }
-    
-    body.sidebar-open .composer-container {
-      margin-left: var(--sidebar-w-open);
-      width: calc(100% - var(--sidebar-w-open));
-    }
-  }
 
   /* Hero backgrounds with patterns */
   .bg-hero {

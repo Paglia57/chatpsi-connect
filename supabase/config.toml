@@ -60,3 +60,6 @@ verify_jwt = false
 
 [functions.busca_plano_dispatch]
 verify_jwt = true
+
+[functions.busca_artigos_dispatch]
+verify_jwt = true

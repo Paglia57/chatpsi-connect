@@ -5,7 +5,7 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { MessageSquare, User, MessageCircle, LogOut, Menu, X, Sparkles, Star, Heart } from 'lucide-react';
+import { MessageSquare, User, MessageCircle, LogOut, Menu, X, Sparkles, Star, Heart, BookOpen } from 'lucide-react';
 import BetaChip from '@/components/ui/BetaChip';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '@/components/auth/AuthProvider';
@@ -122,6 +122,13 @@ const ChatSidebar = () => {
       icon: Sparkles,
       description: "Plano de ação personalizado",
       gradient: "from-cta to-primary"
+    },
+    {
+      title: "Busca Artigos",
+      url: "/busca-artigos",
+      icon: BookOpen,
+      description: "Artigos científicos relevantes",
+      gradient: "from-primary to-accent"
     }
   ];
 

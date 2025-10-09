@@ -29,12 +29,24 @@ export function formatMessageContent(content: string): React.ReactNode {
     .replace(/\n{3,}/g, '\n\n');
 
   // Split content into parts while preserving the delimiters
-  // Captures: **bold**, [text](url), and direct URLs (with full query params support)
-  const parts = cleanedContent.split(/(\*\*[^*]+\*\*|\[([^\]]+)\]\(([^)]+)\)|https?:\/\/[^\s)<]+)/g);
+  // Captures: **bold**, [text](url), direct URLs (with full query params support), and line breaks
+  const parts = cleanedContent.split(/(\*\*[^*]+\*\*|\[([^\]]+)\]\(([^)]+)\)|https?:\/\/[^\s)<]+|\n+)/g);
   
   return parts.map((part, index) => {
     // Skip undefined/empty parts from regex groups
     if (!part) return null;
+    
+    // Handle captured line breaks as <br> elements
+    if (part.match(/^\n+$/)) {
+      const lineBreakCount = part.length;
+      return React.createElement(
+        React.Fragment,
+        { key: index },
+        ...Array(lineBreakCount).fill(null).map((_, i) => 
+          React.createElement('br', { key: `${index}-br-${i}` })
+        )
+      );
+    }
     
     // Check if it's bold text (**text**)
     if (part.startsWith('**') && part.endsWith('**')) {

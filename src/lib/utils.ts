@@ -10,7 +10,7 @@ export function formatMessageContent(content: string): React.ReactNode {
   if (!content) return content;
 
   // Split content into parts while preserving the delimiters
-  const parts = content.split(/(\*\*[^*]+\*\*|https?:\/\/[^\s]+)/g);
+  const parts = content.split(/(\*\*[^*]+\*\*|https?:\/\/[^\s),.;!?]+)/g);
   
   return parts.map((part, index) => {
     // Check if it's bold text (**text**)
@@ -20,13 +20,13 @@ export function formatMessageContent(content: string): React.ReactNode {
     }
     
     // Check if it's a URL
-    if (part.match(/^https?:\/\/[^\s]+$/)) {
+    if (part.match(/^https?:\/\/[^\s),.;!?]+$/)) {
       return React.createElement('a', {
         key: index,
         href: part,
         target: '_blank',
         rel: 'noopener noreferrer',
-        className: 'text-primary hover:text-primary/80 underline'
+        className: 'text-primary hover:text-primary/80 underline break-all'
       }, part);
     }
     

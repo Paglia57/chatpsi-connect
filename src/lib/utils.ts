@@ -9,8 +9,11 @@ export function cn(...inputs: ClassValue[]) {
 export function formatMessageContent(content: string): React.ReactNode {
   if (!content) return content;
 
+  // Step 0: Convert literal \n to actual line breaks
+  let normalizedContent = content.replace(/\\n/g, '\n');
+
   // Step 1: Normalize line breaks and spacing
-  let cleanedContent = content
+  let cleanedContent = normalizedContent
     // Ensure line breaks before numbered items (1., 2., 3., etc.)
     .replace(/(\d+\.\s*Plano de ação:)/g, '\n\n$1')
     // Ensure line break before "Link:"

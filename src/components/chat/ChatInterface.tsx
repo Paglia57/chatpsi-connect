@@ -565,7 +565,7 @@ const ChatInterface = () => {
 
       {/* Composer */}
       <div className="composer-container p-2 sm:p-3 md:p-4 flex-shrink-0">
-        {canSendMessage ? <div className="max-w-4xl mx-auto w-full px-2 sm:px-0">
+        {canSendMessage ? <div className="w-full px-3 sm:px-4 md:px-6">
             {attachedFile && <div className="mb-3 p-2 bg-muted rounded-md flex items-center gap-2 animate-fade-in">
                 <div className="flex items-center gap-2 flex-1 min-w-0">
                   {getFileIcon(attachedFile.type)}

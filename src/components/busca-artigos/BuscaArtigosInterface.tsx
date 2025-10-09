@@ -196,7 +196,7 @@ const BuscaArtigosInterface = () => {
       </div>
 
       <div className="composer-container p-2 sm:p-3 md:p-4 flex-shrink-0">
-        <div className="max-w-4xl mx-auto w-full px-2 sm:px-0">
+        <div className="w-full px-3 sm:px-4 md:px-6">
           <form onSubmit={handleSendMessage} className="flex gap-2 sm:gap-3 items-end">
             <div className="flex-1 min-w-0 w-full">
               <AutoTextarea

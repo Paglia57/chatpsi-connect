@@ -15,8 +15,10 @@ export function formatMessageContent(content: string): React.ReactNode {
     .replace(/(\d+\.\s*Plano de ação:)/g, '\n\n$1')
     // Ensure line break before "Link:"
     .replace(/(Link:)/g, '\n$1')
-    // Convert "Link: URL" to clickable format [Acessar Link](URL)
-    .replace(/Link:\s*(https?:\/\/[^\s),.;!?]+)/g, '[Acessar Link]($1)')
+    // Convert "Link: URL" to clickable format [Acessar Link](URL) - capture full URLs with query params
+    .replace(/Link:\s*(https?:\/\/[^\s)<]+)/g, '[Acessar Link]($1)')
+    // Clean up any duplicate "Acessar Link" text after the Markdown link
+    .replace(/(\[Acessar Link\]\([^)]+\))\s*Acessar Link/g, '$1')
     // Clean up duplicate URLs after Markdown links
     .replace(/(\[([^\]]+)\]\(([^)]+)\))\s*\3\s*\|?\s*/g, '$1 ')
     // Clean up standalone pipes
@@ -27,8 +29,8 @@ export function formatMessageContent(content: string): React.ReactNode {
     .replace(/\n{3,}/g, '\n\n');
 
   // Split content into parts while preserving the delimiters
-  // Captures: **bold**, [text](url), and direct URLs
-  const parts = cleanedContent.split(/(\*\*[^*]+\*\*|\[([^\]]+)\]\(([^)]+)\)|https?:\/\/[^\s),.;!?]+)/g);
+  // Captures: **bold**, [text](url), and direct URLs (with full query params support)
+  const parts = cleanedContent.split(/(\*\*[^*]+\*\*|\[([^\]]+)\]\(([^)]+)\)|https?:\/\/[^\s)<]+)/g);
   
   return parts.map((part, index) => {
     // Skip undefined/empty parts from regex groups
@@ -55,7 +57,7 @@ export function formatMessageContent(content: string): React.ReactNode {
     }
     
     // Check if it's a direct URL
-    if (part.match(/^https?:\/\/[^\s),.;!?]+$/)) {
+    if (part.match(/^https?:\/\/[^\s)<]+$/)) {
       return React.createElement('a', {
         key: index,
         href: part,

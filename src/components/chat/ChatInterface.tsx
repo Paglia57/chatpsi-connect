@@ -564,8 +564,8 @@ const ChatInterface = () => {
      </div>
 
       {/* Composer */}
-      <div className="composer-container p-3 sm:p-4 flex-shrink-0">
-        {canSendMessage ? <div className="max-w-4xl mx-auto">
+      <div className="composer-container p-2 sm:p-3 md:p-4 flex-shrink-0">
+        {canSendMessage ? <div className="max-w-4xl mx-auto w-full px-2 sm:px-0">
             {attachedFile && <div className="mb-3 p-2 bg-muted rounded-md flex items-center gap-2 animate-fade-in">
                 <div className="flex items-center gap-2 flex-1 min-w-0">
                   {getFileIcon(attachedFile.type)}
@@ -595,10 +595,10 @@ const ChatInterface = () => {
               </div>}
             
             <form onSubmit={handleSendMessage}>
-              <div className="flex gap-2">
+              <div className="flex gap-2 sm:gap-3 items-end">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button type="button" size="icon" variant="outline" disabled={isAssistantTyping || uploading || recordingState !== 'idle'} className="touch-target flex-shrink-0" aria-label="Anexar arquivo">
+                    <Button type="button" size="icon" variant="outline" disabled={isAssistantTyping || uploading || recordingState !== 'idle'} className="touch-target flex-shrink-0 h-11 w-11" aria-label="Anexar arquivo">
                       <Paperclip className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
@@ -610,12 +610,12 @@ const ChatInterface = () => {
                   </DropdownMenuContent>
                 </DropdownMenu>
                 
-                <Button type="button" size="icon" variant={getMicrophoneVariant()} disabled={isAssistantTyping || uploading || attachedFile !== null} onClick={recordingState === 'recording' ? handleStopRecording : handleStartRecording} className="touch-target flex-shrink-0" aria-label={recordingState === 'idle' ? 'Gravar áudio' : recordingState === 'recording' ? `Parar gravação (${formatDuration(recordingDuration)})` : recordingState === 'requesting-permission' ? 'Solicitando permissão...' : 'Processando áudio...'}>
+                <Button type="button" size="icon" variant={getMicrophoneVariant()} disabled={isAssistantTyping || uploading || attachedFile !== null} onClick={recordingState === 'recording' ? handleStopRecording : handleStartRecording} className="touch-target flex-shrink-0 h-11 w-11" aria-label={recordingState === 'idle' ? 'Gravar áudio' : recordingState === 'recording' ? `Parar gravação (${formatDuration(recordingDuration)})` : recordingState === 'requesting-permission' ? 'Solicitando permissão...' : 'Processando áudio...'}>
                   {getMicrophoneIcon()}
                 </Button>
                 
-                <div className="flex-1 min-w-0">
-                  <AutoTextarea value={newMessage} onChange={e => setNewMessage(e.target.value)} placeholder={recordingState === 'recording' ? `Gravando... ${formatDuration(recordingDuration)}` : attachedFile ? "Comentário (opcional)" : "Digite sua mensagem..."} disabled={isAssistantTyping || uploading || recordingState !== 'idle'} minRows={isMobile ? 1 : 2} maxRows={isMobile ? 4 : 6} className="text-base resize-none" onKeyDown={e => {
+                <div className="flex-1 min-w-0 w-full">
+                  <AutoTextarea value={newMessage} onChange={e => setNewMessage(e.target.value)} placeholder={recordingState === 'recording' ? `Gravando... ${formatDuration(recordingDuration)}` : attachedFile ? "Comentário (opcional)" : "Digite sua mensagem..."} disabled={isAssistantTyping || uploading || recordingState !== 'idle'} minRows={isMobile ? 1 : 2} maxRows={isMobile ? 4 : 6} className="w-full text-base resize-none" onKeyDown={e => {
                 if (e.key === 'Enter' && !e.shiftKey && !isMobile) {
                   e.preventDefault();
                   handleSendMessage(e);
@@ -624,11 +624,11 @@ const ChatInterface = () => {
                 </div>
                 
                 {/* Refresh Button - only show when AI is typing */}
-                {isAssistantTyping && <Button type="button" size="icon" variant="outline" onClick={handleRefresh} className="text-muted-foreground hover:text-foreground touch-target flex-shrink-0" aria-label="Interromper e recarregar">
+                {isAssistantTyping && <Button type="button" size="icon" variant="outline" onClick={handleRefresh} className="text-muted-foreground hover:text-foreground touch-target flex-shrink-0 h-11 w-11" aria-label="Interromper e recarregar">
                     <RefreshCw className="h-4 w-4" />
                   </Button>}
                 
-                <Button type="submit" disabled={isAssistantTyping || uploading || recordingState !== 'idle' || !newMessage.trim() && !attachedFile} size="icon" className="touch-target flex-shrink-0" aria-label="Enviar mensagem">
+                <Button type="submit" disabled={isAssistantTyping || uploading || recordingState !== 'idle' || !newMessage.trim() && !attachedFile} size="icon" className="touch-target flex-shrink-0 h-11 w-11" aria-label="Enviar mensagem">
                   <Send className="h-4 w-4" />
                 </Button>
               </div>

@@ -195,10 +195,10 @@ const BuscaPlanoInterface = () => {
         </ScrollArea>
       </div>
 
-      <div className="composer-container p-3 sm:p-4 flex-shrink-0">
-        <div className="max-w-4xl mx-auto">
-          <form onSubmit={handleSendMessage} className="flex gap-2">
-            <div className="flex-1 min-w-0">
+      <div className="composer-container p-2 sm:p-3 md:p-4 flex-shrink-0">
+        <div className="max-w-4xl mx-auto w-full px-2 sm:px-0">
+          <form onSubmit={handleSendMessage} className="flex gap-2 sm:gap-3 items-end">
+            <div className="flex-1 min-w-0 w-full">
               <AutoTextarea
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
@@ -206,7 +206,7 @@ const BuscaPlanoInterface = () => {
                 disabled={isLoading || !profile?.subscription_active}
                 minRows={isMobile ? 1 : 2}
                 maxRows={isMobile ? 4 : 6}
-                className="text-base resize-none"
+                className="w-full text-base resize-none"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && !e.shiftKey && !isMobile) {
                     e.preventDefault();
@@ -219,7 +219,7 @@ const BuscaPlanoInterface = () => {
               type="submit" 
               disabled={!newMessage.trim() || isLoading || !profile?.subscription_active}
               size="icon"
-              className="touch-target flex-shrink-0"
+              className="touch-target flex-shrink-0 h-11 w-11"
               aria-label="Enviar mensagem"
             >
               {isLoading ? (

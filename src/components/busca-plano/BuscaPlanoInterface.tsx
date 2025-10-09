@@ -7,6 +7,7 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { formatMessageContent } from '@/lib/utils';
+import { useResponsive } from '@/hooks/useResponsive';
 
 interface PlanoMessage {
   id: string;
@@ -19,6 +20,7 @@ interface PlanoMessage {
 const BuscaPlanoInterface = () => {
   const { user, profile } = useAuth();
   const { toast } = useToast();
+  const { isMobile } = useResponsive();
   
   const [messages, setMessages] = useState<PlanoMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
@@ -125,7 +127,7 @@ const BuscaPlanoInterface = () => {
   }
 
   return (
-    <div className="flex-1 flex flex-col h-full min-h-0">
+    <div className="flex-1 flex flex-col h-full min-h-0 no-horizontal-scroll">
       <header className="app-header">
         <div className="header-center">
           <img src="/logo.png" alt="ChatPsi" className="brand-logo" />
@@ -134,43 +136,43 @@ const BuscaPlanoInterface = () => {
 
       <div className="flex-1 relative min-h-0">
         <ScrollArea className="h-full">
-          <div className="p-4 space-y-4 max-w-4xl mx-auto pb-4">
+          <div className="p-3 sm:p-4 space-y-3 sm:space-y-4 max-w-4xl mx-auto pb-4">
             {messages.length === 0 ? (
-              <div className="text-center py-12 px-4">
-                <Sparkles className="h-12 w-12 text-primary mx-auto mb-4" />
-                <h3 className="text-lg font-medium mb-2">Busca Plano de Ação</h3>
-                <p className="text-muted-foreground mb-4">
+              <div className="text-center py-8 sm:py-12 px-4">
+                <Sparkles className="h-10 w-10 sm:h-12 sm:w-12 text-primary mx-auto mb-3 sm:mb-4" />
+                <h3 className="text-base sm:text-lg font-medium mb-2">Busca Plano de Ação</h3>
+                <p className="text-sm sm:text-base text-muted-foreground mb-4 text-overflow-anywhere">
                   Envie uma pergunta para iniciar seu plano de ação personalizado.
                 </p>
               </div>
             ) : (
               messages.map((msg) => (
                 <React.Fragment key={msg.id}>
-                  <div className="flex gap-3 justify-end">
-                    <div className="bg-primary text-primary-foreground rounded-lg px-4 py-3 max-w-[80%]">
-                      <p className="text-sm whitespace-pre-wrap break-words">{msg.input_text}</p>
+                  <div className="flex gap-2 sm:gap-3 justify-end">
+                    <div className="bg-primary text-primary-foreground rounded-lg px-3 sm:px-4 py-2 sm:py-3 max-w-[80%]">
+                      <p className="text-sm whitespace-pre-wrap break-words text-overflow-anywhere">{msg.input_text}</p>
                       <span className="text-xs opacity-70 mt-1 block">
                         {new Date(msg.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
                     <div className="flex-shrink-0">
-                      <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                        <UserIcon className="h-4 w-4 text-primary" />
+                      <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                        <UserIcon className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex gap-3 justify-start">
+                  <div className="flex gap-2 sm:gap-3 justify-start">
                     <div className="flex-shrink-0">
-                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                        <Bot className="h-4 w-4 text-primary" />
+                      <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                        <Bot className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
                       </div>
                     </div>
-                    <div className="bg-muted rounded-lg px-4 py-3 max-w-[80%]">
+                    <div className="bg-muted rounded-lg px-3 sm:px-4 py-2 sm:py-3 max-w-[80%]">
                       {msg.error_message ? (
                         <p className="text-sm text-destructive">{msg.error_message}</p>
                       ) : msg.response_json ? (
-                        <div className="text-sm whitespace-pre-wrap break-words">
+                        <div className="text-sm whitespace-pre-wrap break-words text-overflow-anywhere">
                           {formatMessageContent(
                             typeof msg.response_json === 'string' 
                               ? msg.response_json 
@@ -193,21 +195,32 @@ const BuscaPlanoInterface = () => {
         </ScrollArea>
       </div>
 
-      <div className="border-t bg-background p-4">
+      <div className="composer-container p-3 sm:p-4 flex-shrink-0">
         <div className="max-w-4xl mx-auto">
-          <form onSubmit={handleSendMessage} className="flex gap-2 items-end">
-            <AutoTextarea
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              placeholder="Digite sua pergunta sobre plano de ação..."
-              className="flex-1 min-h-[44px] max-h-[200px]"
-              disabled={isLoading || !profile?.subscription_active}
-            />
+          <form onSubmit={handleSendMessage} className="flex gap-2">
+            <div className="flex-1 min-w-0">
+              <AutoTextarea
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                placeholder="Digite sua pergunta sobre plano de ação..."
+                disabled={isLoading || !profile?.subscription_active}
+                minRows={isMobile ? 1 : 2}
+                maxRows={isMobile ? 4 : 6}
+                className="text-base resize-none"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey && !isMobile) {
+                    e.preventDefault();
+                    handleSendMessage(e);
+                  }
+                }}
+              />
+            </div>
             <Button 
               type="submit" 
               disabled={!newMessage.trim() || isLoading || !profile?.subscription_active}
               size="icon"
-              className="h-11 w-11"
+              className="touch-target flex-shrink-0"
+              aria-label="Enviar mensagem"
             >
               {isLoading ? (
                 <RefreshCw className="h-5 w-5 animate-spin" />

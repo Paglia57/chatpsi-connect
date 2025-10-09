@@ -227,6 +227,11 @@ Acessibilidade WCAG AA compliance
     @apply max-w-[90%] sm:max-w-[85%] md:max-w-[75%] lg:max-w-[70%];
   }
 
+  /* Chat messages use Montserrat for readability */
+  .chat-message-content {
+    font-family: 'Montserrat', 'Inter', 'system-ui', sans-serif;
+  }
+
   /* Touch-friendly targets */
   .touch-target {
     @apply min-h-[44px] min-w-[44px] touch-manipulation;

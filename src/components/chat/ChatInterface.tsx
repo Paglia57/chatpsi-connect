@@ -494,7 +494,7 @@ const ChatInterface = () => {
                     </div>}
                   
                   <Card className={`${message.sender === 'user' ? `message-bubble-user ${message.status === 'failed' ? 'bg-destructive/10 border-destructive text-destructive' : message.status === 'pending' ? 'bg-primary/70 text-primary-foreground opacity-70' : 'bg-primary text-primary-foreground'}` : 'message-bubble-ai bg-card'} animate-scale-in`}>
-                    <CardContent className="p-2 sm:p-3">
+                    <CardContent className="p-2 sm:p-3 chat-message-content">
                      {message.message_type !== 'text' && <div className={`flex items-center gap-2 text-xs mb-2 ${message.sender === 'user' ? message.status === 'failed' ? 'text-destructive/70' : 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
                          {getFileIcon(message.message_type)}
                          {message.message_type}

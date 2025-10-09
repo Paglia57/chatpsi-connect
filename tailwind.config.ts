@@ -18,10 +18,11 @@ export default {
 			}
 		},
 		extend: {
-			fontFamily: {
-				'display': ['Playfair Display', 'serif'],
-				'sans': ['Montserrat', 'Inter', 'system-ui', 'sans-serif'],
-			},
+		fontFamily: {
+			'sans': ['Anton', 'system-ui', 'sans-serif'],
+			'display': ['Anton', 'system-ui', 'sans-serif'],
+			'chat': ['Montserrat', 'Inter', 'system-ui', 'sans-serif'],
+		},
 			fontSize: {
 				'xs': ['0.75rem', { lineHeight: '1rem' }],
 				'sm': ['0.875rem', { lineHeight: '1.25rem' }],

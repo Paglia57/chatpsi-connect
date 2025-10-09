@@ -135,7 +135,7 @@ const BuscaPlanoInterface = () => {
                 </p>
               </div> : messages.map(msg => <React.Fragment key={msg.id}>
                   <div className="flex gap-2 sm:gap-3 justify-end">
-                    <div className="bg-primary text-primary-foreground rounded-lg px-3 sm:px-4 py-2 sm:py-3 max-w-[80%]">
+                    <div className="bg-primary text-primary-foreground rounded-lg px-3 sm:px-4 py-2 sm:py-3 max-w-[80%] chat-message-content">
                       <p className="text-sm whitespace-pre-wrap break-words text-overflow-anywhere">{msg.input_text}</p>
                       <span className="text-xs opacity-70 mt-1 block">
                         {new Date(msg.created_at).toLocaleTimeString('pt-BR', {
@@ -157,7 +157,7 @@ const BuscaPlanoInterface = () => {
                         <Bot className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
                       </div>
                     </div>
-                    <div className="bg-muted rounded-lg px-3 sm:px-4 py-2 sm:py-3 max-w-[80%]">
+                    <div className="bg-muted rounded-lg px-3 sm:px-4 py-2 sm:py-3 max-w-[80%] chat-message-content">
                       {msg.error_message ? <p className="text-sm text-destructive">{msg.error_message}</p> : msg.response_json ? <div className="text-sm whitespace-pre-wrap break-words text-overflow-anywhere">
                           {formatMessageContent(typeof msg.response_json === 'string' ? msg.response_json : msg.response_json?.response || JSON.stringify(msg.response_json, null, 2))}
                         </div> : <p className="text-sm text-muted-foreground">Sem resposta</p>}

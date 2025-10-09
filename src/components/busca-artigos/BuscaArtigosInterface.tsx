@@ -177,7 +177,7 @@ const BuscaArtigosInterface = () => {
 
       <div className="composer-container p-2 sm:p-3 md:p-4 flex-shrink-0 mx-0">
         <div className="w-full px-3 sm:px-4 md:px-6">
-          <form onSubmit={handleSendMessage} className="flex gap-2 sm:gap-3 items-end mx-[38px]">
+          <form onSubmit={handleSendMessage} className="flex gap-2 sm:gap-3 items-end mx-[30px]">
             <div className="flex-1 min-w-0 w-full">
               <AutoTextarea value={newMessage} onChange={e => setNewMessage(e.target.value)} placeholder="Digite sua pergunta sobre artigos científicos..." disabled={isLoading || !profile?.subscription_active} minRows={isMobile ? 1 : 2} maxRows={isMobile ? 4 : 6} className="w-full max-w-full text-base resize-none" onKeyDown={e => {
               if (e.key === 'Enter' && !e.shiftKey && !isMobile) {

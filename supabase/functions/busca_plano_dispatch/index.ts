@@ -62,7 +62,10 @@ serve(async (req) => {
 
     const threadsPlano = profile?.threads_plano || null;
 
-    const payload: any = { input: input_text };
+    const payload: any = { 
+      input: input_text,
+      user_id: userId
+    };
     if (threadsPlano) {
       payload.thread = threadsPlano;
     }

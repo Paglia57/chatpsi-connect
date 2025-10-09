@@ -596,26 +596,28 @@ const ChatInterface = () => {
             
             <form onSubmit={handleSendMessage}>
               <div className="flex gap-2 sm:gap-3 items-end">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button type="button" size="icon" variant="outline" disabled={isAssistantTyping || uploading || recordingState !== 'idle'} className="touch-target flex-shrink-0 h-11 w-11" aria-label="Anexar arquivo">
-                      <Paperclip className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
-                      <Upload className="h-4 w-4 mr-2" />
-                      Enviar arquivo
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-                
-                <Button type="button" size="icon" variant={getMicrophoneVariant()} disabled={isAssistantTyping || uploading || attachedFile !== null} onClick={recordingState === 'recording' ? handleStopRecording : handleStartRecording} className="touch-target flex-shrink-0 h-11 w-11" aria-label={recordingState === 'idle' ? 'Gravar áudio' : recordingState === 'recording' ? `Parar gravação (${formatDuration(recordingDuration)})` : recordingState === 'requesting-permission' ? 'Solicitando permissão...' : 'Processando áudio...'}>
-                  {getMicrophoneIcon()}
-                </Button>
+                <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button type="button" size="icon" variant="outline" disabled={isAssistantTyping || uploading || recordingState !== 'idle'} className="touch-target h-11 w-11 flex-shrink-0" aria-label="Anexar arquivo">
+                        <Paperclip className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
+                        <Upload className="h-4 w-4 mr-2" />
+                        Enviar arquivo
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  
+                  <Button type="button" size="icon" variant={getMicrophoneVariant()} disabled={isAssistantTyping || uploading || attachedFile !== null} onClick={recordingState === 'recording' ? handleStopRecording : handleStartRecording} className="touch-target h-11 w-11 flex-shrink-0" aria-label={recordingState === 'idle' ? 'Gravar áudio' : recordingState === 'recording' ? `Parar gravação (${formatDuration(recordingDuration)})` : recordingState === 'requesting-permission' ? 'Solicitando permissão...' : 'Processando áudio...'}>
+                    {getMicrophoneIcon()}
+                  </Button>
+                </div>
                 
                 <div className="flex-1 min-w-0 w-full">
-                  <AutoTextarea value={newMessage} onChange={e => setNewMessage(e.target.value)} placeholder={recordingState === 'recording' ? `Gravando... ${formatDuration(recordingDuration)}` : attachedFile ? "Comentário (opcional)" : "Digite sua mensagem..."} disabled={isAssistantTyping || uploading || recordingState !== 'idle'} minRows={isMobile ? 1 : 2} maxRows={isMobile ? 4 : 6} className="w-full text-base resize-none" onKeyDown={e => {
+                  <AutoTextarea value={newMessage} onChange={e => setNewMessage(e.target.value)} placeholder={recordingState === 'recording' ? `Gravando... ${formatDuration(recordingDuration)}` : attachedFile ? "Comentário (opcional)" : "Digite sua mensagem..."} disabled={isAssistantTyping || uploading || recordingState !== 'idle'} minRows={isMobile ? 1 : 2} maxRows={isMobile ? 4 : 6} className="w-full max-w-full text-base resize-none" onKeyDown={e => {
                 if (e.key === 'Enter' && !e.shiftKey && !isMobile) {
                   e.preventDefault();
                   handleSendMessage(e);

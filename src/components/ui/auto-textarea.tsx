@@ -57,6 +57,7 @@ const AutoTextarea = React.forwardRef<HTMLTextAreaElement, AutoTextareaProps>(
           "touch-manipulation", // Better touch experience
           "min-h-[44px]", // Minimum touch target
           "max-w-full", // Garante que não ultrapasse o container
+          "shrink", // Permite encolher dentro do flex
           className
         )}
         style={{ height: textareaHeight }}

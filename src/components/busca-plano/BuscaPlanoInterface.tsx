@@ -206,7 +206,7 @@ const BuscaPlanoInterface = () => {
                 disabled={isLoading || !profile?.subscription_active}
                 minRows={isMobile ? 1 : 2}
                 maxRows={isMobile ? 4 : 6}
-                className="w-full text-base resize-none"
+                className="w-full max-w-full text-base resize-none"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && !e.shiftKey && !isMobile) {
                     e.preventDefault();

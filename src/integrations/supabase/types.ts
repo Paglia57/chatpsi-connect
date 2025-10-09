@@ -53,6 +53,39 @@ export type Database = {
         }
         Relationships: []
       }
+      plano_chat_history: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          http_status: number | null
+          id: string
+          input_text: string
+          response_json: Json | null
+          thread_sent: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          http_status?: number | null
+          id?: string
+          input_text: string
+          response_json?: Json | null
+          thread_sent?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          http_status?: number | null
+          id?: string
+          input_text?: string
+          response_json?: Json | null
+          thread_sent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -69,6 +102,7 @@ export type Database = {
           subscription_end: string | null
           subscription_id: string | null
           subscription_tier: string | null
+          threads_plano: string | null
           TokenCount: number | null
           updated_at: string
           user_id: string
@@ -89,6 +123,7 @@ export type Database = {
           subscription_end?: string | null
           subscription_id?: string | null
           subscription_tier?: string | null
+          threads_plano?: string | null
           TokenCount?: number | null
           updated_at?: string
           user_id: string
@@ -109,6 +144,7 @@ export type Database = {
           subscription_end?: string | null
           subscription_id?: string | null
           subscription_tier?: string | null
+          threads_plano?: string | null
           TokenCount?: number | null
           updated_at?: string
           user_id?: string

@@ -108,13 +108,22 @@ const ChatSidebar = () => {
     return () => ro.disconnect();
   }, [open]);
   
-  const menuItems = [{
-    title: "Chat",
-    url: "/chat",
-    icon: MessageSquare,
-    description: "Conversar com IA especializada",
-    gradient: "from-primary to-cta"
-  }];
+  const menuItems = [
+    {
+      title: "Chat",
+      url: "/chat",
+      icon: MessageSquare,
+      description: "Conversar com IA especializada",
+      gradient: "from-primary to-cta"
+    },
+    {
+      title: "Busca Plano",
+      url: "/busca-plano",
+      icon: Sparkles,
+      description: "Plano de ação personalizado",
+      gradient: "from-cta to-primary"
+    }
+  ];
 
   // Generate avatar from user name/nickname
   const getAvatarText = () => {

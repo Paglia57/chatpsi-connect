@@ -57,3 +57,6 @@ verify_jwt = false
 
 [functions.dispatch_message]
 verify_jwt = false
+
+[functions.busca_plano_dispatch]
+verify_jwt = true

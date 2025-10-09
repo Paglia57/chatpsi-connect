@@ -92,21 +92,6 @@ const ChatSidebar = () => {
       root.classList.remove('sidebar-open');
     }
   }, [open]);
-
-  // Sync CSS variable with actual sidebar width
-  useEffect(() => {
-    const root = document.documentElement;
-    const el = document.querySelector('.app-sidebar') as HTMLElement | null;
-    if (!el || !root) return;
-    const sync = () => {
-      const w = el.getBoundingClientRect().width || 0;
-      root.style.setProperty('--sidebar-w-open', `${Math.round(w)}px`);
-    };
-    sync();
-    const ro = new ResizeObserver(sync);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, [open]);
   
   const menuItems = [
     {
@@ -292,7 +277,14 @@ const ChatSidebar = () => {
   }
 
   // Desktop sidebar with mobile-style design
-  return <Sidebar className={`${!open ? 'w-16' : 'w-80'} border-r bg-background z-30 app-sidebar`} collapsible="icon">
+  return <Sidebar 
+      className="border-r bg-background z-30 app-sidebar" 
+      collapsible="icon"
+      style={{
+        '--sidebar-width': '20rem',
+        '--sidebar-width-icon': '4rem'
+      } as React.CSSProperties}
+    >
       <SidebarTrigger className="absolute -right-4 top-6 z-40" />
       
       <div className="flex flex-col h-full">

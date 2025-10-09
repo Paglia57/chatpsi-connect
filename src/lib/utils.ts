@@ -10,23 +10,41 @@ export function formatMessageContent(content: string): React.ReactNode {
   if (!content) return content;
 
   // Split content into parts while preserving the delimiters
-  const parts = content.split(/(\*\*[^*]+\*\*|https?:\/\/[^\s),.;!?]+)/g);
+  // Captures: **bold**, [text](url), and direct URLs
+  const parts = content.split(/(\*\*[^*]+\*\*|\[([^\]]+)\]\(([^)]+)\)|https?:\/\/[^\s),.;!?]+)/g);
   
   return parts.map((part, index) => {
+    // Skip undefined/empty parts from regex groups
+    if (!part) return null;
+    
     // Check if it's bold text (**text**)
     if (part.startsWith('**') && part.endsWith('**')) {
       const boldText = part.slice(2, -2);
       return React.createElement('strong', { key: index }, boldText);
     }
     
-    // Check if it's a URL
+    // Check if it's a Markdown link [text](url)
+    const markdownLinkMatch = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+    if (markdownLinkMatch) {
+      const linkText = markdownLinkMatch[1];
+      const linkUrl = markdownLinkMatch[2];
+      return React.createElement('a', {
+        key: index,
+        href: linkUrl,
+        target: '_blank',
+        rel: 'noopener noreferrer',
+        className: 'text-primary hover:text-primary/80 underline break-all cursor-pointer'
+      }, linkText);
+    }
+    
+    // Check if it's a direct URL
     if (part.match(/^https?:\/\/[^\s),.;!?]+$/)) {
       return React.createElement('a', {
         key: index,
         href: part,
         target: '_blank',
         rel: 'noopener noreferrer',
-        className: 'text-primary hover:text-primary/80 underline break-all'
+        className: 'text-primary hover:text-primary/80 underline break-all cursor-pointer'
       }, part);
     }
     

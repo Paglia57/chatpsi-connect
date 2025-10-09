@@ -6,6 +6,7 @@ import { Send, Bot, User as UserIcon, RefreshCw, Sparkles } from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { formatMessageContent } from '@/lib/utils';
 
 interface PlanoMessage {
   id: string;
@@ -170,9 +171,11 @@ const BuscaPlanoInterface = () => {
                         <p className="text-sm text-destructive">{msg.error_message}</p>
                       ) : msg.response_json ? (
                         <div className="text-sm whitespace-pre-wrap break-words">
-                          {typeof msg.response_json === 'string' 
-                            ? msg.response_json 
-                            : JSON.stringify(msg.response_json, null, 2)}
+                          {formatMessageContent(
+                            typeof msg.response_json === 'string' 
+                              ? msg.response_json 
+                              : msg.response_json?.response || JSON.stringify(msg.response_json, null, 2)
+                          )}
                         </div>
                       ) : (
                         <p className="text-sm text-muted-foreground">Sem resposta</p>

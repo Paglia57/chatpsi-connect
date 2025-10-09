@@ -595,7 +595,7 @@ const ChatInterface = () => {
               </div>}
             
             <form onSubmit={handleSendMessage}>
-              <div className="flex gap-2 sm:gap-3 items-end">
+              <div className="flex gap-2 sm:gap-3 items-end mx-[30px]">
                 <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>

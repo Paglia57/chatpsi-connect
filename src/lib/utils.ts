@@ -9,18 +9,22 @@ export function cn(...inputs: ClassValue[]) {
 export function formatMessageContent(content: string): React.ReactNode {
   if (!content) return content;
 
-  // Step 1: Clean up duplicate URLs after Markdown links (more permissive)
-  // Patterns: [text](url) url | or [text](url)url| or [text](url)  url  |
-  let cleanedContent = content.replace(
-    /(\[([^\]]+)\]\(([^)]+)\))\s*\3\s*\|?\s*/g,
-    '$1 '
-  );
-
-  // Step 2: Clean up standalone pipes after URLs
-  cleanedContent = cleanedContent.replace(/\s*\|\s*$/gm, '');
-
-  // Step 3: Clean up multiple consecutive spaces
-  cleanedContent = cleanedContent.replace(/\s{2,}/g, ' ');
+  // Step 1: Normalize line breaks and spacing
+  let cleanedContent = content
+    // Ensure line breaks before numbered items (1., 2., 3., etc.)
+    .replace(/(\d+\.\s*Plano de ação:)/g, '\n\n$1')
+    // Ensure line break before "Link:"
+    .replace(/(Link:)/g, '\n$1')
+    // Convert "Link: URL" to clickable format [Acessar Link](URL)
+    .replace(/Link:\s*(https?:\/\/[^\s),.;!?]+)/g, '[Acessar Link]($1)')
+    // Clean up duplicate URLs after Markdown links
+    .replace(/(\[([^\]]+)\]\(([^)]+)\))\s*\3\s*\|?\s*/g, '$1 ')
+    // Clean up standalone pipes
+    .replace(/\s*\|\s*$/gm, '')
+    // Normalize multiple consecutive spaces
+    .replace(/\s{2,}/g, ' ')
+    // Clean up extra line breaks (max 2 consecutive)
+    .replace(/\n{3,}/g, '\n\n');
 
   // Split content into parts while preserving the delimiters
   // Captures: **bold**, [text](url), and direct URLs
@@ -46,7 +50,7 @@ export function formatMessageContent(content: string): React.ReactNode {
         href: linkUrl,
         target: '_blank',
         rel: 'noopener noreferrer',
-        className: 'text-primary hover:text-primary/80 underline break-all cursor-pointer'
+        className: 'text-primary hover:text-primary/80 underline break-all cursor-pointer font-medium'
       }, linkText);
     }
     

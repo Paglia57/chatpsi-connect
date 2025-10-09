@@ -9,12 +9,18 @@ export function cn(...inputs: ClassValue[]) {
 export function formatMessageContent(content: string): React.ReactNode {
   if (!content) return content;
 
-  // First, clean up duplicate URLs after Markdown links
-  // Pattern: [text](url) url | → [text](url)
-  const cleanedContent = content.replace(
-    /(\[([^\]]+)\]\(([^)]+)\))\s+\3\s*\|?/g,
-    '$1'
+  // Step 1: Clean up duplicate URLs after Markdown links (more permissive)
+  // Patterns: [text](url) url | or [text](url)url| or [text](url)  url  |
+  let cleanedContent = content.replace(
+    /(\[([^\]]+)\]\(([^)]+)\))\s*\3\s*\|?\s*/g,
+    '$1 '
   );
+
+  // Step 2: Clean up standalone pipes after URLs
+  cleanedContent = cleanedContent.replace(/\s*\|\s*$/gm, '');
+
+  // Step 3: Clean up multiple consecutive spaces
+  cleanedContent = cleanedContent.replace(/\s{2,}/g, ' ');
 
   // Split content into parts while preserving the delimiters
   // Captures: **bold**, [text](url), and direct URLs

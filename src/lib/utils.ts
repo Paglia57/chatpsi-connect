@@ -9,8 +9,12 @@ export function cn(...inputs: ClassValue[]) {
 export function formatMessageContent(content: string): React.ReactNode {
   if (!content) return content;
 
-  // Step 0: Convert literal \n to actual line breaks
-  let normalizedContent = content.replace(/\\n/g, '\n');
+  // Step 0: Normalizar quebras de linha
+  //  - converte "\n" literal em quebra real
+  //  - unifica CRLF/CR para LF
+  let normalizedContent = content
+    .replace(/\\n/g, '\n')      // literal \n → quebra real
+    .replace(/\r\n?/g, '\n');   // CRLF e CR → LF
 
   // Step 1: Normalize line breaks and spacing
   let cleanedContent = normalizedContent
@@ -26,8 +30,8 @@ export function formatMessageContent(content: string): React.ReactNode {
     .replace(/(\[([^\]]+)\]\(([^)]+)\))\s*\3\s*\|?\s*/g, '$1 ')
     // Clean up standalone pipes
     .replace(/\s*\|\s*$/gm, '')
-    // Normalize multiple consecutive spaces
-    .replace(/\s{2,}/g, ' ')
+    // Colapsar apenas espaços/tabs horizontais (preserva \n)
+    .replace(/[ \t]{2,}/g, ' ')
     // Clean up extra line breaks (max 2 consecutive)
     .replace(/\n{3,}/g, '\n\n');
 

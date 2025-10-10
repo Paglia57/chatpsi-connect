@@ -18,7 +18,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Search, Edit, Trash2, RotateCcw } from 'lucide-react';
+import { Search, Edit, RotateCcw } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 
@@ -101,31 +101,6 @@ const AdminPageContent = () => {
     }
   };
 
-  const handleDeleteProfile = async (userId: string) => {
-    if (!confirm('Tem certeza que deseja deletar este perfil? Esta ação é irreversível.')) {
-      return;
-    }
-
-    try {
-      const { error } = await supabase.rpc('admin_delete_profile', {
-        p_user_id: userId,
-      });
-
-      if (error) throw error;
-
-      toast({
-        title: 'Perfil deletado com sucesso',
-      });
-
-      fetchProfiles();
-    } catch (error: any) {
-      toast({
-        title: 'Erro ao deletar perfil',
-        description: error.message,
-        variant: 'destructive',
-      });
-    }
-  };
 
   const handleSaveEdit = async () => {
     if (!editingProfile) return;
@@ -189,7 +164,7 @@ const AdminPageContent = () => {
                 <TableHead>WhatsApp</TableHead>
                 <TableHead>Assinatura</TableHead>
                 <TableHead>Tokens</TableHead>
-                <TableHead>Thread ID</TableHead>
+                <TableHead>Histórico</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
@@ -206,41 +181,27 @@ const AdminPageContent = () => {
                     </Badge>
                   </TableCell>
                   <TableCell>{profile.TokenCount || 0}</TableCell>
-                  <TableCell className="font-mono text-xs">
+                  <TableCell>
                     {profile.openai_thread_id ? (
-                      <div className="flex items-center gap-2">
-                        <span className="truncate max-w-[100px]">
-                          {profile.openai_thread_id}
-                        </span>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleClearThread(profile.user_id)}
-                        >
-                          <RotateCcw className="w-3 h-3" />
-                        </Button>
-                      </div>
-                    ) : (
-                      '-'
-                    )}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => setEditingProfile(profile)}
+                        onClick={() => handleClearThread(profile.user_id)}
                       >
-                        <Edit className="w-4 h-4" />
+                        Limpar Histórico
                       </Button>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => handleDeleteProfile(profile.user_id)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
+                    ) : (
+                      <span className="text-muted-foreground text-sm">Sem histórico</span>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setEditingProfile(profile)}
+                    >
+                      <Edit className="w-4 h-4" />
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}

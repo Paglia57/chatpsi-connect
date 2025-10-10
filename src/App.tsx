@@ -11,6 +11,7 @@ import BuscaPlanoPage from "./pages/BuscaPlanoPage";
 import BuscaArtigosPage from "./pages/BuscaArtigosPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import AuthCallbackPage from "./pages/AuthCallbackPage";
+import AdminPage from "./pages/AdminPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -29,6 +30,7 @@ const App = () => (
             <Route path="/chat" element={<ChatPage />} />
             <Route path="/busca-plano" element={<BuscaPlanoPage />} />
             <Route path="/busca-artigos" element={<BuscaArtigosPage />} />
+            <Route path="/admin" element={<AdminPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

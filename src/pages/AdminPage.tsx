@@ -18,7 +18,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Search, Edit, RotateCcw } from 'lucide-react';
+import { Search, Edit, RotateCcw, ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 
@@ -40,6 +41,7 @@ const AdminPageContent = () => {
   const [loading, setLoading] = useState(true);
   const [editingProfile, setEditingProfile] = useState<Profile | null>(null);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const fetchProfiles = async () => {
     try {
@@ -135,6 +137,14 @@ const AdminPageContent = () => {
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="mb-8">
+        <Button
+          variant="ghost"
+          onClick={() => navigate('/chat')}
+          className="mb-4"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Voltar para o Chat
+        </Button>
         <h1 className="text-3xl font-bold mb-2">Administração de Usuários</h1>
         <p className="text-muted-foreground">Gerencie os perfis dos usuários registrados</p>
       </div>

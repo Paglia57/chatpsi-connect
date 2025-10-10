@@ -468,7 +468,7 @@ const ChatInterface = () => {
   return <div className="flex-1 flex flex-col h-full min-h-0 no-horizontal-scroll">
       {/* Header */}
       <header className="app-header">
-        <div className="header-center">
+        <div className="header-center mx-0">
           <img src="/logo.png" alt="ChatPsi" className="brand-logo" />
         </div>
       </header>

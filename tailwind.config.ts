@@ -19,9 +19,9 @@ export default {
 		},
 		extend: {
 		fontFamily: {
-			'sans': ['Anton', 'system-ui', 'sans-serif'],
-			'display': ['Anton', 'system-ui', 'sans-serif'],
-			'chat': ['Montserrat', 'Inter', 'system-ui', 'sans-serif'],
+			'sans': ['Inter', 'system-ui', 'sans-serif'],
+			'display': ['Inter', 'system-ui', 'sans-serif'],
+			'chat': ['Montserrat', 'system-ui', 'sans-serif'],
 		},
 			fontSize: {
 				'xs': ['0.75rem', { lineHeight: '1rem' }],

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useInternationalPhone } from '@/hooks/useInternationalPhone';
 import { COUNTRIES } from '@/lib/countries';
 import { Input } from './input';
@@ -33,19 +33,38 @@ export const InternationalPhoneInput = ({
     parsePhone,
   } = useInternationalPhone(value, defaultCountry);
 
-  // Notificar mudanças para o componente pai
+  // Refs para evitar loop infinito
+  const isParsingRef = useRef(false);
+  const lastValueRef = useRef(value);
+  const isInitialMountRef = useRef(true);
+
+  // Parse valor inicial apenas na montagem
   useEffect(() => {
-    if (fullNumber !== value) {
+    if (isInitialMountRef.current && value) {
+      isParsingRef.current = true;
+      parsePhone(value);
+      lastValueRef.current = value;
+      isInitialMountRef.current = false;
+      setTimeout(() => {
+        isParsingRef.current = false;
+      }, 0);
+    }
+  }, []);
+
+  // Notificar mudanças para o componente pai (apenas mudanças reais do usuário)
+  useEffect(() => {
+    // Não notificar durante parsing inicial
+    if (isParsingRef.current) return;
+    
+    // Não notificar na montagem inicial
+    if (isInitialMountRef.current) return;
+    
+    // Só notificar se o valor realmente mudou
+    if (fullNumber !== lastValueRef.current) {
+      lastValueRef.current = fullNumber;
       onChange(fullNumber);
     }
-  }, [fullNumber]);
-
-  // Parse valor inicial
-  useEffect(() => {
-    if (value) {
-      parsePhone(value);
-    }
-  }, [value]);
+  }, [fullNumber, onChange]);
 
   const selectedCountry = COUNTRIES.find(c => c.code === country);
   const showDdd = selectedCountry && selectedCountry.dddLength > 0;

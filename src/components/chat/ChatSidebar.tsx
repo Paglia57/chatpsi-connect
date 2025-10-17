@@ -5,6 +5,7 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { InternationalPhoneInput } from '@/components/ui/international-phone-input';
 import { MessageSquare, User, MessageCircle, LogOut, Menu, X, Sparkles, Star, Heart, BookOpen, Shield } from 'lucide-react';
 import BetaChip from '@/components/ui/BetaChip';
 import { NavLink } from 'react-router-dom';
@@ -245,11 +246,16 @@ const ChatSidebar = () => {
                     }))} placeholder="Como gosta de ser chamado" className="focus-visible:ring-primary" />
                     </div>
                     <div>
-                      <Label htmlFor="whatsapp">WhatsApp</Label>
-                      <Input id="whatsapp" value={profileData.whatsapp} onChange={e => setProfileData(prev => ({
-                      ...prev,
-                      whatsapp: e.target.value
-                    }))} placeholder="+55 11 99999-9999" className="focus-visible:ring-primary" />
+                      <InternationalPhoneInput
+                        value={profileData.whatsapp || ''}
+                        onChange={(value) => setProfileData(prev => ({
+                          ...prev,
+                          whatsapp: value
+                        }))}
+                        defaultCountry="55"
+                        label="WhatsApp"
+                        required
+                      />
                     </div>
                     <Button onClick={handleProfileUpdate} className="w-full touch-target bg-primary hover:bg-primary-hover hover:shadow-lg transition-all duration-200 border border-primary-hover/20">
                       <Sparkles className="h-4 w-4 mr-2" />
@@ -456,16 +462,15 @@ const ChatSidebar = () => {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="whatsapp">WhatsApp</Label>
-                  <Input 
-                    id="whatsapp" 
-                    value={profileData.whatsapp} 
-                    onChange={e => setProfileData(prev => ({
+                  <InternationalPhoneInput
+                    value={profileData.whatsapp || ''}
+                    onChange={(value) => setProfileData(prev => ({
                       ...prev,
-                      whatsapp: e.target.value
-                    }))} 
-                    placeholder="+55 11 99999-9999" 
-                    className="focus-visible:ring-primary" 
+                      whatsapp: value
+                    }))}
+                    defaultCountry="55"
+                    label="WhatsApp"
+                    required
                   />
                 </div>
                 <Button onClick={handleProfileUpdate} className="w-full bg-primary hover:bg-primary-hover hover:shadow-lg transition-all duration-200 border border-primary-hover/20">

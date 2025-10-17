@@ -4,7 +4,7 @@ import { AdminGuard } from '@/components/admin/AdminGuard';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { useWhatsAppFormatter } from '@/hooks/useWhatsAppFormatter';
+import { InternationalPhoneInput } from '@/components/ui/international-phone-input';
 import {
   Table,
   TableBody,
@@ -41,10 +41,8 @@ const AdminPageContent = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [editingProfile, setEditingProfile] = useState<Profile | null>(null);
-  const [whatsappDisplay, setWhatsappDisplay] = useState('');
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { formatForDisplay, cleanForDatabase, isValid } = useWhatsAppFormatter();
 
   const fetchProfiles = async () => {
     try {
@@ -71,15 +69,6 @@ const AdminPageContent = () => {
   useEffect(() => {
     fetchProfiles();
   }, []);
-
-  // Formatar WhatsApp ao abrir edição
-  useEffect(() => {
-    if (editingProfile?.whatsapp) {
-      setWhatsappDisplay(formatForDisplay(editingProfile.whatsapp));
-    } else {
-      setWhatsappDisplay('');
-    }
-  }, [editingProfile]);
 
   useEffect(() => {
     if (searchTerm.trim() === '') {
@@ -119,27 +108,12 @@ const AdminPageContent = () => {
   const handleSaveEdit = async () => {
     if (!editingProfile) return;
 
-    // Validar WhatsApp se fornecido
-    if (editingProfile.whatsapp && !isValid(editingProfile.whatsapp)) {
-      toast({
-        title: 'WhatsApp inválido',
-        description: 'Use o formato: +55 (DDD) 9XXXX-XXXX',
-        variant: 'destructive',
-      });
-      return;
-    }
-
     try {
-      // Limpar WhatsApp antes de salvar (apenas dígitos)
-      const cleanWhatsapp = editingProfile.whatsapp 
-        ? cleanForDatabase(editingProfile.whatsapp) 
-        : null;
-
       const { error } = await supabase.rpc('admin_update_profile', {
         p_user_id: editingProfile.user_id,
         p_email: editingProfile.email,
         p_full_name: editingProfile.full_name,
-        p_whatsapp: cleanWhatsapp,
+        p_whatsapp: editingProfile.whatsapp || null,
         p_nickname: editingProfile.nickname,
         p_subscription_active: editingProfile.subscription_active,
       });
@@ -212,7 +186,7 @@ const AdminPageContent = () => {
                   <TableCell>{profile.full_name || '-'}</TableCell>
                   <TableCell>{profile.nickname || '-'}</TableCell>
                   <TableCell>
-                    {profile.whatsapp ? formatForDisplay(profile.whatsapp) : '-'}
+                    {profile.whatsapp || '-'}
                   </TableCell>
                   <TableCell>
                     <Badge variant={profile.subscription_active ? 'default' : 'secondary'}>
@@ -283,32 +257,18 @@ const AdminPageContent = () => {
                   }
                 />
               </div>
-              <div>
-                <label className="text-sm font-medium">WhatsApp</label>
-                <Input
-                  placeholder="+55 (18) 98113-2787"
-                  value={whatsappDisplay}
-                  onChange={(e) => {
-                    const input = e.target.value;
-                    const digitsOnly = input.replace(/\D/g, '');
-                    
-                    // Atualizar display formatado em tempo real
-                    setWhatsappDisplay(formatForDisplay(digitsOnly));
-                    
-                    // Atualizar o estado com valor limpo
-                    setEditingProfile({ 
-                      ...editingProfile, 
-                      whatsapp: digitsOnly 
-                    });
-                  }}
-                  className={!isValid(whatsappDisplay) && whatsappDisplay ? 'border-yellow-500' : ''}
-                />
-                {whatsappDisplay && !isValid(whatsappDisplay) && (
-                  <p className="text-xs text-yellow-600 mt-1">
-                    Formato: +55 (DDD) 9XXXX-XXXX
-                  </p>
-                )}
-              </div>
+              <InternationalPhoneInput
+                value={editingProfile.whatsapp || ''}
+                onChange={(value) => {
+                  setEditingProfile({ 
+                    ...editingProfile, 
+                    whatsapp: value || null
+                  });
+                }}
+                defaultCountry="55"
+                label="WhatsApp"
+                required={false}
+              />
               <div className="flex items-center gap-2">
                 <Checkbox
                   checked={editingProfile.subscription_active}

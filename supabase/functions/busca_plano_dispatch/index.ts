@@ -18,9 +18,32 @@ serve(async (req) => {
 
     const { input_text } = await req.json();
 
+    // Input validation
     if (!input_text || typeof input_text !== 'string') {
       return new Response(
         JSON.stringify({ error: 'Campo obrigatório: input_text (string)' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (input_text.length === 0 || input_text.trim().length === 0) {
+      return new Response(
+        JSON.stringify({ error: 'input_text não pode estar vazio' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (input_text.length > 5000) {
+      return new Response(
+        JSON.stringify({ error: 'input_text muito longo (máximo 5000 caracteres)' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Prevent script injection
+    if (/<script|javascript:|onerror=/i.test(input_text)) {
+      return new Response(
+        JSON.stringify({ error: 'Caracteres inválidos detectados' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -149,7 +172,7 @@ serve(async (req) => {
   } catch (e) {
     console.error('Error in busca_plano_dispatch:', e);
     return new Response(
-      JSON.stringify({ error: String(e.message || e) }),
+      JSON.stringify({ error: 'Erro ao processar requisição' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

@@ -53,10 +53,10 @@ enable_phone_confirmations = false
 enable_phone_autoconfirm = false
 
 [functions.dispatch-message]
-verify_jwt = false
+verify_jwt = true
 
 [functions.dispatch_message]
-verify_jwt = false
+verify_jwt = true
 
 [functions.busca_plano_dispatch]
 verify_jwt = true

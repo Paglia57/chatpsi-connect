@@ -96,8 +96,8 @@ export const InternationalPhoneInput = ({
       </div>
 
       {/* Preview do número normalizado */}
-      <p className="text-xs text-muted-foreground">
-        Salvo como: {fullNumber || '—'}
+      <p className={`text-xs ${fullNumber && !isValid ? 'text-yellow-600' : 'text-muted-foreground'}`}>
+        Será salvo como: {fullNumber || '—'}
       </p>
 
       {/* Mensagens de erro */}

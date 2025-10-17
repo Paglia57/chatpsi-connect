@@ -78,12 +78,14 @@ export const useInternationalPhone = (
 
     if (country === '55') {
       // DDD deve ter exatamente 2 dígitos
-      if (ddd.length > 0 && ddd.length !== 2) {
-        errors.ddd = 'DDD deve ter 2 dígitos (11-99)';
+      if (ddd.length !== 2) {
+        errors.ddd = 'DDD obrigatório (2 dígitos)';
       }
 
       // Número deve ter 8 ou 9 dígitos
-      if (number.length > 0 && number.length !== 8 && number.length !== 9) {
+      if (number.length === 0) {
+        errors.number = 'Número obrigatório';
+      } else if (number.length !== 8 && number.length !== 9) {
         errors.number = 'Número deve ter 8 ou 9 dígitos';
       }
     }
@@ -96,10 +98,13 @@ export const useInternationalPhone = (
 
   // Validar
   const errors = validateBrazil();
+  const selectedCountry = COUNTRIES.find(c => c.code === country);
+  const needsDdd = selectedCountry && selectedCountry.dddLength > 0;
+  
   const isValid = 
     country.length > 0 &&
-    (country === '55' ? ddd.length === 2 : true) &&
     number.length > 0 &&
+    (needsDdd ? ddd.length === selectedCountry.dddLength : true) &&
     !errors.ddd &&
     !errors.number;
 

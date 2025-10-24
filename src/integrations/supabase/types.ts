@@ -265,14 +265,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      admin_clear_thread: {
-        Args: { p_user_id: string }
-        Returns: undefined
-      }
-      admin_delete_profile: {
-        Args: { p_user_id: string }
-        Returns: undefined
-      }
+      admin_clear_thread: { Args: { p_user_id: string }; Returns: undefined }
+      admin_delete_profile: { Args: { p_user_id: string }; Returns: undefined }
       admin_update_profile: {
         Args: {
           p_email?: string
@@ -291,20 +285,21 @@ export type Database = {
         }
         Returns: boolean
       }
-      is_admin: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      update_profile_basic_info: {
-        Args:
-          | { p_full_name: string; p_nickname?: string; p_whatsapp: string }
-          | { p_full_name: string; p_whatsapp: string }
-        Returns: undefined
-      }
-      validate_file_type: {
-        Args: { filename: string }
-        Returns: boolean
-      }
+      is_admin: { Args: never; Returns: boolean }
+      update_profile_basic_info:
+        | {
+            Args: {
+              p_full_name: string
+              p_nickname?: string
+              p_whatsapp: string
+            }
+            Returns: undefined
+          }
+        | {
+            Args: { p_full_name: string; p_whatsapp: string }
+            Returns: undefined
+          }
+      validate_file_type: { Args: { filename: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "user"

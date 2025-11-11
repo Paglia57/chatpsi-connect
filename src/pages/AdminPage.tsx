@@ -19,7 +19,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Search, Edit, RotateCcw, ArrowLeft } from 'lucide-react';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Search, Edit, RotateCcw, ArrowLeft, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -31,6 +37,7 @@ interface Profile {
   nickname: string | null;
   whatsapp: string | null;
   subscription_active: boolean;
+  subscription_id: string | null;
   TokenCount: number | null;
   openai_thread_id: string | null;
 }
@@ -48,7 +55,7 @@ const AdminPageContent = () => {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('user_id, email, full_name, nickname, whatsapp, subscription_active, TokenCount, openai_thread_id')
+        .select('user_id, email, full_name, nickname, whatsapp, subscription_active, subscription_id, TokenCount, openai_thread_id')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -146,8 +153,67 @@ const AdminPageContent = () => {
           <ArrowLeft className="w-4 h-4 mr-2" />
           Voltar para o Chat
         </Button>
-        <h1 className="text-3xl font-bold mb-2">Administração de Usuários</h1>
-        <p className="text-muted-foreground">Gerencie os perfis dos usuários registrados</p>
+        
+        <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">Administração de Usuários</h1>
+            <p className="text-muted-foreground">Gerencie os perfis dos usuários registrados</p>
+          </div>
+
+          {(() => {
+            const activeSubscribers = profiles.filter(p => p.subscription_active);
+            const activeCount = activeSubscribers.length;
+
+            return (
+              <div className="bg-primary/5 border-2 border-primary/20 rounded-lg p-4 w-full lg:min-w-[280px] lg:w-auto">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <Users className="h-5 w-5 text-primary" />
+                    <h2 className="text-sm font-medium text-muted-foreground">
+                      Assinantes Ativos
+                    </h2>
+                  </div>
+                  <p className="text-3xl font-bold text-primary">
+                    {activeCount}
+                  </p>
+                </div>
+                
+                <Collapsible>
+                  <CollapsibleTrigger asChild>
+                    <Button variant="outline" size="sm" className="w-full">
+                      Ver Detalhes
+                    </Button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="mt-2">
+                    <ScrollArea className="h-48 w-full rounded border">
+                      <div className="p-2">
+                        {activeSubscribers.length === 0 ? (
+                          <p className="text-sm text-muted-foreground text-center py-4">
+                            Nenhum assinante ativo
+                          </p>
+                        ) : (
+                          activeSubscribers.map(sub => (
+                            <div 
+                              key={sub.user_id} 
+                              className="flex flex-col gap-1 border-b py-2 last:border-0"
+                            >
+                              <span className="font-medium text-sm truncate">
+                                {sub.full_name || sub.email}
+                              </span>
+                              <Badge variant="secondary" className="font-mono text-xs w-fit">
+                                ID: {sub.subscription_id || 'N/A'}
+                              </Badge>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </ScrollArea>
+                  </CollapsibleContent>
+                </Collapsible>
+              </div>
+            );
+          })()}
+        </div>
       </div>
 
       <div className="mb-6 flex gap-4">

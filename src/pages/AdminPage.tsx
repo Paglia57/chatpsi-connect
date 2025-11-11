@@ -161,7 +161,7 @@ const AdminPageContent = () => {
           </div>
 
           {(() => {
-            const activeSubscribers = profiles.filter(p => p.subscription_active);
+            const activeSubscribers = profiles.filter(p => p.subscription_active && p.subscription_id);
             const activeCount = activeSubscribers.length;
 
             return (

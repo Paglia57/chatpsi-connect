@@ -268,7 +268,7 @@ const MarketingInterface = () => {
             {texts.map((text) => (
               <Card
                 key={text.id}
-                className={`p-3 cursor-pointer transition-colors hover:bg-muted/50 relative group overflow-hidden ${
+                className={`p-3 cursor-pointer transition-colors hover:bg-muted/50 ${
                   selectedId === text.id ? 'bg-primary/10 border-primary' : ''
                 }`}
                 onClick={() => {
@@ -276,30 +276,32 @@ const MarketingInterface = () => {
                   if (isMobile) setSidebarOpen(false);
                 }}
               >
-                <div className="pr-16 overflow-hidden">
-                  <p className="font-medium text-sm truncate">
-                    {text.title || text.generated_text.split('\n')[0].substring(0, 18)}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {new Date(text.created_at).toLocaleDateString('pt-BR', {
-                      day: '2-digit',
-                      month: '2-digit',
-                      year: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                  </p>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm truncate">
+                      {text.title || text.generated_text.split('\n')[0].substring(0, 30)}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {new Date(text.created_at).toLocaleDateString('pt-BR', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </p>
+                  </div>
+                  
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 shrink-0 opacity-60 hover:opacity-100 transition-opacity"
+                    onClick={(e) => handleDeleteClick(e, text.id)}
+                    title="Excluir texto"
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
                 </div>
-                
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="absolute top-2 right-2 h-8 w-8 opacity-60 hover:opacity-100 transition-opacity z-10 bg-background/80 hover:bg-background"
-                  onClick={(e) => handleDeleteClick(e, text.id)}
-                  title="Excluir texto"
-                >
-                  <Trash2 className="h-4 w-4 text-destructive" />
-                </Button>
               </Card>
             ))}
           </div>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -6,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card } from '@/components/ui/card';
-import { Loader2, Save, Sparkles, Plus } from 'lucide-react';
+import { Loader2, Save, Sparkles, Plus, ArrowLeft } from 'lucide-react';
 
 interface MarketingText {
   id: string;
@@ -18,6 +19,7 @@ interface MarketingText {
 }
 
 const MarketingInterface = () => {
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [texts, setTexts] = useState<MarketingText[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -225,10 +227,23 @@ const MarketingInterface = () => {
       {/* Painel Direita - Formulário */}
       <div className="flex-1 flex flex-col">
         <div className="p-6 border-b">
-          <h1 className="text-2xl font-bold">IA de Marketing</h1>
-          <p className="text-muted-foreground">
-            Gere textos de marketing com inteligência artificial
-          </p>
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate('/chat')}
+              className="shrink-0"
+              title="Voltar para o Chat"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div>
+              <h1 className="text-2xl font-bold">IA de Marketing</h1>
+              <p className="text-muted-foreground text-sm">
+                Gere textos de marketing com inteligência artificial
+              </p>
+            </div>
+          </div>
         </div>
 
         <ScrollArea className="flex-1">

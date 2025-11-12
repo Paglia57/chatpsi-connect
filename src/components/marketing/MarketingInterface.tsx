@@ -275,7 +275,7 @@ const MarketingInterface = () => {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="absolute top-2 right-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="absolute top-2 right-2 h-7 w-7 opacity-50 hover:opacity-100 transition-opacity"
                   onClick={(e) => handleDeleteClick(e, text.id)}
                   title="Excluir texto"
                 >

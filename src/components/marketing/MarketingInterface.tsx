@@ -257,9 +257,9 @@ const MarketingInterface = () => {
                 }`}
                 onClick={() => handleSelectText(text)}
               >
-                <div className="pr-8">
+                <div className="pr-12">
                   <p className="font-medium text-sm truncate">
-                    {text.title || text.generated_text.split('\n')[0].substring(0, 50)}
+                    {text.title || text.generated_text.split('\n')[0].substring(0, 35)}
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
                     {new Date(text.created_at).toLocaleDateString('pt-BR', {

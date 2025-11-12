@@ -47,6 +47,36 @@ export type Database = {
         }
         Relationships: []
       }
+      marketing_texts: {
+        Row: {
+          created_at: string | null
+          generated_text: string
+          id: string
+          prompt: string
+          title: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          generated_text: string
+          id?: string
+          prompt: string
+          title?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          generated_text?: string
+          id?: string
+          prompt?: string
+          title?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           content: string

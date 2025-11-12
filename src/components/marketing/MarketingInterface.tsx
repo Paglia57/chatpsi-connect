@@ -268,7 +268,7 @@ const MarketingInterface = () => {
             {texts.map((text) => (
               <Card
                 key={text.id}
-                className={`p-3 cursor-pointer transition-colors hover:bg-muted/50 relative group ${
+                className={`p-3 cursor-pointer transition-colors hover:bg-muted/50 relative group overflow-hidden ${
                   selectedId === text.id ? 'bg-primary/10 border-primary' : ''
                 }`}
                 onClick={() => {
@@ -276,9 +276,9 @@ const MarketingInterface = () => {
                   if (isMobile) setSidebarOpen(false);
                 }}
               >
-                <div className="pr-12">
+                <div className="pr-14 overflow-hidden">
                   <p className="font-medium text-sm truncate">
-                    {text.title || text.generated_text.split('\n')[0].substring(0, 35)}
+                    {text.title || text.generated_text.split('\n')[0].substring(0, 25)}
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
                     {new Date(text.created_at).toLocaleDateString('pt-BR', {
@@ -294,7 +294,7 @@ const MarketingInterface = () => {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="absolute top-2 right-2 h-7 w-7 opacity-50 hover:opacity-100 transition-opacity"
+                  className="absolute top-2 right-2 h-8 w-8 opacity-60 hover:opacity-100 transition-opacity z-10 bg-background/80 hover:bg-background"
                   onClick={(e) => handleDeleteClick(e, text.id)}
                   title="Excluir texto"
                 >

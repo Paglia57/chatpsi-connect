@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { InternationalPhoneInput } from '@/components/ui/international-phone-input';
-import { MessageSquare, User, MessageCircle, LogOut, Menu, X, Sparkles, Star, Heart, BookOpen, Shield } from 'lucide-react';
+import { MessageSquare, User, MessageCircle, LogOut, Menu, X, Sparkles, Star, Heart, BookOpen, Shield, PenTool } from 'lucide-react';
 import BetaChip from '@/components/ui/BetaChip';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '@/components/auth/AuthProvider';
@@ -116,6 +116,13 @@ const ChatSidebar = () => {
       icon: BookOpen,
       description: "Artigos científicos relevantes",
       gradient: "from-primary to-accent"
+    },
+    {
+      title: "IA de Marketing",
+      url: "/marketing",
+      icon: PenTool,
+      description: "Gerar textos de marketing",
+      gradient: "from-cta to-accent"
     },
     ...(isAdmin ? [{
       title: "Administração",

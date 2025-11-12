@@ -7,7 +7,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card } from '@/components/ui/card';
-import { Loader2, Save, Sparkles, Plus, ArrowLeft, Trash2 } from 'lucide-react';
+import { Loader2, Save, Sparkles, Plus, ArrowLeft, Trash2, Menu } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from '@/components/ui/sheet';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -40,6 +46,8 @@ const MarketingInterface = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
+  const isMobile = useIsMobile();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     fetchHistory();
@@ -223,39 +231,50 @@ const MarketingInterface = () => {
     }
   };
 
-  return (
-    <div className="min-h-screen flex bg-background">
-      {/* Sidebar Esquerda - Histórico */}
-      <div className="w-80 border-r bg-muted/10 flex flex-col">
-        <div className="p-4 border-b">
-          <div className="flex items-center justify-between mb-2">
-            <h2 className="text-lg font-semibold">Histórico</h2>
-            <Button size="sm" variant="outline" onClick={handleNewText}>
-              <Plus className="h-4 w-4 mr-1" />
-              Novo
-            </Button>
-          </div>
+  const SidebarContent = () => (
+    <>
+      <div className="p-4 border-b">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate('/chat')}
+          className="mb-4 w-full justify-start"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Voltar para o Chat
+        </Button>
+        
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold">Histórico</h2>
+          <Button size="sm" variant="outline" onClick={handleNewText}>
+            <Plus className="h-4 w-4 mr-1" />
+            Novo
+          </Button>
         </div>
+      </div>
 
-        <ScrollArea className="flex-1">
-          {isLoadingHistory ? (
-            <div className="p-4 text-center text-muted-foreground">
-              <Loader2 className="h-5 w-5 animate-spin mx-auto mb-2" />
-              Carregando...
-            </div>
-          ) : texts.length === 0 ? (
-            <div className="p-4 text-center text-muted-foreground">
-              Nenhum texto salvo ainda
-            </div>
-          ) : (
-            <div className="p-2 space-y-2">
-              {texts.map((text) => (
+      <ScrollArea className="flex-1">
+        {isLoadingHistory ? (
+          <div className="p-4 text-center text-muted-foreground">
+            <Loader2 className="h-5 w-5 animate-spin mx-auto mb-2" />
+            Carregando...
+          </div>
+        ) : texts.length === 0 ? (
+          <div className="p-4 text-center text-muted-foreground">
+            Nenhum texto salvo ainda
+          </div>
+        ) : (
+          <div className="p-2 space-y-2">
+            {texts.map((text) => (
               <Card
                 key={text.id}
                 className={`p-3 cursor-pointer transition-colors hover:bg-muted/50 relative group ${
                   selectedId === text.id ? 'bg-primary/10 border-primary' : ''
                 }`}
-                onClick={() => handleSelectText(text)}
+                onClick={() => {
+                  handleSelectText(text);
+                  if (isMobile) setSidebarOpen(false);
+                }}
               >
                 <div className="pr-12">
                   <p className="font-medium text-sm truncate">
@@ -282,28 +301,45 @@ const MarketingInterface = () => {
                   <Trash2 className="h-4 w-4 text-destructive" />
                 </Button>
               </Card>
-              ))}
-            </div>
-          )}
-        </ScrollArea>
-      </div>
+            ))}
+          </div>
+        )}
+      </ScrollArea>
+    </>
+  );
+
+  return (
+    <div className="min-h-screen flex flex-col md:flex-row bg-background">
+      {/* Desktop: Sidebar fixa */}
+      {!isMobile && (
+        <div className="w-80 border-r bg-muted/10 flex flex-col">
+          <SidebarContent />
+        </div>
+      )}
 
       {/* Painel Direita - Formulário */}
       <div className="flex-1 flex flex-col">
-        <div className="p-6 border-b">
+        <div className="p-4 md:p-6 border-b">
           <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate('/chat')}
-              className="shrink-0"
-              title="Voltar para o Chat"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
+            {/* Mobile: Botão hambúrguer */}
+            {isMobile && (
+              <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon" className="shrink-0">
+                    <Menu className="h-5 w-5" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-80 p-0">
+                  <div className="flex flex-col h-full">
+                    <SidebarContent />
+                  </div>
+                </SheetContent>
+              </Sheet>
+            )}
+            
             <div>
-              <h1 className="text-2xl font-bold">IA de Marketing</h1>
-              <p className="text-muted-foreground text-sm">
+              <h1 className="text-xl md:text-2xl font-bold">IA de Marketing</h1>
+              <p className="text-muted-foreground text-xs md:text-sm">
                 Gere textos de marketing com inteligência artificial
               </p>
             </div>
@@ -311,7 +347,7 @@ const MarketingInterface = () => {
         </div>
 
         <ScrollArea className="flex-1">
-          <div className="p-6 max-w-4xl mx-auto w-full space-y-6">
+          <div className="p-4 md:p-6 max-w-4xl mx-auto w-full space-y-4 md:space-y-6">
             <div className="space-y-2">
               <Label htmlFor="prompt">Pedido ao assistente</Label>
               <Textarea
@@ -336,7 +372,7 @@ const MarketingInterface = () => {
               />
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex flex-col md:flex-row gap-3">
               <Button
                 onClick={handleGenerate}
                 disabled={isGenerating || !prompt.trim()}

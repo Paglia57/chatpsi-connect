@@ -419,10 +419,10 @@ const MarketingInterface = () => {
                     handleDeleteClick(e, selectedId);
                   }}
                   variant="destructive"
-                  className="flex-1"
+                  size="icon"
+                  title="Excluir texto"
                 >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Excluir
+                  <Trash2 className="h-4 w-4" />
                 </Button>
               )}
             </div>

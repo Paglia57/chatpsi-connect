@@ -7,7 +7,17 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card } from '@/components/ui/card';
-import { Loader2, Save, Sparkles, Plus, ArrowLeft } from 'lucide-react';
+import { Loader2, Save, Sparkles, Plus, ArrowLeft, Trash2 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface MarketingText {
   id: string;
@@ -23,6 +33,8 @@ const MarketingInterface = () => {
   const { toast } = useToast();
   const [texts, setTexts] = useState<MarketingText[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [textToDelete, setTextToDelete] = useState<string | null>(null);
   const [prompt, setPrompt] = useState('');
   const [generatedText, setGeneratedText] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -171,6 +183,46 @@ const MarketingInterface = () => {
     setGeneratedText('');
   };
 
+  const handleDeleteClick = (e: React.MouseEvent, textId: string) => {
+    e.stopPropagation();
+    setTextToDelete(textId);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!textToDelete) return;
+
+    try {
+      const { error } = await supabase
+        .from('marketing_texts')
+        .delete()
+        .eq('id', textToDelete);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Sucesso',
+        description: 'Texto excluído com sucesso!',
+      });
+
+      if (selectedId === textToDelete) {
+        handleNewText();
+      }
+
+      await fetchHistory();
+    } catch (error) {
+      console.error('Erro ao excluir:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Erro',
+        description: 'Não foi possível excluir o texto',
+      });
+    } finally {
+      setDeleteDialogOpen(false);
+      setTextToDelete(null);
+    }
+  };
+
   return (
     <div className="min-h-screen flex bg-background">
       {/* Sidebar Esquerda - Histórico */}
@@ -198,13 +250,14 @@ const MarketingInterface = () => {
           ) : (
             <div className="p-2 space-y-2">
               {texts.map((text) => (
-                <Card
-                  key={text.id}
-                  className={`p-3 cursor-pointer transition-colors hover:bg-muted/50 ${
-                    selectedId === text.id ? 'bg-primary/10 border-primary' : ''
-                  }`}
-                  onClick={() => handleSelectText(text)}
-                >
+              <Card
+                key={text.id}
+                className={`p-3 cursor-pointer transition-colors hover:bg-muted/50 relative group ${
+                  selectedId === text.id ? 'bg-primary/10 border-primary' : ''
+                }`}
+                onClick={() => handleSelectText(text)}
+              >
+                <div className="pr-8">
                   <p className="font-medium text-sm truncate">
                     {text.title || text.generated_text.split('\n')[0].substring(0, 50)}
                   </p>
@@ -217,7 +270,18 @@ const MarketingInterface = () => {
                       minute: '2-digit'
                     })}
                   </p>
-                </Card>
+                </div>
+                
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute top-2 right-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={(e) => handleDeleteClick(e, text.id)}
+                  title="Excluir texto"
+                >
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
+              </Card>
               ))}
             </div>
           )}
@@ -313,6 +377,26 @@ const MarketingInterface = () => {
           </div>
         </ScrollArea>
       </div>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir este texto? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

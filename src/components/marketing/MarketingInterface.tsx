@@ -411,6 +411,20 @@ const MarketingInterface = () => {
                   </>
                 )}
               </Button>
+
+              {selectedId && (
+                <Button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleDeleteClick(e, selectedId);
+                  }}
+                  variant="destructive"
+                  className="flex-1"
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Excluir
+                </Button>
+              )}
             </div>
           </div>
         </ScrollArea>

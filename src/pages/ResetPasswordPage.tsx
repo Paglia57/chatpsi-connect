@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Eye, EyeOff, Check, X, Loader2, Shield } from 'lucide-react';
+import { Eye, EyeOff, Check, X, Loader2, Shield, AlertTriangle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { logger, GENERIC_ERROR_MESSAGES } from '@/lib/logger';
 
@@ -15,9 +15,34 @@ const ResetPasswordPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [sessionValid, setSessionValid] = useState<boolean | null>(null);
+  const [checkingSession, setCheckingSession] = useState(true);
   
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  // Verificar se há uma sessão válida ao carregar a página
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          logger.error('Session check failed', error);
+          setSessionValid(false);
+        } else {
+          setSessionValid(!!session);
+        }
+      } catch (error) {
+        logger.error('Session check error', error);
+        setSessionValid(false);
+      } finally {
+        setCheckingSession(false);
+      }
+    };
+
+    checkSession();
+  }, []);
 
   // Validação de senha
   const hasMinLength = password.length >= 8;
@@ -80,6 +105,48 @@ const ResetPasswordPage = () => {
       setLoading(false);
     }
   };
+
+  // Mostrar loading enquanto verifica a sessão
+  if (checkingSession) {
+    return (
+      <div className="min-h-screen bg-accent-light/30 flex items-center justify-center p-4 relative">
+        <div className="absolute inset-0 bg-pattern-grid opacity-10 bg-[length:30px_30px]"></div>
+        <div className="text-center space-y-4 relative z-10">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
+          <p className="text-muted-foreground">Verificando link...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Se não há sessão válida, mostrar mensagem de link expirado
+  if (!sessionValid) {
+    return (
+      <div className="min-h-screen bg-accent-light/30 flex items-center justify-center p-4 relative">
+        <div className="absolute inset-0 bg-pattern-grid opacity-10 bg-[length:30px_30px]"></div>
+        <Card className="w-full max-w-md mx-auto shadow-lg relative z-10 card-decorated">
+          <CardHeader className="text-center">
+            <div className="flex items-center justify-center mb-4">
+              <AlertTriangle className="h-12 w-12 text-yellow-500" />
+            </div>
+            <CardTitle className="text-2xl text-accent">Link expirado ou inválido</CardTitle>
+            <CardDescription className="text-base mt-4">
+              O link de redefinição de senha expirou ou já foi utilizado.
+              Por favor, solicite um novo link para redefinir sua senha.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Button 
+              onClick={() => navigate('/auth')}
+              className="w-full bg-primary hover:bg-primary/90"
+            >
+              Solicitar novo link
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-accent-light/30 flex items-center justify-center p-4 relative">

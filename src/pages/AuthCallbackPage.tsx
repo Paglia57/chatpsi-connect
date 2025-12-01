@@ -19,30 +19,54 @@ const AuthCallbackPage = () => {
         
         logger.debug('Processing auth callback', { type, nextPath });
 
-        // Para recuperação de senha, apenas verificar se temos acesso ao hash da URL
+        // Para recuperação de senha, aguardar estabelecimento da sessão
         if (type === 'recovery') {
-          // Para password recovery, o Supabase automaticamente processa o hash
-          // Apenas aguardar um momento para o processamento automático
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          logger.debug('Processing password recovery callback');
           
-          // Verificar se a sessão foi estabelecida
-          const { data: { session }, error } = await supabase.auth.getSession();
-          
-          if (error) {
-            logger.error('Session verification failed after recovery', error);
-            toast({
-              title: "Link expirado",
-              description: GENERIC_ERROR_MESSAGES.PASSWORD_RESET_FAILED,
-              variant: "destructive",
+          // Aguardar até 5 segundos pelo evento de sessão via onAuthStateChange
+          const sessionPromise = new Promise<boolean>((resolve) => {
+            const timeout = setTimeout(() => {
+              logger.warn('Recovery session timeout - no PASSWORD_RECOVERY event received');
+              resolve(false);
+            }, 5000);
+            
+            const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+              logger.debug('Auth state change during recovery', { event, hasSession: !!session });
+              
+              if ((event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') && session) {
+                clearTimeout(timeout);
+                subscription.unsubscribe();
+                resolve(true);
+              }
             });
-            setRedirectTo('/auth');
-          } else if (session) {
+          });
+          
+          const hasSession = await sessionPromise;
+          
+          if (hasSession) {
             logger.debug('Recovery session established successfully');
             setRedirectTo(nextPath);
           } else {
-            logger.debug('No session after recovery, proceeding to reset page');
-            // Mesmo sem sessão, permite ir para reset-password pois o Supabase pode ter processado o token
-            setRedirectTo(nextPath);
+            // Verificar sessão existente como fallback
+            const { data: { session }, error } = await supabase.auth.getSession();
+            
+            if (error) {
+              logger.error('Session verification failed after recovery', error);
+            }
+            
+            if (session) {
+              logger.debug('Recovery session found in fallback check');
+              setRedirectTo(nextPath);
+            } else {
+              // Sem sessão válida - link expirado ou já usado
+              logger.error('No valid session after recovery - link expired or already used');
+              toast({
+                title: "Link expirado",
+                description: GENERIC_ERROR_MESSAGES.PASSWORD_RESET_LINK_EXPIRED,
+                variant: "destructive",
+              });
+              setRedirectTo('/auth');
+            }
           }
         } else {
           // Para outros tipos de callback (OAuth, magic link, etc.)

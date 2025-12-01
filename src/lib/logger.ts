@@ -86,5 +86,6 @@ export const GENERIC_ERROR_MESSAGES = {
   NETWORK_ERROR: 'Erro de conexão. Verifique sua internet.',
   GENERIC: 'Ocorreu um erro inesperado. Tente novamente.',
   PASSWORD_RESET_FAILED: 'Não foi possível redefinir a senha. Tente novamente.',
+  PASSWORD_RESET_LINK_EXPIRED: 'O link de redefinição expirou ou já foi utilizado. Solicite um novo link.',
   UPLOAD_FAILED: 'Falha no upload do arquivo.',
 } as const;

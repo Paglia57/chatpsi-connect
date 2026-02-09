@@ -25,7 +25,7 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Search, Edit, RotateCcw, ArrowLeft, Users } from 'lucide-react';
+import { Search, Edit, RotateCcw, ArrowLeft, Users, ArrowUpDown, ArrowDown, ArrowUp } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -48,6 +48,7 @@ const AdminPageContent = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [editingProfile, setEditingProfile] = useState<Profile | null>(null);
+  const [sortByTokens, setSortByTokens] = useState<'none' | 'asc' | 'desc'>('none');
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -78,15 +79,22 @@ const AdminPageContent = () => {
   }, []);
 
   useEffect(() => {
-    if (searchTerm.trim() === '') {
-      setFilteredProfiles(profiles);
-    } else {
-      const filtered = profiles.filter((profile) =>
-        profile.full_name?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      setFilteredProfiles(filtered);
+    let result = searchTerm.trim() === ''
+      ? [...profiles]
+      : profiles.filter((profile) =>
+          profile.full_name?.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+
+    if (sortByTokens !== 'none') {
+      result.sort((a, b) => {
+        const aTokens = a.TokenCount || 0;
+        const bTokens = b.TokenCount || 0;
+        return sortByTokens === 'desc' ? bTokens - aTokens : aTokens - bTokens;
+      });
     }
-  }, [searchTerm, profiles]);
+
+    setFilteredProfiles(result);
+  }, [searchTerm, profiles, sortByTokens]);
 
   const handleClearThread = async (userId: string) => {
     try {
@@ -240,7 +248,19 @@ const AdminPageContent = () => {
                 <TableHead>Apelido</TableHead>
                 <TableHead>WhatsApp</TableHead>
                 <TableHead>Assinatura</TableHead>
-                <TableHead>Tokens</TableHead>
+                <TableHead>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 px-2 -ml-2"
+                    onClick={() => setSortByTokens(prev => prev === 'none' ? 'desc' : prev === 'desc' ? 'asc' : 'none')}
+                  >
+                    Tokens
+                    {sortByTokens === 'none' && <ArrowUpDown className="ml-1 h-4 w-4" />}
+                    {sortByTokens === 'desc' && <ArrowDown className="ml-1 h-4 w-4" />}
+                    {sortByTokens === 'asc' && <ArrowUp className="ml-1 h-4 w-4" />}
+                  </Button>
+                </TableHead>
                 <TableHead>Histórico</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>

@@ -145,12 +145,17 @@ export const useFileUpload = () => {
         throw uploadError;
       }
 
-      // Generate public URL (permanent, no expiry)
-      const supabaseUrl = 'https://rrdvivxdasezvhfbetra.supabase.co';
-      const publicUrl = `${supabaseUrl}/storage/v1/object/public/chat-uploads/${filePath}`;
+      // Generate signed URL (15 min expiry) for private bucket
+      const { data: signedUrlData, error: signedUrlError } = await supabase.storage
+        .from('chat-uploads')
+        .createSignedUrl(filePath, 900); // 900 seconds = 15 minutes
+
+      if (signedUrlError || !signedUrlData?.signedUrl) {
+        throw signedUrlError || new Error('Failed to generate signed URL');
+      }
 
       const uploadedFile: UploadedFile = {
-        url: publicUrl,
+        url: signedUrlData.signedUrl,
         type: getFileType(file),
         name: file.name,
       };

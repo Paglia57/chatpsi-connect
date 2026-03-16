@@ -132,6 +132,12 @@ const ChatSidebar = () => {
       icon: Shield,
       description: "Gerenciar usuários",
       gradient: "from-accent to-primary"
+    }, {
+      title: "Indicações",
+      url: "/admin/referrals",
+      icon: Gift,
+      description: "Programa de indicação",
+      gradient: "from-cta to-primary"
     }] : [])
   ];
 

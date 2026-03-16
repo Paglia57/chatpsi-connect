@@ -65,6 +65,8 @@ export default function EvolutionPage() {
             session_number: data.session_number,
             session_duration: data.session_duration,
             session_type: data.session_type,
+            audio_base64: audioBase64,
+            audio_filename: audioFilename,
           }),
         }
       );

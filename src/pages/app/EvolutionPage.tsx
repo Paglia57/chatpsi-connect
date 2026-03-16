@@ -1,0 +1,182 @@
+import { useState, useRef } from "react";
+import EvolutionInput from "@/components/evolution/EvolutionInput";
+import EvolutionOutput from "@/components/evolution/EvolutionOutput";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/components/auth/AuthProvider";
+import { toast } from "sonner";
+
+export default function EvolutionPage() {
+  const { user } = useAuth();
+  const [evolutionContent, setEvolutionContent] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const lastParamsRef = useRef<any>(null);
+
+  const handleGenerate = async (data: {
+    approach: string;
+    patient_initials: string;
+    session_number: number | null;
+    session_duration: string;
+    session_type: string;
+    input_type: "audio" | "text";
+    input_content: string;
+    audio_file?: File;
+  }) => {
+    if (!user) return;
+    setIsGenerating(true);
+    setEvolutionContent("");
+    lastParamsRef.current = data;
+
+    try {
+      let inputContent = data.input_content;
+      let audioUrl: string | null = null;
+
+      // Upload audio if provided
+      if (data.input_type === "audio" && data.audio_file) {
+        const filePath = `${user.id}/${Date.now()}-${data.audio_file.name}`;
+        const { error: uploadError } = await supabase.storage
+          .from("session-audios")
+          .upload(filePath, data.audio_file);
+        if (uploadError) throw new Error("Erro ao enviar áudio: " + uploadError.message);
+
+        const { data: urlData } = supabase.storage
+          .from("session-audios")
+          .getPublicUrl(filePath);
+        audioUrl = urlData.publicUrl;
+        inputContent = `[Áudio enviado: ${data.audio_file.name}] — A transcrição de áudio ainda não está disponível. Por favor, use anotações em texto por enquanto.`;
+      }
+
+      // Call edge function with streaming
+      const session = await supabase.auth.getSession();
+      const token = session.data.session?.access_token;
+      if (!token) throw new Error("Sessão expirada");
+
+      const resp = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-evolution`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            input_type: data.input_type,
+            input_content: inputContent,
+            approach: data.approach,
+            patient_initials: data.patient_initials,
+            session_number: data.session_number,
+            session_duration: data.session_duration,
+            session_type: data.session_type,
+          }),
+        }
+      );
+
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({ error: "Erro desconhecido" }));
+        throw new Error(err.error || `Erro ${resp.status}`);
+      }
+
+      if (!resp.body) throw new Error("Sem resposta do servidor");
+
+      // Stream SSE
+      const reader = resp.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let fullText = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+
+        let newlineIdx: number;
+        while ((newlineIdx = buffer.indexOf("\n")) !== -1) {
+          let line = buffer.slice(0, newlineIdx);
+          buffer = buffer.slice(newlineIdx + 1);
+          if (line.endsWith("\r")) line = line.slice(0, -1);
+          if (line.startsWith(":") || line.trim() === "") continue;
+          if (!line.startsWith("data: ")) continue;
+          const jsonStr = line.slice(6).trim();
+          if (jsonStr === "[DONE]") break;
+          try {
+            const parsed = JSON.parse(jsonStr);
+            const delta = parsed.choices?.[0]?.delta?.content;
+            if (delta) {
+              fullText += delta;
+              setEvolutionContent(fullText);
+            }
+          } catch {
+            buffer = line + "\n" + buffer;
+            break;
+          }
+        }
+      }
+
+      // Flush
+      if (buffer.trim()) {
+        for (let raw of buffer.split("\n")) {
+          if (!raw || !raw.startsWith("data: ")) continue;
+          const j = raw.slice(6).trim();
+          if (j === "[DONE]") continue;
+          try {
+            const p = JSON.parse(j);
+            const c = p.choices?.[0]?.delta?.content;
+            if (c) {
+              fullText += c;
+              setEvolutionContent(fullText);
+            }
+          } catch {}
+        }
+      }
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Erro ao gerar evolução");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleRegenerate = () => {
+    if (lastParamsRef.current) {
+      handleGenerate(lastParamsRef.current);
+    }
+  };
+
+  const handleSave = async (content: string) => {
+    if (!user || !lastParamsRef.current) return;
+    setIsSaving(true);
+    try {
+      const params = lastParamsRef.current;
+      const { error } = await supabase.from("evolutions").insert({
+        user_id: user.id,
+        patient_initials: params.patient_initials,
+        session_number: params.session_number,
+        session_duration: params.session_duration,
+        session_type: params.session_type,
+        approach: params.approach,
+        input_type: params.input_type,
+        input_content: params.input_content,
+        output_content: content,
+      });
+      if (error) throw error;
+      toast.success("Evolução salva com sucesso!");
+    } catch (err: any) {
+      toast.error("Erro ao salvar: " + (err.message || "Erro desconhecido"));
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-7xl mx-auto">
+      <EvolutionInput onGenerate={handleGenerate} isLoading={isGenerating} />
+      <EvolutionOutput
+        content={evolutionContent}
+        isLoading={isGenerating}
+        onRegenerate={handleRegenerate}
+        onSave={handleSave}
+        isSaving={isSaving}
+      />
+    </div>
+  );
+}

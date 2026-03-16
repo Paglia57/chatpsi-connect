@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import Index from "./pages/Index";
 import AuthPage from "@/components/auth/AuthPage";
@@ -15,6 +15,10 @@ import AdminPage from "./pages/AdminPage";
 import AdminReferralsPage from "./pages/AdminReferralsPage";
 import MarketingPage from "./pages/MarketingPage";
 import NotFound from "./pages/NotFound";
+import AppLayout from "@/components/app/AppLayout";
+import EvolutionPage from "./pages/app/EvolutionPage";
+import HistoryPage from "./pages/app/HistoryPage";
+import ProfilePage from "./pages/app/ProfilePage";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +40,13 @@ const App = () => (
             <Route path="/admin" element={<AdminPage />} />
             <Route path="/admin/referrals" element={<AdminReferralsPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
+            {/* App module routes */}
+            <Route path="/app" element={<AppLayout />}>
+              <Route index element={<Navigate to="/app/evolucao" replace />} />
+              <Route path="evolucao" element={<EvolutionPage />} />
+              <Route path="historico" element={<HistoryPage />} />
+              <Route path="perfil" element={<ProfilePage />} />
+            </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

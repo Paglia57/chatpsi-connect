@@ -23,7 +23,7 @@ const Index = () => {
 
   // Redirect based on auth status
   if (user) {
-    return <Navigate to="/chat" replace />;
+    return <Navigate to="/app" replace />;
   } else {
     return <Navigate to="/auth" replace />;
   }

@@ -99,11 +99,18 @@ const ChatSidebar = () => {
   
   const menuItems = [
     {
+      title: "Evolução Clínica",
+      url: "/app/evolucao",
+      icon: FileCheck,
+      description: "Gerar evolução por IA",
+      gradient: "from-primary to-cta"
+    },
+    {
       title: "Chat",
       url: "/chat",
       icon: MessageSquare,
       description: "Conversar com IA especializada",
-      gradient: "from-primary to-cta"
+      gradient: "from-cta to-primary"
     },
     {
       title: "Busca Plano",

@@ -3,6 +3,7 @@ import { Navigate } from 'react-router-dom';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import ChatSidebar from '@/components/chat/ChatSidebar';
 import ChatInterface from '@/components/chat/ChatInterface';
+import ReferralNotificationPoller from '@/components/referral/ReferralNotificationPoller';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useResponsive } from '@/hooks/useResponsive';
 

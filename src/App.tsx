@@ -12,6 +12,7 @@ import BuscaArtigosPage from "./pages/BuscaArtigosPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import AuthCallbackPage from "./pages/AuthCallbackPage";
 import AdminPage from "./pages/AdminPage";
+import AdminReferralsPage from "./pages/AdminReferralsPage";
 import MarketingPage from "./pages/MarketingPage";
 import NotFound from "./pages/NotFound";
 

@@ -66,3 +66,6 @@ verify_jwt = true
 
 [functions.marketing_ai_dispatch]
 verify_jwt = true
+
+[functions.generate-evolution]
+verify_jwt = false

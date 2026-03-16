@@ -6,8 +6,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { InternationalPhoneInput } from '@/components/ui/international-phone-input';
-import { MessageSquare, User, MessageCircle, LogOut, Menu, X, Sparkles, Star, Heart, BookOpen, Shield, PenTool } from 'lucide-react';
+import { MessageSquare, User, MessageCircle, LogOut, Menu, X, Sparkles, Star, Heart, BookOpen, Shield, PenTool, Gift } from 'lucide-react';
 import BetaChip from '@/components/ui/BetaChip';
+import ReferralCard from '@/components/referral/ReferralCard';
+import RedeemBanner from '@/components/referral/RedeemBanner';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
@@ -130,6 +132,12 @@ const ChatSidebar = () => {
       icon: Shield,
       description: "Gerenciar usuários",
       gradient: "from-accent to-primary"
+    }, {
+      title: "Indicações",
+      url: "/admin/referrals",
+      icon: Gift,
+      description: "Programa de indicação",
+      gradient: "from-cta to-primary"
     }] : [])
   ];
 
@@ -209,6 +217,12 @@ const ChatSidebar = () => {
                         {isActive && <div className="w-2 h-2 rounded-full bg-white/80 animate-pulse"></div>}
                       </>}
                   </NavLink>)}
+              </div>
+
+              {/* Referral Section */}
+              <div className="mt-4 space-y-3 px-1">
+                <RedeemBanner />
+                <ReferralCard />
               </div>
             </div>
             
@@ -402,6 +416,14 @@ const ChatSidebar = () => {
               </NavLink>
             ))}
           </div>
+
+          {/* Referral Section - Desktop */}
+          {open && (
+            <div className="px-4 pb-2 space-y-3">
+              <RedeemBanner />
+              <ReferralCard />
+            </div>
+          )}
         </div>
         
         {/* Account Section */}

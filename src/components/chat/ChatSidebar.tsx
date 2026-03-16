@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { InternationalPhoneInput } from '@/components/ui/international-phone-input';
-import { MessageSquare, User, MessageCircle, LogOut, Menu, X, Sparkles, Star, Heart, BookOpen, Shield, PenTool, Gift } from 'lucide-react';
+import { MessageSquare, User, MessageCircle, LogOut, Menu, X, Sparkles, Star, Heart, BookOpen, Shield, PenTool, Gift, FileCheck } from 'lucide-react';
 import BetaChip from '@/components/ui/BetaChip';
 import ReferralCard from '@/components/referral/ReferralCard';
 import RedeemBanner from '@/components/referral/RedeemBanner';
@@ -99,11 +99,18 @@ const ChatSidebar = () => {
   
   const menuItems = [
     {
+      title: "Evolução Clínica",
+      url: "/app/evolucao",
+      icon: FileCheck,
+      description: "Gerar evolução por IA",
+      gradient: "from-primary to-cta"
+    },
+    {
       title: "Chat",
       url: "/chat",
       icon: MessageSquare,
       description: "Conversar com IA especializada",
-      gradient: "from-primary to-cta"
+      gradient: "from-cta to-primary"
     },
     {
       title: "Busca Plano",

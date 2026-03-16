@@ -1,20 +1,36 @@
 
 
-## Diagnóstico
+## Ordenar por Tokens no Admin
 
-O módulo de Evolução Clínica existe em `/app/evolucao`, mas **não há link para ele** na sidebar do Chat (onde o usuário navega). A sidebar do Chat (`ChatSidebar.tsx`) lista Chat, Busca Plano, Busca Artigos, IA de Marketing, etc. — mas não inclui "Evolução Clínica".
+Adicionar um botão/toggle na coluna "Tokens" da tabela de administração que permite ordenar os usuários pelo consumo de tokens (maior para menor e vice-versa).
 
-O usuário está em `/chat` e não tem como chegar ao módulo novo.
+### Mudanças em `src/pages/AdminPage.tsx`
 
-## Correção
+**1. Novo estado de ordenação**
 
-Adicionar um item **"Evolução Clínica"** no menu da `ChatSidebar.tsx`, com ícone `FileCheck` ou `ClipboardPlus`, apontando para `/app/evolucao`. Posicionar como primeiro item do menu (já que é a funcionalidade central).
+Adicionar estado para controlar a direção da ordenação:
+```typescript
+const [sortByTokens, setSortByTokens] = useState<'none' | 'asc' | 'desc'>('none');
+```
 
-### Arquivo a modificar
+**2. Aplicar ordenação no useEffect de filtro (linhas 80-89)**
 
-| Arquivo | Mudança |
-|---------|---------|
-| `src/components/chat/ChatSidebar.tsx` | Adicionar item "Evolução Clínica" (`/app/evolucao`) no array `menuItems`, como primeiro item, com ícone `FileCheck` e descrição "Gerar evolução por IA" |
+Após filtrar por nome, aplicar a ordenação por tokens:
+- `desc`: usuários com mais tokens primeiro
+- `asc`: usuários com menos tokens primeiro
+- `none`: ordem padrão (por data de criação)
 
-Apenas 1 linha de adição no array de menu items — nenhuma outra mudança necessária.
+Valores `null` de `TokenCount` serao tratados como `0`.
+
+**3. Cabeçalho clicável na coluna "Tokens" (linha ~230)**
+
+Trocar o `<TableHead>Tokens</TableHead>` por um botao clicavel com icone de seta indicando a direção atual:
+- Clique alterna entre `none` -> `desc` -> `asc` -> `none`
+- Icone `ArrowUpDown` (neutro), `ArrowDown` (desc), `ArrowUp` (asc) do lucide-react
+
+### Detalhes Técnicos
+
+- Importar `ArrowUpDown`, `ArrowDown`, `ArrowUp` do lucide-react
+- A ordenação é aplicada no frontend sobre `filteredProfiles`, sem nova query ao banco
+- O ciclo de clique: sem ordenação -> maior primeiro -> menor primeiro -> sem ordenação
 

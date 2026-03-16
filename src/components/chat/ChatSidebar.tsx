@@ -416,6 +416,14 @@ const ChatSidebar = () => {
               </NavLink>
             ))}
           </div>
+
+          {/* Referral Section - Desktop */}
+          {open && (
+            <div className="px-4 pb-2 space-y-3">
+              <RedeemBanner />
+              <ReferralCard />
+            </div>
+          )}
         </div>
         
         {/* Account Section */}

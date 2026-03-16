@@ -1,28 +1,36 @@
 
 
-## Plano: 3 ajustes
+## Ordenar por Tokens no Admin
 
-### 1. Usar ChatSidebar na tela de Evolução (em vez do AppSidebar simplificado)
+Adicionar um botão/toggle na coluna "Tokens" da tabela de administração que permite ordenar os usuários pelo consumo de tokens (maior para menor e vice-versa).
 
-O `/app/*` atualmente usa `AppLayout` com `AppSidebar` (sidebar minimalista com 3 itens). O usuário quer ver o sidebar principal (`ChatSidebar`) que tem todos os links, perfil, referral, etc.
+### Mudanças em `src/pages/AdminPage.tsx`
 
-**Solução:** Modificar `AppLayout.tsx` para usar `ChatSidebar` no lugar de `AppSidebar`, seguindo o mesmo padrão do `ChatPage.tsx`.
+**1. Novo estado de ordenação**
 
-| Arquivo | Mudança |
-|---------|---------|
-| `src/components/app/AppLayout.tsx` | Trocar `AppSidebar` por `ChatSidebar`. Remover header com SidebarTrigger (ChatSidebar já tem trigger próprio) |
+Adicionar estado para controlar a direção da ordenação:
+```typescript
+const [sortByTokens, setSortByTokens] = useState<'none' | 'asc' | 'desc'>('none');
+```
 
-### 2. App já inicia na tela de evolução
+**2. Aplicar ordenação no useEffect de filtro (linhas 80-89)**
 
-`Index.tsx` já redireciona para `/app` que redireciona para `/app/evolucao`. Nenhuma mudança necessária.
+Após filtrar por nome, aplicar a ordenação por tokens:
+- `desc`: usuários com mais tokens primeiro
+- `asc`: usuários com menos tokens primeiro
+- `none`: ordem padrão (por data de criação)
 
-### 3. Adicionar OPENAI_API_KEY para transcrição de áudio
+Valores `null` de `TokenCount` serao tratados como `0`.
 
-O edge function `generate-evolution` já usa Lovable AI Gateway para geração de texto. Para transcrição de áudio via Whisper, precisa de `OPENAI_API_KEY`.
+**3. Cabeçalho clicável na coluna "Tokens" (linha ~230)**
 
-**Ação:** Solicitar ao usuário que forneça a chave via ferramenta de secrets, e atualizar o edge function para usar OpenAI Whisper quando `input_type === "audio"`.
+Trocar o `<TableHead>Tokens</TableHead>` por um botao clicavel com icone de seta indicando a direção atual:
+- Clique alterna entre `none` -> `desc` -> `asc` -> `none`
+- Icone `ArrowUpDown` (neutro), `ArrowDown` (desc), `ArrowUp` (asc) do lucide-react
 
-| Arquivo | Mudança |
-|---------|---------|
-| `supabase/functions/generate-evolution/index.ts` | Adicionar lógica de transcrição: baixar áudio do bucket, enviar para `api.openai.com/v1/audio/transcriptions` (Whisper), usar transcrição como input para geração |
+### Detalhes Técnicos
+
+- Importar `ArrowUpDown`, `ArrowDown`, `ArrowUp` do lucide-react
+- A ordenação é aplicada no frontend sobre `filteredProfiles`, sem nova query ao banco
+- O ciclo de clique: sem ordenação -> maior primeiro -> menor primeiro -> sem ordenação
 

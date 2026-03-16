@@ -29,21 +29,19 @@ export default function EvolutionPage() {
 
     try {
       let inputContent = data.input_content;
-      let audioUrl: string | null = null;
+      let audioBase64: string | null = null;
+      let audioFilename: string | null = null;
 
-      // Upload audio if provided
+      // Convert audio to base64 for Whisper transcription
       if (data.input_type === "audio" && data.audio_file) {
-        const filePath = `${user.id}/${Date.now()}-${data.audio_file.name}`;
-        const { error: uploadError } = await supabase.storage
-          .from("session-audios")
-          .upload(filePath, data.audio_file);
-        if (uploadError) throw new Error("Erro ao enviar áudio: " + uploadError.message);
-
-        const { data: urlData } = supabase.storage
-          .from("session-audios")
-          .getPublicUrl(filePath);
-        audioUrl = urlData.publicUrl;
-        inputContent = `[Áudio enviado: ${data.audio_file.name}] — A transcrição de áudio ainda não está disponível. Por favor, use anotações em texto por enquanto.`;
+        const arrayBuffer = await data.audio_file.arrayBuffer();
+        const bytes = new Uint8Array(arrayBuffer);
+        let binary = "";
+        for (let i = 0; i < bytes.length; i++) {
+          binary += String.fromCharCode(bytes[i]);
+        }
+        audioBase64 = btoa(binary);
+        audioFilename = data.audio_file.name;
       }
 
       // Call edge function with streaming

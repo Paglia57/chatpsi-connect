@@ -19,8 +19,19 @@ const RedeemBanner = () => {
     if (!user || !profile) return;
 
     const checkEligibility = async () => {
-      // Check account age < 7 days
-      const createdAt = new Date(profile.created_at);
+      // Check account age < 7 days via profiles table
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('created_at')
+        .eq('user_id', user.id)
+        .single();
+
+      if (!profileData) {
+        setEligible(false);
+        return;
+      }
+
+      const createdAt = new Date(profileData.created_at);
       const daysSinceCreation = (Date.now() - createdAt.getTime()) / (1000 * 60 * 60 * 24);
       if (daysSinceCreation > 7) {
         setEligible(false);

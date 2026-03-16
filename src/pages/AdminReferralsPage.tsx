@@ -155,9 +155,9 @@ const AdminReferralsContent = () => {
 
   const getRankIcon = (position: number) => {
     switch (position) {
-      case 0: return <Trophy className="h-5 w-5 text-yellow-500" />;
-      case 1: return <Medal className="h-5 w-5 text-gray-400" />;
-      case 2: return <Award className="h-5 w-5 text-amber-700" />;
+      case 0: return <Trophy className="h-5 w-5 text-warning" />;
+      case 1: return <Medal className="h-5 w-5 text-muted-foreground" />;
+      case 2: return <Award className="h-5 w-5 text-primary" />;
       default: return <span className="text-sm font-bold text-muted-foreground w-5 text-center">{position + 1}</span>;
     }
   };

@@ -1,36 +1,46 @@
 
 
-## Ordenar por Tokens no Admin
+## Analysis: Referral Flow Issues Found
 
-Adicionar um botão/toggle na coluna "Tokens" da tabela de administração que permite ordenar os usuários pelo consumo de tokens (maior para menor e vice-versa).
+After inspecting the database and code, I identified two issues preventing the referral flow from working:
 
-### Mudanças em `src/pages/AdminPage.tsx`
+### Issue 1: No referral codes exist for existing users
 
-**1. Novo estado de ordenação**
+The `referral_codes` table is **empty**. The trigger `trigger_generate_referral_on_subscription` only fires when `subscription_active` changes from `false` to `true`. All 174 existing active subscribers already had `subscription_active=true` before the trigger was created, so they never got codes.
 
-Adicionar estado para controlar a direção da ordenação:
-```typescript
-const [sortByTokens, setSortByTokens] = useState<'none' | 'asc' | 'desc'>('none');
+**Fix:** Run a one-time migration that backfills referral codes for all existing active subscribers by calling `generate_referral_code()` for each one.
+
+### Issue 2: No new accounts exist to test the RedeemBanner
+
+All accounts were created in September 2025 (>170 days ago), so the RedeemBanner correctly hides itself (accounts must be < 7 days old). This is working as designed — it will only appear for genuinely new sign-ups.
+
+### Plan
+
+**Single migration** to backfill referral codes for existing active users:
+
+```sql
+-- Backfill referral codes for all active subscribers who don't have one yet
+DO $$
+DECLARE
+  r RECORD;
+BEGIN
+  FOR r IN 
+    SELECT p.user_id 
+    FROM public.profiles p
+    LEFT JOIN public.referral_codes rc ON rc.user_id = p.user_id
+    WHERE p.subscription_active = true AND rc.id IS NULL
+  LOOP
+    PERFORM public.generate_referral_code(r.user_id);
+  END LOOP;
+END;
+$$;
 ```
 
-**2. Aplicar ordenação no useEffect de filtro (linhas 80-89)**
+After this migration:
+- All 174 active subscribers will have a PSI-XXXX code
+- The ReferralCard will display in the sidebar for logged-in subscribers
+- The RedeemBanner will correctly appear only for new accounts (< 7 days)
+- The trigger continues working for future activations
 
-Após filtrar por nome, aplicar a ordenação por tokens:
-- `desc`: usuários com mais tokens primeiro
-- `asc`: usuários com menos tokens primeiro
-- `none`: ordem padrão (por data de criação)
-
-Valores `null` de `TokenCount` serao tratados como `0`.
-
-**3. Cabeçalho clicável na coluna "Tokens" (linha ~230)**
-
-Trocar o `<TableHead>Tokens</TableHead>` por um botao clicavel com icone de seta indicando a direção atual:
-- Clique alterna entre `none` -> `desc` -> `asc` -> `none`
-- Icone `ArrowUpDown` (neutro), `ArrowDown` (desc), `ArrowUp` (asc) do lucide-react
-
-### Detalhes Técnicos
-
-- Importar `ArrowUpDown`, `ArrowDown`, `ArrowUp` do lucide-react
-- A ordenação é aplicada no frontend sobre `filteredProfiles`, sem nova query ao banco
-- O ciclo de clique: sem ordenação -> maior primeiro -> menor primeiro -> sem ordenação
+No code changes needed — only the database backfill.
 

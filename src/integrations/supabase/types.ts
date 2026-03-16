@@ -116,6 +116,33 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          seen: boolean
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          seen?: boolean
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          seen?: boolean
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       plano_chat_history: {
         Row: {
           created_at: string
@@ -218,6 +245,63 @@ export type Database = {
         }
         Relationships: []
       }
+      referral_codes: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          total_redeemed: number
+          user_id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          total_redeemed?: number
+          user_id: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          total_redeemed?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      referral_redemptions: {
+        Row: {
+          code_used: string
+          created_at: string
+          id: string
+          redeemed_by: string
+          referrer_id: string
+          status: string
+          validated_at: string | null
+          validated_by: string | null
+        }
+        Insert: {
+          code_used: string
+          created_at?: string
+          id?: string
+          redeemed_by: string
+          referrer_id: string
+          status?: string
+          validated_at?: string | null
+          validated_by?: string | null
+        }
+        Update: {
+          code_used?: string
+          created_at?: string
+          id?: string
+          redeemed_by?: string
+          referrer_id?: string
+          status?: string
+          validated_at?: string | null
+          validated_by?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -295,8 +379,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_approve_referral: {
+        Args: { p_redemption_id: string }
+        Returns: undefined
+      }
       admin_clear_thread: { Args: { p_user_id: string }; Returns: undefined }
       admin_delete_profile: { Args: { p_user_id: string }; Returns: undefined }
+      admin_reject_referral: {
+        Args: { p_redemption_id: string }
+        Returns: undefined
+      }
       admin_update_profile: {
         Args: {
           p_email?: string
@@ -308,6 +400,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      generate_referral_code: { Args: { p_user_id: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -316,6 +409,7 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: never; Returns: boolean }
+      redeem_referral_code: { Args: { p_code: string }; Returns: Json }
       update_profile_basic_info:
         | {
             Args: { p_full_name: string; p_whatsapp: string }

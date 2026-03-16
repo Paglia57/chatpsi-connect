@@ -47,6 +47,54 @@ export type Database = {
         }
         Relationships: []
       }
+      evolutions: {
+        Row: {
+          approach: string | null
+          audio_url: string | null
+          created_at: string
+          id: string
+          input_content: string | null
+          input_type: string
+          output_content: string | null
+          patient_initials: string
+          session_duration: string | null
+          session_number: number | null
+          session_type: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          approach?: string | null
+          audio_url?: string | null
+          created_at?: string
+          id?: string
+          input_content?: string | null
+          input_type: string
+          output_content?: string | null
+          patient_initials: string
+          session_duration?: string | null
+          session_number?: number | null
+          session_type?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          approach?: string | null
+          audio_url?: string | null
+          created_at?: string
+          id?: string
+          input_content?: string | null
+          input_type?: string
+          output_content?: string | null
+          patient_initials?: string
+          session_duration?: string | null
+          session_number?: number | null
+          session_type?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       marketing_texts: {
         Row: {
           created_at: string | null
@@ -178,15 +226,19 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_url: string | null
           created_at: string
+          crp: string | null
           current_period_end: string | null
           email: string
           full_name: string | null
           id: string
+          main_approach: string | null
           name: string | null
           nickname: string | null
           openai_thread_id: string | null
           plan: string | null
+          specialties: string[] | null
           subscribed_at: string | null
           subscription_active: boolean
           subscription_end: string | null
@@ -200,15 +252,19 @@ export type Database = {
           whatsapp: string | null
         }
         Insert: {
+          avatar_url?: string | null
           created_at?: string
+          crp?: string | null
           current_period_end?: string | null
           email: string
           full_name?: string | null
           id?: string
+          main_approach?: string | null
           name?: string | null
           nickname?: string | null
           openai_thread_id?: string | null
           plan?: string | null
+          specialties?: string[] | null
           subscribed_at?: string | null
           subscription_active?: boolean
           subscription_end?: string | null
@@ -222,15 +278,19 @@ export type Database = {
           whatsapp?: string | null
         }
         Update: {
+          avatar_url?: string | null
           created_at?: string
+          crp?: string | null
           current_period_end?: string | null
           email?: string
           full_name?: string | null
           id?: string
+          main_approach?: string | null
           name?: string | null
           nickname?: string | null
           openai_thread_id?: string | null
           plan?: string | null
+          specialties?: string[] | null
           subscribed_at?: string | null
           subscription_active?: boolean
           subscription_end?: string | null

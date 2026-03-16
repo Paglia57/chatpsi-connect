@@ -95,6 +95,8 @@ serve(async (req) => {
       session_number,
       session_duration,
       session_type,
+      audio_base64,
+      audio_filename,
     } = await req.json();
 
     if (!input_type || !patient_initials) {
@@ -102,6 +104,65 @@ serve(async (req) => {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    let finalInputContent = input_content || "";
+
+    // Transcribe audio using OpenAI Whisper if audio is provided
+    if (input_type === "audio" && audio_base64) {
+      const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+      if (!OPENAI_API_KEY) {
+        return new Response(JSON.stringify({ error: "Chave da OpenAI não configurada para transcrição" }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      console.log("Transcribing audio with Whisper...");
+
+      // Decode base64 to binary
+      const binaryString = atob(audio_base64);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+
+      const filename = audio_filename || "audio.webm";
+      const ext = filename.split(".").pop()?.toLowerCase() || "webm";
+      const mimeMap: Record<string, string> = {
+        mp3: "audio/mpeg",
+        m4a: "audio/mp4",
+        wav: "audio/wav",
+        ogg: "audio/ogg",
+        webm: "audio/webm",
+      };
+      const mimeType = mimeMap[ext] || "audio/webm";
+
+      const formData = new FormData();
+      formData.append("file", new Blob([bytes], { type: mimeType }), filename);
+      formData.append("model", "whisper-1");
+      formData.append("language", "pt");
+      formData.append("response_format", "text");
+
+      const whisperResp = await fetch("https://api.openai.com/v1/audio/transcriptions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${OPENAI_API_KEY}`,
+        },
+        body: formData,
+      });
+
+      if (!whisperResp.ok) {
+        const errText = await whisperResp.text();
+        console.error("Whisper error:", whisperResp.status, errText);
+        return new Response(JSON.stringify({ error: "Erro na transcrição do áudio: " + whisperResp.status }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      finalInputContent = await whisperResp.text();
+      console.log("Transcription completed, length:", finalInputContent.length);
     }
 
     const today = new Date().toLocaleDateString("pt-BR");
@@ -116,7 +177,7 @@ Modalidade: ${session_type || "Não informada"}
 Tipo de input: ${input_type}
 
 ${input_type === "audio" ? "TRANSCRIÇÃO DO ÁUDIO DA SESSÃO" : "ANOTAÇÕES DO PROFISSIONAL"}:
-${input_content}
+${finalInputContent}
 
 Gere a evolução clínica completa seguindo a estrutura obrigatória, adaptando a terminologia para a abordagem ${approach || "geral"}.`;
 

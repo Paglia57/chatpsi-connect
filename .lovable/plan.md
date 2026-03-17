@@ -1,36 +1,29 @@
 
 
-## Ordenar por Tokens no Admin
+## Problema
 
-Adicionar um botão/toggle na coluna "Tokens" da tabela de administração que permite ordenar os usuários pelo consumo de tokens (maior para menor e vice-versa).
+O dialog de detalhes no Histórico mostra o conteúdo da evolução como somente leitura, sem opção de editar e salvar alterações.
 
-### Mudanças em `src/pages/AdminPage.tsx`
+## Solução
 
-**1. Novo estado de ordenação**
+Adicionar modo de edição inline no dialog de detalhes da evolução no `HistoryPage.tsx`, similar ao que já existe no `EvolutionOutput.tsx`.
 
-Adicionar estado para controlar a direção da ordenação:
-```typescript
-const [sortByTokens, setSortByTokens] = useState<'none' | 'asc' | 'desc'>('none');
-```
+### Mudanças em `src/pages/app/HistoryPage.tsx`
 
-**2. Aplicar ordenação no useEffect de filtro (linhas 80-89)**
+1. Adicionar estados `isEditing` e `editedContent`
+2. No dialog de detalhes, alternar entre exibição de texto e `Textarea` editável
+3. Adicionar botões "Editar" e "Salvar" (além do "Copiar" existente)
+4. No "Salvar", fazer `UPDATE` na tabela `evolutions` (coluna `output_content`) via Supabase client e atualizar o estado local
+5. Importar `Textarea` e ícones `Pencil`, `Save`, `Check`
 
-Após filtrar por nome, aplicar a ordenação por tokens:
-- `desc`: usuários com mais tokens primeiro
-- `asc`: usuários com menos tokens primeiro
-- `none`: ordem padrão (por data de criação)
+### Fluxo do usuário
 
-Valores `null` de `TokenCount` serao tratados como `0`.
+- Abre o dialog de uma evolução salva
+- Clica em "Editar" → conteúdo vira editável em um Textarea
+- Faz alterações → clica em "Salvar" → atualiza no banco e no estado local
+- Pode cancelar a edição voltando ao modo leitura
 
-**3. Cabeçalho clicável na coluna "Tokens" (linha ~230)**
+### Segurança
 
-Trocar o `<TableHead>Tokens</TableHead>` por um botao clicavel com icone de seta indicando a direção atual:
-- Clique alterna entre `none` -> `desc` -> `asc` -> `none`
-- Icone `ArrowUpDown` (neutro), `ArrowDown` (desc), `ArrowUp` (asc) do lucide-react
-
-### Detalhes Técnicos
-
-- Importar `ArrowUpDown`, `ArrowDown`, `ArrowUp` do lucide-react
-- A ordenação é aplicada no frontend sobre `filteredProfiles`, sem nova query ao banco
-- O ciclo de clique: sem ordenação -> maior primeiro -> menor primeiro -> sem ordenação
+A RLS policy `Users can update own evolutions` já existe e permite que o usuário autenticado atualize suas próprias evoluções. Nenhuma mudança no banco necessária.
 

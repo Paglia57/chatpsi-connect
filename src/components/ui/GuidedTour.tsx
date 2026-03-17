@@ -279,7 +279,13 @@ const GuidedTour: React.FC<GuidedTourProps> = ({ run, onFinish }) => {
     if (type === EVENTS.STEP_AFTER) {
       const nextIndex = action === ACTIONS.PREV ? index - 1 : index + 1;
 
-      if (nextIndex < 0 || nextIndex >= tourSteps.length) return;
+      if (nextIndex >= tourSteps.length) {
+        setInternalRun(false);
+        navigate('/app');
+        onFinish();
+        return;
+      }
+      if (nextIndex < 0) return;
 
       const nextStep = tourSteps[nextIndex];
       const targetRoute = nextStep.data?.route;

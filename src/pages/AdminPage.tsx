@@ -272,15 +272,20 @@ const AdminPageContent = () => {
                   <TableCell>{profile.TokenCount || 0}</TableCell>
                   <TableCell>
                     {profile.openai_thread_id ? (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleClearThread(profile.user_id)}
-                      >
-                        Limpar Histórico
-                      </Button>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleClearThread(profile.user_id)}
+                          >
+                            <RotateCcw className="w-4 h-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Limpar Histórico</TooltipContent>
+                      </Tooltip>
                     ) : (
-                      <span className="text-muted-foreground text-sm">Sem histórico</span>
+                      <span className="text-muted-foreground text-sm">—</span>
                     )}
                   </TableCell>
                   <TableCell className="text-right">

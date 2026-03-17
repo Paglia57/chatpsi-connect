@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { Card, CardContent } from '@/components/ui/card';
@@ -28,17 +28,18 @@ const HomePage = () => {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [onboardingInitialStep, setOnboardingInitialStep] = useState(0);
   const [showBanner, setShowBanner] = useState(false);
+  const [showSidebarTooltip, setShowSidebarTooltip] = useState(false);
 
   // Onboarding logic
   useEffect(() => {
     if (!profile) return;
     if (profile.has_completed_onboarding) {
-      // Check banner dismiss count
-      const step = profile.onboarding_step ?? 0;
-      if (step > 0 && step < 4) {
-        // Edge case: completed but step < 4 — ignore
-      }
       setShowOnboarding(false);
+      // Show sidebar tooltip once after completing onboarding
+      const hasSeen = localStorage.getItem('has_seen_sidebar_tooltip');
+      if (!hasSeen) {
+        setShowSidebarTooltip(true);
+      }
       return;
     }
     // Not completed
@@ -47,15 +48,38 @@ const HomePage = () => {
       setShowOnboarding(true);
       setOnboardingInitialStep(0);
     } else {
-      // Partial progress — show banner
-      const viewsKey = 'onboarding_banner_views';
-      const views = parseInt(localStorage.getItem(viewsKey) || '0', 10);
-      if (views < 3) {
-        localStorage.setItem(viewsKey, String(views + 1));
+      // Partial progress — show banner if not dismissed 3 times
+      const dismissKey = 'onboarding_banner_dismiss_count';
+      const dismissCount = parseInt(localStorage.getItem(dismissKey) || '0', 10);
+      if (dismissCount < 3) {
         setShowBanner(true);
       }
     }
   }, [profile]);
+
+  // Sidebar tooltip auto-dismiss after 8s + click anywhere
+  useEffect(() => {
+    if (!showSidebarTooltip) return;
+    const timer = setTimeout(() => dismissTooltip(), 8000);
+    const handleClick = () => dismissTooltip();
+    document.addEventListener('click', handleClick, { once: true });
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('click', handleClick);
+    };
+  }, [showSidebarTooltip]);
+
+  const dismissTooltip = useCallback(() => {
+    setShowSidebarTooltip(false);
+    localStorage.setItem('has_seen_sidebar_tooltip', 'true');
+  }, []);
+
+  const handleDismissBanner = () => {
+    const dismissKey = 'onboarding_banner_dismiss_count';
+    const dismissCount = parseInt(localStorage.getItem(dismissKey) || '0', 10);
+    localStorage.setItem(dismissKey, String(dismissCount + 1));
+    setShowBanner(false);
+  };
 
   const handleResume = () => {
     setOnboardingInitialStep(profile?.onboarding_step ?? 0);

@@ -179,7 +179,7 @@ export default function EvolutionPage() {
         { label: "Evolução", href: "/app/evolucao" },
         { label: "Nova Evolução" },
       ]} />
-      {!guideDismissed && !(profile?.seen_guides as any)?.evolution ? (
+      {!guideDismissed && (!(profile?.seen_guides as any)?.evolution || tourActive) ? (
         <FirstTimeGuide
           guideKey="evolution"
           icon={<FileText className="h-8 w-8 text-primary" />}

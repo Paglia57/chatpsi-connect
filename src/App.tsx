@@ -46,6 +46,8 @@ const App = () => (
             <Route path="/app" element={<AppLayout />}>
               <Route index element={<Navigate to="/app/evolucao" replace />} />
               <Route path="evolucao" element={<EvolutionPage />} />
+              <Route path="pacientes" element={<PatientsPage />} />
+              <Route path="pacientes/:id" element={<PatientDetailPage />} />
               <Route path="historico" element={<HistoryPage />} />
               <Route path="perfil" element={<ProfilePage />} />
             </Route>

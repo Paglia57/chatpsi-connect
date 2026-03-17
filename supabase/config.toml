@@ -69,3 +69,6 @@ verify_jwt = true
 
 [functions.generate-evolution]
 verify_jwt = false
+
+[functions.create-patient-thread]
+verify_jwt = false

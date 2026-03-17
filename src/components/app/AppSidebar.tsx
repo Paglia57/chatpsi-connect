@@ -20,6 +20,7 @@ import { useEffect, useState } from "react";
 
 const menuItems = [
   { title: "Nova Evolução", url: "/app/evolucao", icon: Plus },
+  { title: "Pacientes", url: "/app/pacientes", icon: Users },
   { title: "Histórico", url: "/app/historico", icon: ClipboardList },
   { title: "Perfil", url: "/app/perfil", icon: User },
 ];

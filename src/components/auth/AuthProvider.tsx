@@ -18,6 +18,7 @@ interface Profile {
   onboarding_step: number;
   main_approach?: string;
   specialties?: string[];
+  seen_guides?: Record<string, boolean>;
 }
 
 interface AuthContextType {

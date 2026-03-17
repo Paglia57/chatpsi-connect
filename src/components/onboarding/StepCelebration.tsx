@@ -72,7 +72,11 @@ export default function StepCelebration({ evolutionContent, onFinish }: StepCele
         <p className="text-sm font-semibold text-foreground text-center">O que mais você pode fazer no ChatPsi:</p>
         <div className="grid grid-cols-2 gap-3">
           {features.map(f => (
-            <Card key={f.title} className="rounded-xl border">
+            <Card
+              key={f.title}
+              className="rounded-xl border cursor-pointer transition-colors hover:border-primary/40 hover:bg-accent/50"
+              onClick={() => { onFinish(); navigate(f.route); }}
+            >
               <CardContent className="p-3 text-center space-y-1">
                 <span className="text-xl">{f.emoji}</span>
                 <p className="text-xs font-semibold text-foreground">{f.title}</p>

@@ -194,7 +194,12 @@ export default function HistoryPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-4xl mx-auto space-y-6 animate-fade-in">
+      <AppBreadcrumb items={[
+        { label: "Clínica", href: "/app/evolucao" },
+        { label: "Evolução", href: "/app/evolucao" },
+        { label: "Histórico" },
+      ]} />
       <h1 className="font-display text-2xl font-semibold text-foreground">Histórico de Evoluções</h1>
 
       {/* Filters */}

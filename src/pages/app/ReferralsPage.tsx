@@ -83,7 +83,8 @@ const ReferralsPage = () => {
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <div className="max-w-2xl mx-auto space-y-6 animate-fade-in">
+      <AppBreadcrumb items={[{ label: "Indique e Ganhe" }]} />
       <div>
         <h1 className="text-2xl font-bold text-foreground">Programa de Indicações</h1>
         <p className="text-muted-foreground mt-1">

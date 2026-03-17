@@ -142,7 +142,8 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-2xl mx-auto animate-fade-in">
+      <AppBreadcrumb items={[{ label: "Meu Perfil" }]} />
       <Card className="border-border bg-card text-card-foreground shadow-sm">
         <CardHeader>
           <CardTitle className="font-display text-xl text-foreground">Perfil Profissional</CardTitle>

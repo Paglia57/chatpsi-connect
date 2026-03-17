@@ -158,8 +158,12 @@ export default function PatientDetailPage() {
     ) : null;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      {/* Header */}
+    <div className="max-w-4xl mx-auto space-y-6 animate-fade-in">
+      <AppBreadcrumb items={[
+        { label: "Clínica", href: "/app/pacientes" },
+        { label: "Pacientes", href: "/app/pacientes" },
+        { label: patient.full_name },
+      ]} />
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" onClick={() => navigate("/app/pacientes")}>
           <ArrowLeft className="h-5 w-5" />

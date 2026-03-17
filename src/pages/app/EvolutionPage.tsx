@@ -171,7 +171,11 @@ export default function EvolutionPage() {
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-      <EvolutionInput onGenerate={handleGenerate} isLoading={isGenerating} />
+      <AppBreadcrumb items={[
+        { label: "Clínica", href: "/app/evolucao" },
+        { label: "Evolução", href: "/app/evolucao" },
+        { label: "Nova Evolução" },
+      ]} />
       {(evolutionContent || isGenerating) && (
         <EvolutionOutput
           content={evolutionContent}

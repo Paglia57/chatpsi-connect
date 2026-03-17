@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -7,13 +6,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card } from '@/components/ui/card';
-import { Loader2, Save, Sparkles, Plus, ArrowLeft, Trash2, Menu } from 'lucide-react';
-import { useIsMobile } from '@/hooks/use-mobile';
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-} from '@/components/ui/sheet';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Loader2, Save, Sparkles, Plus, Trash2 } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -35,7 +29,6 @@ interface MarketingText {
 }
 
 const MarketingInterface = () => {
-  const navigate = useNavigate();
   const { toast } = useToast();
   const [texts, setTexts] = useState<MarketingText[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -46,8 +39,7 @@ const MarketingInterface = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
-  const isMobile = useIsMobile();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('novo');
 
   useEffect(() => {
     fetchHistory();
@@ -95,10 +87,7 @@ const MarketingInterface = () => {
 
       if (data?.success) {
         setGeneratedText(data.generated_text);
-        toast({
-          title: 'Sucesso',
-          description: 'Texto gerado com IA!',
-        });
+        toast({ title: 'Sucesso', description: 'Texto gerado com IA!' });
       } else {
         throw new Error(data?.error || 'Erro ao gerar texto');
       }
@@ -156,11 +145,7 @@ const MarketingInterface = () => {
         if (error) throw error;
       }
 
-      toast({
-        title: 'Sucesso',
-        description: 'Texto salvo com sucesso!',
-      });
-
+      toast({ title: 'Sucesso', description: 'Texto salvo com sucesso!' });
       await fetchHistory();
 
       if (!selectedId) {
@@ -183,12 +168,14 @@ const MarketingInterface = () => {
     setSelectedId(text.id);
     setPrompt(text.prompt);
     setGeneratedText(text.generated_text);
+    setActiveTab('novo');
   };
 
   const handleNewText = () => {
     setSelectedId(null);
     setPrompt('');
     setGeneratedText('');
+    setActiveTab('novo');
   };
 
   const handleDeleteClick = (e: React.MouseEvent, textId: string) => {
@@ -208,10 +195,7 @@ const MarketingInterface = () => {
 
       if (error) throw error;
 
-      toast({
-        title: 'Sucesso',
-        description: 'Texto excluído com sucesso!',
-      });
+      toast({ title: 'Sucesso', description: 'Texto excluído com sucesso!' });
 
       if (selectedId === textToDelete) {
         handleNewText();
@@ -231,124 +215,34 @@ const MarketingInterface = () => {
     }
   };
 
-  const SidebarContent = () => (
-    <>
-      <div className="p-4 border-b">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => navigate('/chat')}
-          className="mb-4 w-full justify-start"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Voltar para o Chat
-        </Button>
-        
+  return (
+    <div className="flex flex-col h-full">
+      <div className="p-4 md:p-6 border-b">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Histórico</h2>
-          <Button size="sm" variant="outline" onClick={handleNewText}>
-            <Plus className="h-4 w-4 mr-1" />
-            Novo
-          </Button>
+          <div>
+            <h1 className="text-xl md:text-2xl font-bold">IA de Marketing</h1>
+            <p className="text-muted-foreground text-xs md:text-sm">
+              Gere textos de marketing com inteligência artificial
+            </p>
+          </div>
+          {(selectedId || activeTab === 'historico') && (
+            <Button size="sm" variant="outline" onClick={handleNewText}>
+              <Plus className="h-4 w-4 mr-1" />
+              Novo
+            </Button>
+          )}
         </div>
       </div>
 
-      <ScrollArea className="flex-1">
-        {isLoadingHistory ? (
-          <div className="p-4 text-center text-muted-foreground">
-            <Loader2 className="h-5 w-5 animate-spin mx-auto mb-2" />
-            Carregando...
-          </div>
-        ) : texts.length === 0 ? (
-          <div className="p-4 text-center text-muted-foreground">
-            Nenhum texto salvo ainda
-          </div>
-        ) : (
-          <div className="p-2 space-y-2">
-            {texts.map((text) => (
-              <Card
-                key={text.id}
-                className={`p-3 cursor-pointer transition-colors hover:bg-muted/50 ${
-                  selectedId === text.id ? 'bg-primary/10 border-primary' : ''
-                }`}
-                onClick={() => {
-                  handleSelectText(text);
-                  if (isMobile) setSidebarOpen(false);
-                }}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm truncate">
-                      {text.title || text.generated_text.split('\n')[0].substring(0, 30)}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {new Date(text.created_at).toLocaleDateString('pt-BR', {
-                        day: '2-digit',
-                        month: '2-digit',
-                        year: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </p>
-                  </div>
-                  
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 shrink-0 opacity-60 hover:opacity-100 transition-opacity"
-                    onClick={(e) => handleDeleteClick(e, text.id)}
-                    title="Excluir texto"
-                  >
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </div>
-              </Card>
-            ))}
-          </div>
-        )}
-      </ScrollArea>
-    </>
-  );
-
-  return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-background">
-      {/* Desktop: Sidebar fixa */}
-      {!isMobile && (
-        <div className="w-80 border-r bg-muted/10 flex flex-col">
-          <SidebarContent />
-        </div>
-      )}
-
-      {/* Painel Direita - Formulário */}
-      <div className="flex-1 flex flex-col">
-        <div className="p-4 md:p-6 border-b">
-          <div className="flex items-center gap-4">
-            {/* Mobile: Botão hambúrguer */}
-            {isMobile && (
-              <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-                <SheetTrigger asChild>
-                  <Button variant="ghost" size="icon" className="shrink-0">
-                    <Menu className="h-5 w-5" />
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="left" className="w-80 p-0">
-                  <div className="flex flex-col h-full">
-                    <SidebarContent />
-                  </div>
-                </SheetContent>
-              </Sheet>
-            )}
-            
-            <div>
-              <h1 className="text-xl md:text-2xl font-bold">IA de Marketing</h1>
-              <p className="text-muted-foreground text-xs md:text-sm">
-                Gere textos de marketing com inteligência artificial
-              </p>
-            </div>
-          </div>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
+        <div className="px-4 md:px-6 pt-4">
+          <TabsList>
+            <TabsTrigger value="novo">Novo Texto</TabsTrigger>
+            <TabsTrigger value="historico">Histórico</TabsTrigger>
+          </TabsList>
         </div>
 
-        <ScrollArea className="flex-1">
+        <TabsContent value="novo" className="flex-1 overflow-auto mt-0">
           <div className="p-4 md:p-6 max-w-4xl mx-auto w-full space-y-4 md:space-y-6">
             <div className="space-y-2">
               <Label htmlFor="prompt">Pedido ao assistente</Label>
@@ -414,10 +308,7 @@ const MarketingInterface = () => {
 
               {selectedId && (
                 <Button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    handleDeleteClick(e, selectedId);
-                  }}
+                  onClick={(e) => handleDeleteClick(e, selectedId)}
                   variant="destructive"
                   size="icon"
                   title="Excluir texto"
@@ -427,8 +318,63 @@ const MarketingInterface = () => {
               )}
             </div>
           </div>
-        </ScrollArea>
-      </div>
+        </TabsContent>
+
+        <TabsContent value="historico" className="flex-1 overflow-auto mt-0">
+          <div className="p-4 md:p-6">
+            {isLoadingHistory ? (
+              <div className="py-12 text-center text-muted-foreground">
+                <Loader2 className="h-5 w-5 animate-spin mx-auto mb-2" />
+                Carregando...
+              </div>
+            ) : texts.length === 0 ? (
+              <div className="py-12 text-center text-muted-foreground">
+                Nenhum texto salvo ainda
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {texts.map((text) => (
+                  <Card
+                    key={text.id}
+                    className="p-4 cursor-pointer transition-colors hover:bg-muted/50"
+                    onClick={() => handleSelectText(text)}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate">
+                          {text.title || text.generated_text.split('\n')[0].substring(0, 30)}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {new Date(text.created_at).toLocaleDateString('pt-BR', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-2 line-clamp-2">
+                          {text.generated_text.substring(0, 120)}
+                        </p>
+                      </div>
+
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 shrink-0 opacity-60 hover:opacity-100 transition-opacity"
+                        onClick={(e) => handleDeleteClick(e, text.id)}
+                        title="Excluir texto"
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+        </TabsContent>
+      </Tabs>
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>

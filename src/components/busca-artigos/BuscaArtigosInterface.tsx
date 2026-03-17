@@ -101,6 +101,7 @@ const BuscaArtigosInterface = () => {
         throw new Error(data.error || 'Erro ao processar mensagem');
       }
       await fetchHistory();
+      trial.refetch();
       toast({
         title: "Resposta recebida",
         description: "Artigos processados com sucesso!",

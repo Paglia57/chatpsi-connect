@@ -6,7 +6,7 @@ import { Separator } from '@/components/ui/separator';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Badge } from '@/components/ui/badge';
 import {
-  ClipboardList, Plus, History, Users, MessageCircle, Target, BookOpen,
+  Home, ClipboardList, Plus, History, Users, MessageCircle, Target, BookOpen,
   PenTool, Settings, Gift, User, HelpCircle, LogOut, Menu, ChevronDown,
   ChevronRight, Star
 } from 'lucide-react';

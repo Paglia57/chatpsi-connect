@@ -9,9 +9,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Search, Trash2, ClipboardList, ClipboardCopy, Pencil, X } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Search, Trash2, ClipboardList, ClipboardCopy, Pencil, X, Download, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
+import { parseEvolutionContent, getContentPreview, exportEvolutionPdf } from "@/lib/evolutionParser";
 
 interface Evolution {
   id: string;
@@ -22,6 +25,98 @@ interface Evolution {
   session_number: number | null;
   session_duration: string | null;
   session_type: string | null;
+}
+
+function PatientAvatar({ initials }: { initials: string }) {
+  return (
+    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary font-semibold text-sm uppercase">
+      {initials.slice(0, 2)}
+    </div>
+  );
+}
+
+function FormattedDate({ date }: { date: string }) {
+  const d = new Date(date);
+  const day = d.toLocaleDateString("pt-BR", { day: "2-digit" });
+  const month = d.toLocaleDateString("pt-BR", { month: "short" }).replace(".", "");
+  return (
+    <div className="text-center shrink-0">
+      <div className="text-lg font-bold text-foreground leading-none">{day}</div>
+      <div className="text-xs text-muted-foreground uppercase">{month}</div>
+    </div>
+  );
+}
+
+function EvolutionDetailContent({ content }: { content: string }) {
+  const parsed = parseEvolutionContent(content);
+  
+  // Group into sections: each heading starts a new collapsible section
+  const sections: { heading: string; lines: typeof parsed }[] = [];
+  let currentSection: { heading: string; lines: typeof parsed } | null = null;
+  
+  for (const line of parsed) {
+    if (line.type === 'title') {
+      // Title rendered standalone, not in a collapsible
+      sections.push({ heading: '', lines: [line] });
+      currentSection = null;
+    } else if (line.type === 'heading') {
+      currentSection = { heading: line.content, lines: [] };
+      sections.push(currentSection);
+    } else {
+      if (currentSection) {
+        currentSection.lines.push(line);
+      } else {
+        // Lines before any heading
+        if (sections.length === 0 || sections[sections.length - 1].heading !== '') {
+          sections.push({ heading: '', lines: [] });
+        }
+        sections[sections.length - 1].lines.push(line);
+      }
+    }
+  }
+
+  return (
+    <div className="space-y-2">
+      {sections.map((section, si) => {
+        if (!section.heading) {
+          // Ungrouped lines (title or preamble)
+          return (
+            <div key={si}>
+              {section.lines.map((line, li) => (
+                <LineRenderer key={li} line={line} />
+              ))}
+            </div>
+          );
+        }
+        return (
+          <Collapsible key={si} defaultOpen>
+            <CollapsibleTrigger className="flex items-center gap-2 w-full text-left py-2 group">
+              <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=closed]:-rotate-90" />
+              <h3 className="font-display font-semibold text-sm text-foreground uppercase tracking-wide">{section.heading}</h3>
+            </CollapsibleTrigger>
+            <Separator className="mb-2" />
+            <CollapsibleContent className="pl-6 space-y-1 pb-2">
+              {section.lines.map((line, li) => (
+                <LineRenderer key={li} line={line} />
+              ))}
+            </CollapsibleContent>
+          </Collapsible>
+        );
+      })}
+    </div>
+  );
+}
+
+function LineRenderer({ line }: { line: { type: string; content: string } }) {
+  switch (line.type) {
+    case 'empty': return <div className="h-2" />;
+    case 'separator': return <Separator className="my-3" />;
+    case 'title': return <h2 className="font-display font-semibold text-lg text-foreground text-center border-b border-border pb-2 mb-3">{line.content}</h2>;
+    case 'heading': return <h3 className="font-display font-semibold text-sm text-foreground uppercase tracking-wide mt-4 mb-1">{line.content}</h3>;
+    case 'metadata': return <p className="text-sm text-muted-foreground">{line.content}</p>;
+    case 'text': return <p className="text-sm text-foreground leading-relaxed">{line.content}</p>;
+    default: return null;
+  }
 }
 
 export default function HistoryPage() {
@@ -125,25 +220,38 @@ export default function HistoryPage() {
                 className="border-border bg-card hover:shadow-md transition-shadow cursor-pointer"
                 onClick={() => setSelectedEvolution(ev)}
               >
-                <CardContent className="p-4 flex items-start justify-between gap-3">
+                <CardContent className="p-4 flex items-start gap-4">
+                  <FormattedDate date={ev.created_at} />
+                  <PatientAvatar initials={ev.patient_initials} />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-semibold text-foreground">{ev.patient_initials}</span>
+                      <span className="font-semibold text-base text-foreground">{ev.patient_initials}</span>
                       {ev.approach && (
-                        <span className="text-xs bg-accent text-accent-foreground px-2 py-0.5 rounded-md">
+                        <Badge variant="secondary" className="bg-primary/10 text-primary border-0 text-xs">
                           {ev.approach}
-                        </span>
-                      )}
-                      {ev.session_number && (
-                        <span className="text-xs text-muted-foreground">Sessão {ev.session_number}</span>
+                        </Badge>
                       )}
                     </div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {new Date(ev.created_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })}
-                    </p>
+                    <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                      {ev.session_number && (
+                        <Badge variant="outline" className="text-xs font-normal">
+                          Sessão {ev.session_number}
+                        </Badge>
+                      )}
+                      {ev.session_duration && (
+                        <Badge variant="outline" className="text-xs font-normal">
+                          {ev.session_duration}
+                        </Badge>
+                      )}
+                      {ev.session_type && (
+                        <Badge variant="outline" className="text-xs font-normal">
+                          {ev.session_type}
+                        </Badge>
+                      )}
+                    </div>
                     {ev.output_content && (
-                      <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                        {ev.output_content.slice(0, 150)}...
+                      <p className="text-sm text-muted-foreground mt-1.5 line-clamp-2">
+                        {getContentPreview(ev.output_content)}
                       </p>
                     )}
                   </div>
@@ -187,19 +295,30 @@ export default function HistoryPage() {
       <Dialog open={!!selectedEvolution} onOpenChange={(open) => { if (!open) { setSelectedEvolution(null); setIsEditing(false); } }}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="font-display">
-              Evolução — {selectedEvolution?.patient_initials}
-            </DialogTitle>
+            <div className="flex items-center gap-3">
+              {selectedEvolution && <PatientAvatar initials={selectedEvolution.patient_initials} />}
+              <div>
+                <DialogTitle className="font-display">
+                  Evolução — {selectedEvolution?.patient_initials}
+                </DialogTitle>
+                {selectedEvolution && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap mt-1">
+                    <span>{new Date(selectedEvolution.created_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })}</span>
+                    {selectedEvolution.approach && (
+                      <Badge variant="secondary" className="bg-primary/10 text-primary border-0 text-xs">
+                        {selectedEvolution.approach}
+                      </Badge>
+                    )}
+                    {selectedEvolution.session_number && <span>• Sessão {selectedEvolution.session_number}</span>}
+                    {selectedEvolution.session_duration && <span>• {selectedEvolution.session_duration}</span>}
+                    {selectedEvolution.session_type && <span>• {selectedEvolution.session_type}</span>}
+                  </div>
+                )}
+              </div>
+            </div>
           </DialogHeader>
           {selectedEvolution && (
             <div className="space-y-3">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
-                <span>{new Date(selectedEvolution.created_at).toLocaleDateString("pt-BR")}</span>
-                {selectedEvolution.approach && <span>• {selectedEvolution.approach}</span>}
-                {selectedEvolution.session_number && <span>• Sessão {selectedEvolution.session_number}</span>}
-                {selectedEvolution.session_duration && <span>• {selectedEvolution.session_duration}</span>}
-                {selectedEvolution.session_type && <span>• {selectedEvolution.session_type}</span>}
-              </div>
               <Separator />
               {isEditing ? (
                 <Textarea
@@ -208,9 +327,9 @@ export default function HistoryPage() {
                   className="min-h-[300px] text-sm leading-relaxed font-sans"
                 />
               ) : (
-                <div className="whitespace-pre-wrap text-sm text-foreground leading-relaxed font-sans">
-                  {selectedEvolution.output_content}
-                </div>
+                selectedEvolution.output_content && (
+                  <EvolutionDetailContent content={selectedEvolution.output_content} />
+                )
               )}
               <Separator />
               <div className="flex items-center gap-2 flex-wrap">
@@ -267,6 +386,14 @@ export default function HistoryPage() {
                     >
                       <ClipboardCopy className="h-4 w-4" />
                       Copiar
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => exportEvolutionPdf(selectedEvolution.output_content || "")}
+                    >
+                      <Download className="h-4 w-4" />
+                      Exportar PDF
                     </Button>
                   </>
                 )}

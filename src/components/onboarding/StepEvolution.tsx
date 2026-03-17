@@ -13,10 +13,10 @@ import { toast } from 'sonner';
 
 const DURATIONS = ["30min", "40min", "50min", "60min"];
 const SESSION_TYPES = ["Presencial", "Online"];
-const LOADING_TEXTS = [
-  "Analisando suas anotações...",
-  "Estruturando a evolução clínica...",
-  "Aplicando formato profissional...",
+const LOADING_STEPS = [
+  { icon: Search, text: "Analisando suas anotações..." },
+  { icon: FileText, text: "Estruturando a evolução clínica..." },
+  { icon: CheckCircle, text: "Aplicando formato profissional..." },
 ];
 
 interface CreatedPatient {

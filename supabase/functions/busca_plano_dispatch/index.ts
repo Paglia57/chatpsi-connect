@@ -1,4 +1,5 @@
-import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.55.0";
 
 const corsHeaders = {
@@ -6,16 +7,44 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const ASSISTANT_ID = 'asst_esHKfSJcaMNF99QVrILGu6pW';
+const OPENAI_BASE = 'https://api.openai.com/v1';
+
+function sleep(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function openaiRequest(path: string, apiKey: string, options: RequestInit = {}) {
+  const res = await fetch(`${OPENAI_BASE}${path}`, {
+    ...options,
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+      'OpenAI-Beta': 'assistants=v2',
+      ...(options.headers || {}),
+    },
+  });
+  if (!res.ok) {
+    const errText = await res.text();
+    console.error(`OpenAI error ${res.status} on ${path}:`, errText);
+    throw new Error(`OpenAI API error ${res.status}: ${errText}`);
+  }
+  return res.json();
+}
+
 serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
+    if (!openaiApiKey) {
+      throw new Error('OPENAI_API_KEY não configurado');
+    }
+
     const authHeader = req.headers.get('authorization') || '';
     const jwt = authHeader.replace('Bearer ', '');
-
     const { input_text } = await req.json();
 
     // Input validation
@@ -26,7 +55,7 @@ serve(async (req) => {
       );
     }
 
-    if (input_text.length === 0 || input_text.trim().length === 0) {
+    if (input_text.trim().length === 0) {
       return new Response(
         JSON.stringify({ error: 'input_text não pode estar vazio' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -40,19 +69,6 @@ serve(async (req) => {
       );
     }
 
-    // Prevent script injection
-    if (/<script|javascript:|onerror=/i.test(input_text)) {
-      return new Response(
-        JSON.stringify({ error: 'Caracteres inválidos detectados' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    );
-
     const supabaseUser = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_ANON_KEY')!,
@@ -62,7 +78,6 @@ serve(async (req) => {
     const { data: { user }, error: authError } = await supabaseUser.auth.getUser(jwt);
     
     if (authError || !user) {
-      console.error('Auth error:', authError);
       return new Response(
         JSON.stringify({ error: 'Usuário não autenticado' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -72,6 +87,12 @@ serve(async (req) => {
     const userId = user.id;
     console.log('Busca Plano request from user:', userId);
 
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    );
+
+    // Get or create thread
     const { data: profile, error: profileError } = await supabaseAdmin
       .from('profiles')
       .select('threads_plano')
@@ -83,96 +104,100 @@ serve(async (req) => {
       throw new Error('Erro ao buscar perfil do usuário');
     }
 
-    const threadsPlano = profile?.threads_plano || null;
+    let threadId = profile?.threads_plano || null;
 
-    const payload: any = { 
-      input: input_text,
-      user_id: userId
-    };
-    if (threadsPlano) {
-      payload.thread = threadsPlano;
+    if (!threadId) {
+      console.log('Creating new OpenAI thread for plano');
+      const threadData = await openaiRequest('/threads', openaiApiKey, { method: 'POST', body: '{}' });
+      threadId = threadData.id;
+      console.log('Created thread:', threadId);
+
+      await supabaseAdmin
+        .from('profiles')
+        .update({ threads_plano: threadId })
+        .eq('user_id', userId);
     }
 
-    console.log('Payload to webhook (input preview):', input_text.substring(0, 50) + '...', 'Has thread:', !!threadsPlano);
-
-    const webhookUrl = 'https://webhook.seconsult.com.br/webhook/buscaplano';
-    const apiKey = Deno.env.get('BUSCA_PLANO_API_KEY');
-
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      'X-App-Source': 'lovable',
-    };
-
-    if (apiKey) {
-      headers['X-API-Key'] = apiKey;
-    }
-
-    const webhookResponse = await fetch(webhookUrl, {
+    // Add message to thread
+    await openaiRequest(`/threads/${threadId}/messages`, openaiApiKey, {
       method: 'POST',
-      headers,
-      body: JSON.stringify(payload),
+      body: JSON.stringify({ role: 'user', content: input_text }),
     });
 
-    const statusCode = webhookResponse.status;
-    let responseData: any = null;
-    let errorMessage: string | null = null;
+    // Create run
+    const run = await openaiRequest(`/threads/${threadId}/runs`, openaiApiKey, {
+      method: 'POST',
+      body: JSON.stringify({ assistant_id: ASSISTANT_ID }),
+    });
 
-    try {
-      const responseText = await webhookResponse.text();
-      responseData = responseText ? JSON.parse(responseText) : null;
-    } catch (e) {
-      errorMessage = `Failed to parse webhook response: ${e.message}`;
-      console.error(errorMessage);
+    console.log('Run created:', run.id, 'status:', run.status);
+
+    // Poll until complete
+    const TIMEOUT_MS = 90_000;
+    const POLL_INTERVAL = 1500;
+    const startTime = Date.now();
+    let runStatus = run.status;
+
+    while (!['completed', 'failed', 'cancelled', 'expired', 'incomplete'].includes(runStatus)) {
+      if (Date.now() - startTime > TIMEOUT_MS) {
+        throw new Error('Tempo limite excedido aguardando resposta da IA');
+      }
+      await sleep(POLL_INTERVAL);
+      const updated = await openaiRequest(`/threads/${threadId}/runs/${run.id}`, openaiApiKey);
+      runStatus = updated.status;
+      console.log('Run poll:', runStatus);
     }
 
-    if (!webhookResponse.ok) {
-      errorMessage = `Webhook returned status ${statusCode}`;
+    if (runStatus !== 'completed') {
+      throw new Error(`A IA não conseguiu processar (status: ${runStatus})`);
     }
 
+    // Get assistant response
+    const messagesData = await openaiRequest(
+      `/threads/${threadId}/messages?limit=1&order=desc`,
+      openaiApiKey
+    );
+
+    const assistantMsg = messagesData.data?.[0];
+    if (!assistantMsg || assistantMsg.role !== 'assistant') {
+      throw new Error('Resposta da IA não encontrada');
+    }
+
+    const outputText = assistantMsg.content
+      .filter((block: any) => block.type === 'text')
+      .map((block: any) => block.text.value)
+      .join('\n');
+
+    console.log('Plano gerado com sucesso, length:', outputText.length);
+
+    // Save to history
     const { error: historyError } = await supabaseAdmin
       .from('plano_chat_history')
       .insert({
         user_id: userId,
-        thread_sent: threadsPlano,
+        thread_sent: threadId,
         input_text,
-        http_status: statusCode,
-        response_json: responseData,
-        error_message: errorMessage,
+        http_status: 200,
+        response_json: { output: outputText },
+        error_message: null,
       });
 
     if (historyError) {
       console.error('Error saving history:', historyError);
     }
 
-    if (webhookResponse.ok && responseData) {
-      return new Response(
-        JSON.stringify({ 
-          success: true, 
-          response: responseData 
-        }),
-        { 
-          status: 200, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    } else {
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: errorMessage || 'Erro ao processar requisição',
-          status: statusCode 
-        }),
-        { 
-          status: 200,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    }
+    return new Response(
+      JSON.stringify({ 
+        success: true, 
+        response: { output: outputText } 
+      }),
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
 
   } catch (e) {
     console.error('Error in busca_plano_dispatch:', e);
     return new Response(
-      JSON.stringify({ error: 'Erro ao processar requisição' }),
+      JSON.stringify({ error: e instanceof Error ? e.message : 'Erro ao processar requisição' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

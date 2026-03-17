@@ -73,7 +73,7 @@ export default function EvolutionOutput({ content, isLoading, onRegenerate, onSa
     return (
       <Card className="border-border bg-card text-card-foreground shadow-sm">
         <CardHeader>
-          <CardTitle className="font-display text-xl text-foreground">Evolução Clínica</CardTitle>
+          <CardTitle className="font-display text-xl text-foreground">Evolução</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground">Analisando sessão e gerando evolução...</p>

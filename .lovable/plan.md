@@ -1,29 +1,36 @@
 
 
-## Plano: Empty State Rico na Página de Pacientes
+## Ordenar por Tokens no Admin
 
-### Mudança em `src/pages/app/PatientsPage.tsx`
+Adicionar um botão/toggle na coluna "Tokens" da tabela de administração que permite ordenar os usuários pelo consumo de tokens (maior para menor e vice-versa).
 
-Substituir o empty state atual (linhas ~114-118) — que mostra apenas ícone `Users` + texto "Nenhum paciente cadastrado" — por um componente mais orientador:
+### Mudanças em `src/pages/AdminPage.tsx`
 
-**Quando `patients.length === 0` (nenhum paciente cadastrado):**
-- Esconder os filtros (search, approach, status, sort) — não fazem sentido sem dados
-- Mostrar um empty state centralizado com:
-  - Ícone `Users` maior (h-16 w-16) com fundo circular `bg-primary/10`
-  - Título: "Nenhum paciente cadastrado ainda"
-  - Texto explicativo: "Cadastre seus pacientes para acompanhar evoluções, manter o histórico organizado e ter contexto personalizado nas sessões."
-  - Botão CTA primário `variant="cta"` com ícone `UserPlus`: "Cadastrar primeiro paciente"
-  - 3 mini-bullets abaixo com ícones pequenos mostrando benefícios:
-    - "Histórico de sessões organizado por paciente"
-    - "Contexto automático para a IA nas evoluções"  
-    - "Acompanhamento de progresso ao longo do tempo"
+**1. Novo estado de ordenação**
 
-**Quando `filtered.length === 0` mas `patients.length > 0` (filtro sem resultado):**
-- Manter o estado atual simples: ícone + "Nenhum paciente encontrado"
+Adicionar estado para controlar a direção da ordenação:
+```typescript
+const [sortByTokens, setSortByTokens] = useState<'none' | 'asc' | 'desc'>('none');
+```
 
-### Arquivo
+**2. Aplicar ordenação no useEffect de filtro (linhas 80-89)**
 
-| Arquivo | Mudança |
-|---------|---------|
-| `src/pages/app/PatientsPage.tsx` | Empty state rico com CTA, texto explicativo e benefícios; esconder filtros quando não há pacientes |
+Após filtrar por nome, aplicar a ordenação por tokens:
+- `desc`: usuários com mais tokens primeiro
+- `asc`: usuários com menos tokens primeiro
+- `none`: ordem padrão (por data de criação)
+
+Valores `null` de `TokenCount` serao tratados como `0`.
+
+**3. Cabeçalho clicável na coluna "Tokens" (linha ~230)**
+
+Trocar o `<TableHead>Tokens</TableHead>` por um botao clicavel com icone de seta indicando a direção atual:
+- Clique alterna entre `none` -> `desc` -> `asc` -> `none`
+- Icone `ArrowUpDown` (neutro), `ArrowDown` (desc), `ArrowUp` (asc) do lucide-react
+
+### Detalhes Técnicos
+
+- Importar `ArrowUpDown`, `ArrowDown`, `ArrowUp` do lucide-react
+- A ordenação é aplicada no frontend sobre `filteredProfiles`, sem nova query ao banco
+- O ciclo de clique: sem ordenação -> maior primeiro -> menor primeiro -> sem ordenação
 

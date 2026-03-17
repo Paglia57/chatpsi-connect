@@ -20,7 +20,7 @@ const AuthPage = () => {
   const { toast } = useToast();
 
   if (user) {
-    return <Navigate to="/chat" replace />;
+    return <Navigate to="/app" replace />;
   }
 
   const handleSubmit = async (e: React.FormEvent) => {

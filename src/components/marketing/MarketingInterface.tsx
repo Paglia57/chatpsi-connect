@@ -249,7 +249,7 @@ const MarketingInterface = () => {
 
         <TabsContent value="novo" className="flex-1 overflow-auto mt-0">
           <div className="p-4 md:p-6 max-w-4xl mx-auto w-full space-y-4 md:space-y-6">
-            {activeTab === 'novo' && prompt === '' && !profile?.seen_guides?.marketing && (
+            {activeTab === 'novo' && prompt === '' && (!profile?.seen_guides?.marketing || tourActive) && (
               <FirstTimeGuide
                 guideKey="marketing"
                 icon={<Megaphone className="h-8 w-8 text-pink-500" />}

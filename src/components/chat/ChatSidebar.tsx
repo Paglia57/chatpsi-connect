@@ -209,15 +209,15 @@ const ChatSidebar = () => {
         {/* FERRAMENTAS IA */}
         <SectionLabel>Ferramentas IA</SectionLabel>
 
-        <NavLink to="/chat" onClick={onNavigate} className={navLinkClass(isActive('/chat'))}>
+        <NavLink to="/chat" onClick={onNavigate} className={navLinkClass(isActive('/chat'))} data-tour="nav-chat">
           <MessageCircle className="h-4 w-4 shrink-0" />
           <span>Chat Clínico</span>
         </NavLink>
-        <NavLink to="/busca-plano" onClick={onNavigate} className={navLinkClass(isActive('/busca-plano'))}>
+        <NavLink to="/busca-plano" onClick={onNavigate} className={navLinkClass(isActive('/busca-plano'))} data-tour="nav-plano">
           <Target className="h-4 w-4 shrink-0" />
           <span>Planos de Ação</span>
         </NavLink>
-        <NavLink to="/busca-artigos" onClick={onNavigate} className={navLinkClass(isActive('/busca-artigos'))}>
+        <NavLink to="/busca-artigos" onClick={onNavigate} className={navLinkClass(isActive('/busca-artigos'))} data-tour="nav-artigos">
           <BookOpen className="h-4 w-4 shrink-0" />
           <span>Artigos Científicos</span>
         </NavLink>

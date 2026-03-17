@@ -1,28 +1,36 @@
 
 
-## Plano: Corrigir busca_plano_dispatch — dois bugs identificados nos logs
+## Ordenar por Tokens no Admin
 
-### Problemas encontrados
+Adicionar um botão/toggle na coluna "Tokens" da tabela de administração que permite ordenar os usuários pelo consumo de tokens (maior para menor e vice-versa).
 
-Os logs mostram dois erros distintos:
+### Mudanças em `src/pages/AdminPage.tsx`
 
-1. **`requires_action` infinito → timeout**: O assistant `asst_esHKfSJcaMNF99QVrILGu6pW` tem tools (function calling) configuradas. Quando o run entra em `requires_action`, o código atual não trata esse status — fica em loop de polling por 90s e dá timeout.
+**1. Novo estado de ordenação**
 
-2. **"Can't add messages while a run is active"**: Quando o timeout acontece, o run anterior fica ativo na thread. Na próxima requisição, tentar adicionar mensagem falha com erro 400.
+Adicionar estado para controlar a direção da ordenação:
+```typescript
+const [sortByTokens, setSortByTokens] = useState<'none' | 'asc' | 'desc'>('none');
+```
 
-### Correções
+**2. Aplicar ordenação no useEffect de filtro (linhas 80-89)**
 
-Alterar `supabase/functions/busca_plano_dispatch/index.ts`:
+Após filtrar por nome, aplicar a ordenação por tokens:
+- `desc`: usuários com mais tokens primeiro
+- `asc`: usuários com menos tokens primeiro
+- `none`: ordem padrão (por data de criação)
 
-**A. Tratar `requires_action`**: Quando o run pedir function calling, cancelar o run (já que não temos como executar as tools do assistant neste contexto) e retornar erro amigável. Ou, melhor ainda: submeter tool outputs vazios/dummy para que o assistant continue sem a tool.
+Valores `null` de `TokenCount` serao tratados como `0`.
 
-A abordagem mais robusta: **cancelar o run** com `POST /threads/{threadId}/runs/{runId}/cancel` e criar um novo run com `additional_instructions` pedindo para responder sem usar tools.
+**3. Cabeçalho clicável na coluna "Tokens" (linha ~230)**
 
-**B. Verificar runs ativos antes de adicionar mensagem**: Antes de enviar nova mensagem na thread, verificar se há runs ativos (`GET /threads/{threadId}/runs?limit=1`) e cancelá-los se existirem.
+Trocar o `<TableHead>Tokens</TableHead>` por um botao clicavel com icone de seta indicando a direção atual:
+- Clique alterna entre `none` -> `desc` -> `asc` -> `none`
+- Icone `ArrowUpDown` (neutro), `ArrowDown` (desc), `ArrowUp` (asc) do lucide-react
 
-### Arquivo alterado
+### Detalhes Técnicos
 
-| Arquivo | Mudança |
-|---------|---------|
-| `supabase/functions/busca_plano_dispatch/index.ts` | Adicionar cancelamento de runs ativos antes de enviar mensagem; tratar status `requires_action` no polling |
+- Importar `ArrowUpDown`, `ArrowDown`, `ArrowUp` do lucide-react
+- A ordenação é aplicada no frontend sobre `filteredProfiles`, sem nova query ao banco
+- O ciclo de clique: sem ordenação -> maior primeiro -> menor primeiro -> sem ordenação
 

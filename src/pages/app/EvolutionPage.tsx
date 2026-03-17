@@ -19,6 +19,7 @@ export default function EvolutionPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const lastParamsRef = useRef<any>(null);
+  const trial = useTrialLimit("evolutions", 2);
 
   const handleGenerate = async (data: {
     approach: string;

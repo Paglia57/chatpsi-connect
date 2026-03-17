@@ -79,6 +79,7 @@ const BuscaPlanoInterface = () => {
     }
     const messageText = newMessage.trim();
     setNewMessage('');
+    setShowSuggestions(false);
     setIsLoading(true);
     try {
       const {

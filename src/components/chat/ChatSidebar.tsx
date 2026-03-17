@@ -122,6 +122,7 @@ const ChatSidebar = () => {
       <div className="p-4 border-b border-sidebar-border">
         <div className="flex items-center gap-3">
           <Avatar className="h-10 w-10 ring-2 ring-sidebar-border">
+            <AvatarImage src={profile?.avatar_url || undefined} />
             <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
               {getAvatarText()}
             </AvatarFallback>

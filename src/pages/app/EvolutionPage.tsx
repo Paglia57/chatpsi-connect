@@ -226,7 +226,7 @@ export default function EvolutionPage() {
           }}
         />
       ) : (
-        <EvolutionInput onGenerate={handleGenerate} isLoading={isGenerating} />
+        <EvolutionInput onGenerate={handleGenerate} isLoading={isGenerating} trialReached={trial.hasReachedLimit} />
       )}
       {(evolutionContent || isGenerating) && (
         <EvolutionOutput

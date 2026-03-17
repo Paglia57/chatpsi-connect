@@ -33,7 +33,14 @@ const RedeemBanner = () => {
 
       const createdAt = new Date(profileData.created_at);
       const daysSinceCreation = (Date.now() - createdAt.getTime()) / (1000 * 60 * 60 * 24);
-      if (daysSinceCreation > 7) {
+      const isNewAccount = daysSinceCreation <= 7;
+
+      const subscribedAt = profile.subscribed_at ? new Date(profile.subscribed_at) : null;
+      const isRecentSubscriber = subscribedAt
+        ? (Date.now() - subscribedAt.getTime()) / (1000 * 60 * 60 * 24) <= 7
+        : false;
+
+      if (!isNewAccount && !isRecentSubscriber) {
         setEligible(false);
         return;
       }

@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import ReferralCard from '@/components/referral/ReferralCard';
+import RedeemBanner from '@/components/referral/RedeemBanner';
 import OnboardingWizard from '@/components/onboarding/OnboardingWizard';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
@@ -187,6 +188,9 @@ const HomePage = () => {
         <h1 className="text-2xl md:text-3xl font-bold text-foreground font-playfair">Olá, {displayName}! 👋</h1>
         <p className="text-muted-foreground mt-1">O que vamos fazer hoje?</p>
       </div>
+
+      {/* Redeem referral banner for new/recent users */}
+      <RedeemBanner />
 
       {/* Stats */}
       <div className="grid grid-cols-2 gap-4">

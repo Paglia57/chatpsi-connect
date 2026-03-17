@@ -13,6 +13,7 @@ interface Profile {
   subscription_active: boolean;
   subscription_tier?: string;
   subscription_end?: string;
+  subscribed_at?: string;
   openai_thread_id?: string;
   has_completed_onboarding: boolean;
   onboarding_step: number;

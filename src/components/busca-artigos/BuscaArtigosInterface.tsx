@@ -2,9 +2,11 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { AutoTextarea } from '@/components/ui/auto-textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Send, Bot, User as UserIcon, RefreshCw, BookOpen, Search } from 'lucide-react';
+import { Send, Bot, User as UserIcon, RefreshCw, BookOpen, Search, Lock } from 'lucide-react';
 import FirstTimeGuide from '@/components/ui/FirstTimeGuide';
+import TrialLimitBanner from '@/components/ui/TrialLimitBanner';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { useTrialLimit } from '@/hooks/useTrialLimit';
 
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';

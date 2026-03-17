@@ -1,36 +1,60 @@
 
 
-## Ordenar por Tokens no Admin
+## Tour guiado com popups por módulo
 
-Adicionar um botão/toggle na coluna "Tokens" da tabela de administração que permite ordenar os usuários pelo consumo de tokens (maior para menor e vice-versa).
+### Conceito
+Substituir os guias inline (`FirstTimeGuide`) por um sistema de **tour guiado interativo** usando tooltips/popovers que apontam para elementos específicos da sidebar e da interface, conduzindo o usuário passo a passo pelos módulos.
 
-### Mudanças em `src/pages/AdminPage.tsx`
+### Abordagem: React Joyride
+Usar a biblioteca [react-joyride](https://github.com/gilbarbara/react-joyride) — a mais popular para tours guiados em React. Ela:
+- Renderiza tooltips posicionados em elementos do DOM via seletores CSS
+- Suporta navegação passo a passo (próximo/anterior/pular)
+- Inclui overlay com spotlight no elemento alvo
+- É customizável visualmente (cores, botões, textos)
+- Suporta callback para saber quando o tour terminou
 
-**1. Novo estado de ordenação**
+### Implementação
 
-Adicionar estado para controlar a direção da ordenação:
-```typescript
-const [sortByTokens, setSortByTokens] = useState<'none' | 'asc' | 'desc'>('none');
+**1. Instalar dependência**
+```
+npm install react-joyride
 ```
 
-**2. Aplicar ordenação no useEffect de filtro (linhas 80-89)**
+**2. Criar componente `GuidedTour.tsx`**
+- Componente wrapper que recebe o estado `run` (ativo/inativo) e `onFinish`
+- Define os steps do tour, cada um apontando para um seletor CSS na sidebar/página:
+  - Step 1: Sidebar item "Início" → "Aqui é seu painel principal com estatísticas"
+  - Step 2: Grupo "Evolução" → "Crie evoluções clínicas com IA aqui"
+  - Step 3: "Pacientes" → "Gerencie seus pacientes e fichas"
+  - Step 4: "Chat Clínico" → "Consulte protocolos e tire dúvidas clínicas"
+  - Step 5: "Buscar Artigos" → "Encontre evidências científicas"
+  - Step 6: "Planos de Ação" → "Monte planos terapêuticos"
+  - Step 7: "Marketing" → "Crie conteúdo para redes sociais"
+  - Step 8: "Suporte" → "Aqui você pode revisitar este tour quando quiser"
+- Tooltip customizado com estilo do app (cores, fontes, border-radius)
+- Textos dos botões em português: "Próximo", "Anterior", "Pular", "Finalizar"
 
-Após filtrar por nome, aplicar a ordenação por tokens:
-- `desc`: usuários com mais tokens primeiro
-- `asc`: usuários com menos tokens primeiro
-- `none`: ordem padrão (por data de criação)
+**3. Adicionar `data-tour` attributes nos itens da sidebar**
+- No `ChatSidebar.tsx`, adicionar atributos como `data-tour="nav-inicio"`, `data-tour="nav-evolucao"`, etc. nos NavLinks e seções para que o Joyride encontre os elementos.
 
-Valores `null` de `TokenCount` serao tratados como `0`.
+**4. Integrar o tour no `AppLayout.tsx`**
+- Importar `GuidedTour`
+- Controlar estado `run` baseado em `profile?.seen_guides?.tour !== true`
+- Ao finalizar, salvar `seen_guides: { ...current, tour: true }` no Supabase
 
-**3. Cabeçalho clicável na coluna "Tokens" (linha ~230)**
+**5. Atualizar "Revisitar orientações" no `ChatSidebar.tsx`**
+- `handleResetGuides` já reseta `seen_guides: {}` — o tour será reativado automaticamente ao navegar para `/app`
 
-Trocar o `<TableHead>Tokens</TableHead>` por um botao clicavel com icone de seta indicando a direção atual:
-- Clique alterna entre `none` -> `desc` -> `asc` -> `none`
-- Icone `ArrowUpDown` (neutro), `ArrowDown` (desc), `ArrowUp` (asc) do lucide-react
+**6. Remover `FirstTimeGuide` das interfaces**
+- Remover o componente dos 3 arquivos: `ChatInterface.tsx`, `BuscaArtigosInterface.tsx`, `BuscaPlanoInterface.tsx`
+- O `FirstTimeGuide.tsx` pode ser mantido ou removido conforme preferência
 
-### Detalhes Técnicos
-
-- Importar `ArrowUpDown`, `ArrowDown`, `ArrowUp` do lucide-react
-- A ordenação é aplicada no frontend sobre `filteredProfiles`, sem nova query ao banco
-- O ciclo de clique: sem ordenação -> maior primeiro -> menor primeiro -> sem ordenação
+### Arquivos alterados
+- `package.json` — adicionar `react-joyride`
+- `src/components/ui/GuidedTour.tsx` — novo componente
+- `src/components/chat/ChatSidebar.tsx` — adicionar `data-tour` nos elementos de navegação
+- `src/components/app/AppLayout.tsx` — integrar o tour
+- `src/components/chat/ChatInterface.tsx` — remover FirstTimeGuide
+- `src/components/busca-artigos/BuscaArtigosInterface.tsx` — remover FirstTimeGuide
+- `src/components/busca-plano/BuscaPlanoInterface.tsx` — remover FirstTimeGuide
 

@@ -8,8 +8,32 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
+const ASSISTANT_ID = 'asst_ghTrVWfzgh5vtW28qDs5MnRB';
+const OPENAI_BASE = 'https://api.openai.com/v1';
+
+function sleep(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function openaiRequest(path: string, apiKey: string, options: RequestInit = {}) {
+  const res = await fetch(`${OPENAI_BASE}${path}`, {
+    ...options,
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+      'OpenAI-Beta': 'assistants=v2',
+      ...(options.headers || {}),
+    },
+  });
+  if (!res.ok) {
+    const errText = await res.text();
+    console.error(`OpenAI error ${res.status} on ${path}:`, errText);
+    throw new Error(`OpenAI API error ${res.status}: ${errText}`);
+  }
+  return res.json();
+}
+
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -17,15 +41,9 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-    const n8nWebhookUrl = Deno.env.get('N8N_WEBHOOK_URL');
+    const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
 
-    console.log('Environment check:', {
-      supabaseUrl: supabaseUrl ? 'Present' : 'Missing',
-      serviceKey: supabaseServiceKey ? 'Present' : 'Missing',
-      n8nWebhookUrl: n8nWebhookUrl ? 'Present' : 'Missing'
-    });
-
-    if (!supabaseUrl || !supabaseServiceKey || !n8nWebhookUrl) {
+    if (!supabaseUrl || !supabaseServiceKey || !openaiApiKey) {
       console.error('Missing required environment variables');
       return new Response(
         JSON.stringify({ error: 'Configuração de ambiente incompleta' }),
@@ -47,20 +65,18 @@ serve(async (req) => {
     // Validate userId as UUID
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (!uuidRegex.test(userId)) {
-      console.error('Invalid userId format:', userId);
       return new Response(
         JSON.stringify({ error: 'userId deve ser um UUID válido' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Validate messageType - use only allowed values, default to 'text'
     const validTypes = ['text', 'audio', 'image', 'video', 'document'];
     const validatedMessageType = validTypes.includes(messageType) ? messageType : 'text';
 
     console.log('Dispatch message request:', { userId, messageType: validatedMessageType });
 
-    // Verify user subscription and get OpenAI thread ID
+    // Verify subscription and get thread ID
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('subscription_active, openai_thread_id, nickname')
@@ -68,18 +84,15 @@ serve(async (req) => {
       .single();
 
     if (profileError || !profile?.subscription_active) {
-      console.error('User subscription not active:', profileError);
       return new Response(
         JSON.stringify({ error: 'Assinatura inativa' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Always use userId as conversationId for database thread_id
     const conversationId = userId;
-    console.log('Using conversationId (thread_id):', conversationId);
 
-    // Save user message first
+    // Save user message
     const { error: insertError } = await supabase
       .from('messages')
       .insert({
@@ -103,83 +116,125 @@ serve(async (req) => {
       );
     }
 
-    // Prepare webhook payload
-    const webhookPayload = {
-      UserId: userId,
-      tipodemensagem: validatedMessageType,
-      texto: validatedMessageType === 'text' ? message : null,
-      audio: validatedMessageType === 'audio' ? fileUrl : null,
-      imagem: validatedMessageType === 'image' ? fileUrl : null,
-      video: validatedMessageType === 'video' ? fileUrl : null,
-      documento: validatedMessageType === 'document' ? fileUrl : null
-    };
+    // --- OpenAI Assistants API ---
 
-    // Include OpenAI thread ID for n8n (from input or profile)
-    const openaiThreadForN8n = openai_thread_id || profile.openai_thread_id;
-    if (openaiThreadForN8n) {
-      webhookPayload.openai_thread_id = openaiThreadForN8n;
+    // 1. Get or create thread
+    let threadId = openai_thread_id || profile.openai_thread_id;
+
+    if (!threadId) {
+      console.log('Creating new OpenAI thread for user:', userId);
+      const threadData = await openaiRequest('/threads', openaiApiKey, { method: 'POST', body: '{}' });
+      threadId = threadData.id;
+      console.log('Created thread:', threadId);
+
+      // Save thread ID to profile
+      await supabase
+        .from('profiles')
+        .update({ openai_thread_id: threadId })
+        .eq('user_id', userId);
     }
 
-    // Include nickname if available (from input or profile)
-    const finalNickname = nickname || profile.nickname;
-    if (finalNickname) {
-      webhookPayload.nickname = finalNickname;
+    // 2. Build message content
+    let contentText = message || '';
+    if (fileUrl && validatedMessageType !== 'text') {
+      const typeLabels: Record<string, string> = {
+        audio: 'Áudio',
+        image: 'Imagem',
+        video: 'Vídeo',
+        document: 'Documento',
+      };
+      const label = typeLabels[validatedMessageType] || 'Arquivo';
+      contentText = contentText 
+        ? `${contentText}\n\n[${label} enviado: ${fileUrl}]`
+        : `[${label} enviado: ${fileUrl}]`;
     }
 
-    console.log('Sending to webhook:', webhookPayload);
+    if (!contentText) {
+      contentText = 'Arquivo enviado';
+    }
 
-    // Send to webhook and wait for response
-    const webhookResponse = await fetch(n8nWebhookUrl, {
+    console.log('Sending message to thread:', threadId);
+
+    // 3. Add message to thread
+    await openaiRequest(`/threads/${threadId}/messages`, openaiApiKey, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(webhookPayload),
+      body: JSON.stringify({ role: 'user', content: contentText }),
     });
 
-    if (!webhookResponse.ok) {
-      const errorText = await webhookResponse.text();
-      console.error('Webhook error:', errorText);
-      throw new Error(`Webhook failed with status ${webhookResponse.status}: ${errorText}`);
+    // 4. Create run
+    const run = await openaiRequest(`/threads/${threadId}/runs`, openaiApiKey, {
+      method: 'POST',
+      body: JSON.stringify({ assistant_id: ASSISTANT_ID }),
+    });
+
+    console.log('Run created:', run.id, 'status:', run.status);
+
+    // 5. Poll run until terminal state
+    const TIMEOUT_MS = 90_000;
+    const POLL_INTERVAL = 1500;
+    const startTime = Date.now();
+    let runStatus = run.status;
+    let runId = run.id;
+
+    while (!['completed', 'failed', 'cancelled', 'expired', 'incomplete'].includes(runStatus)) {
+      if (Date.now() - startTime > TIMEOUT_MS) {
+        throw new Error('Tempo limite excedido aguardando resposta da IA');
+      }
+      await sleep(POLL_INTERVAL);
+      const updated = await openaiRequest(`/threads/${threadId}/runs/${runId}`, openaiApiKey);
+      runStatus = updated.status;
+      console.log('Run poll:', runStatus);
     }
 
-    // Parse webhook response
-    const webhookData = await webhookResponse.json();
-    console.log('Webhook response received:', webhookData);
-
-    if (!webhookData.response) {
-      console.error('Invalid webhook response format:', webhookData);
-      throw new Error('Resposta do webhook em formato inválido');
+    if (runStatus !== 'completed') {
+      console.error('Run ended with status:', runStatus);
+      throw new Error(`A IA não conseguiu processar a mensagem (status: ${runStatus})`);
     }
 
-    // Save assistant message using conversationId (always userId)
+    // 6. Get assistant's latest message
+    const messagesData = await openaiRequest(
+      `/threads/${threadId}/messages?limit=1&order=desc`,
+      openaiApiKey
+    );
+
+    const assistantMsg = messagesData.data?.[0];
+    if (!assistantMsg || assistantMsg.role !== 'assistant') {
+      throw new Error('Resposta da IA não encontrada');
+    }
+
+    // Extract text from content blocks
+    const responseText = assistantMsg.content
+      .filter((block: any) => block.type === 'text')
+      .map((block: any) => block.text.value)
+      .join('\n');
+
+    if (!responseText) {
+      throw new Error('Resposta da IA veio vazia');
+    }
+
+    console.log('Assistant response length:', responseText.length);
+
+    // 7. Save assistant message
     const { error: assistantInsertError } = await supabase
       .from('messages')
       .insert({
         user_id: userId,
         thread_id: conversationId,
-        content: webhookData.response,
+        content: responseText,
         type: 'text',
         sender: 'assistant',
         media_url: null,
-        metadata: {
-          ai_bridge_response: true
-        }
+        metadata: { openai_thread_id: threadId }
       });
 
     if (assistantInsertError) {
       console.error('Error saving assistant message:', assistantInsertError);
-      // Don't fail the request, but log the error
-      console.warn('Assistant message could not be saved, but continuing...');
     }
 
     console.log('Flow completed successfully');
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        response: webhookData.response
-      }),
+      JSON.stringify({ success: true, response: responseText }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
@@ -187,10 +242,7 @@ serve(async (req) => {
     console.error('Error in dispatch-message:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
-      { 
-        status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });

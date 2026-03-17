@@ -5,8 +5,6 @@ import AppBreadcrumb from "@/components/ui/AppBreadcrumb";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { toast } from "sonner";
-import { useAuth } from "@/components/auth/AuthProvider";
-import { toast } from "sonner";
 
 export default function EvolutionPage() {
   const { user } = useAuth();

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Sidebar, SidebarContent, SidebarHeader, SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -55,6 +56,17 @@ const ChatSidebar = () => {
     window.open('https://wa.me/5511942457454', '_blank', 'noopener,noreferrer');
   };
 
+  const handleResetGuides = async () => {
+    if (!user) return;
+    const { error } = await supabase.from('profiles').update({
+      seen_guides: {},
+    }).eq('user_id', user.id);
+    if (!error) {
+      toast.success('Guias reativados! Visite cada ferramenta para revê-los.');
+      navigate('/app');
+    }
+  };
+
   const handleResetOnboarding = async () => {
     if (!user) return;
     await supabase.from('profiles').update({
@@ -79,13 +91,23 @@ const ChatSidebar = () => {
         </div>
       </button>
       <button
-        onClick={handleResetOnboarding}
+        onClick={handleResetGuides}
         className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-foreground hover:bg-muted transition-colors text-left"
       >
         <RotateCcw className="h-4 w-4 shrink-0 text-primary" />
         <div>
           <p className="font-medium">Revisitar orientações</p>
-          <p className="text-xs text-muted-foreground">Rever onboarding e guias</p>
+          <p className="text-xs text-muted-foreground">Rever guias das ferramentas</p>
+        </div>
+      </button>
+      <button
+        onClick={handleResetOnboarding}
+        className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-foreground hover:bg-muted transition-colors text-left"
+      >
+        <RotateCcw className="h-4 w-4 shrink-0 text-muted-foreground" />
+        <div>
+          <p className="font-medium">Refazer onboarding</p>
+          <p className="text-xs text-muted-foreground">Reiniciar wizard completo</p>
         </div>
       </button>
     </div>

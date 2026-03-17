@@ -1,28 +1,36 @@
 
 
-## Problema: "Revisitar orientações" reseta o onboarding inteiro
+## Ordenar por Tokens no Admin
 
-Atualmente, o botão "Revisitar orientações" (em Suporte, no rodapé da sidebar) executa `handleResetOnboarding` que:
-1. Define `has_completed_onboarding: false` e `onboarding_step: 0` — forçando o wizard completo novamente
-2. Reseta `seen_guides: {}` — para reexibir os guias de primeira vez
-3. Recarrega a página inteira
+Adicionar um botão/toggle na coluna "Tokens" da tabela de administração que permite ordenar os usuários pelo consumo de tokens (maior para menor e vice-versa).
 
-O usuário quer apenas **rever os guias** das ferramentas, sem refazer todo o onboarding.
+### Mudanças em `src/pages/AdminPage.tsx`
 
-## Solução
+**1. Novo estado de ordenação**
 
-Separar as duas ações no popover de Suporte:
+Adicionar estado para controlar a direção da ordenação:
+```typescript
+const [sortByTokens, setSortByTokens] = useState<'none' | 'asc' | 'desc'>('none');
+```
 
-### 1. Alterar "Revisitar orientações" para resetar apenas os guias
-- Atualizar `seen_guides: {}` no banco **sem** alterar `has_completed_onboarding` nem `onboarding_step`
-- Navegar para `/app` sem recarregar a página
-- Mostrar um toast de confirmação: "Guias reativados! Visite cada ferramenta para revê-los."
+**2. Aplicar ordenação no useEffect de filtro (linhas 80-89)**
 
-### 2. Adicionar opção separada "Refazer onboarding" (opcional)
-- Manter a lógica atual de reset completo como opção secundária, caso o usuário realmente queira refazer o onboarding
+Após filtrar por nome, aplicar a ordenação por tokens:
+- `desc`: usuários com mais tokens primeiro
+- `asc`: usuários com menos tokens primeiro
+- `none`: ordem padrão (por data de criação)
 
-### Arquivo: `src/components/chat/ChatSidebar.tsx`
-- Criar `handleResetGuides` que faz apenas `update({ seen_guides: {} })`
-- Alterar o botão "Revisitar orientações" para chamar `handleResetGuides`
-- Adicionar um novo botão "Refazer onboarding" com a lógica atual de `handleResetOnboarding`
+Valores `null` de `TokenCount` serao tratados como `0`.
+
+**3. Cabeçalho clicável na coluna "Tokens" (linha ~230)**
+
+Trocar o `<TableHead>Tokens</TableHead>` por um botao clicavel com icone de seta indicando a direção atual:
+- Clique alterna entre `none` -> `desc` -> `asc` -> `none`
+- Icone `ArrowUpDown` (neutro), `ArrowDown` (desc), `ArrowUp` (asc) do lucide-react
+
+### Detalhes Técnicos
+
+- Importar `ArrowUpDown`, `ArrowDown`, `ArrowUp` do lucide-react
+- A ordenação é aplicada no frontend sobre `filteredProfiles`, sem nova query ao banco
+- O ciclo de clique: sem ordenação -> maior primeiro -> menor primeiro -> sem ordenação
 

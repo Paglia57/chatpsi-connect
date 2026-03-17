@@ -596,6 +596,37 @@ const ChatInterface = () => {
          </div>}
      </div>
 
+      {/* Suggestions above composer */}
+      {showSuggestions && canSendMessage && (
+        <div className="px-4 sm:px-6 md:px-8 pb-2 flex-shrink-0 animate-fade-in">
+          <div className="flex gap-2 overflow-x-auto max-w-4xl mx-auto scrollbar-none">
+            {[
+              "Sugira técnicas de TCC para ansiedade",
+              "Me ajude a planejar uma sessão",
+              "Estratégias para adesão ao tratamento",
+            ].map((suggestion) => (
+              <Button
+                key={suggestion}
+                variant="outline"
+                size="sm"
+                className="whitespace-nowrap text-xs gap-1.5 flex-shrink-0 bg-primary/5 border-primary/20 hover:bg-primary/10 hover:border-primary/30"
+                onClick={() => {
+                  setNewMessage(suggestion);
+                  setShowSuggestions(false);
+                  setTimeout(() => {
+                    const form = document.querySelector('.composer-container form');
+                    form?.requestSubmit();
+                  }, 50);
+                }}
+              >
+                <Sparkles className="h-3 w-3 text-primary" />
+                {suggestion}
+              </Button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Composer */}
       <div className="composer-container p-2 sm:p-3 md:p-4 flex-shrink-0">
         {canSendMessage ? <div className="w-full px-3 sm:px-4 md:px-6">

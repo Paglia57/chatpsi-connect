@@ -262,7 +262,6 @@ const ChatSidebar = () => {
           <CircleUser className="h-4 w-4 mr-3 shrink-0" />
           Meu Perfil
         </NavLink>
-        </NavLink>
         <Popover>
           <PopoverTrigger asChild>
             <button className={`${footerBtnClass} flex items-center`} data-tour="nav-suporte">

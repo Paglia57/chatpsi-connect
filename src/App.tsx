@@ -19,6 +19,8 @@ import AppLayout from "@/components/app/AppLayout";
 import EvolutionPage from "./pages/app/EvolutionPage";
 import HistoryPage from "./pages/app/HistoryPage";
 import ProfilePage from "./pages/app/ProfilePage";
+import PatientsPage from "./pages/app/PatientsPage";
+import PatientDetailPage from "./pages/app/PatientDetailPage";
 
 const queryClient = new QueryClient();
 

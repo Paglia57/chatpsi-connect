@@ -33,7 +33,6 @@ export default function EvolutionPage() {
       let audioBase64: string | null = null;
       let audioFilename: string | null = null;
 
-      // Convert audio to base64 for Whisper transcription
       if (data.input_type === "audio" && data.audio_file) {
         const arrayBuffer = await data.audio_file.arrayBuffer();
         const bytes = new Uint8Array(arrayBuffer);
@@ -45,7 +44,6 @@ export default function EvolutionPage() {
         audioFilename = data.audio_file.name;
       }
 
-      // Call edge function with streaming
       const session = await supabase.auth.getSession();
       const token = session.data.session?.access_token;
       if (!token) throw new Error("Sessão expirada");
@@ -80,7 +78,6 @@ export default function EvolutionPage() {
 
       if (!resp.body) throw new Error("Sem resposta do servidor");
 
-      // Stream SSE
       const reader = resp.body.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
@@ -114,7 +111,6 @@ export default function EvolutionPage() {
         }
       }
 
-      // Flush
       if (buffer.trim()) {
         for (let raw of buffer.split("\n")) {
           if (!raw || !raw.startsWith("data: ")) continue;
@@ -171,15 +167,17 @@ export default function EvolutionPage() {
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-7xl mx-auto">
+    <div className="max-w-3xl mx-auto space-y-6">
       <EvolutionInput onGenerate={handleGenerate} isLoading={isGenerating} />
-      <EvolutionOutput
-        content={evolutionContent}
-        isLoading={isGenerating}
-        onRegenerate={handleRegenerate}
-        onSave={handleSave}
-        isSaving={isSaving}
-      />
+      {(evolutionContent || isGenerating) && (
+        <EvolutionOutput
+          content={evolutionContent}
+          isLoading={isGenerating}
+          onRegenerate={handleRegenerate}
+          onSave={handleSave}
+          isSaving={isSaving}
+        />
+      )}
     </div>
   );
 }

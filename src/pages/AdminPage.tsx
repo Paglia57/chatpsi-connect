@@ -152,15 +152,6 @@ const AdminPageContent = () => {
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="mb-8">
-        <Button
-          variant="ghost"
-          onClick={() => navigate('/chat')}
-          className="mb-4"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Voltar para o Chat
-        </Button>
-        
         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold mb-2">Administração de Usuários</h1>

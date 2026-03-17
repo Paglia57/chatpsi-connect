@@ -35,7 +35,7 @@ const profileCache: Record<string, { name: string; email: string }> = {};
 
 const AdminReferralsContent = () => {
   const { toast } = useToast();
-  const navigate = useNavigate();
+  
   const [pendingRedemptions, setPendingRedemptions] = useState<Redemption[]>([]);
   const [allRedemptions, setAllRedemptions] = useState<Redemption[]>([]);
   const [ranking, setRanking] = useState<RankingEntry[]>([]);

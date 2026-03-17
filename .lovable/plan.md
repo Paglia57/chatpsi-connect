@@ -1,36 +1,44 @@
 
 
-## Ordenar por Tokens no Admin
+## Plano: Melhorar Empty States de Planos de Ação e Artigos Científicos
 
-Adicionar um botão/toggle na coluna "Tokens" da tabela de administração que permite ordenar os usuários pelo consumo de tokens (maior para menor e vice-versa).
+### Mudanças em ambas as interfaces
 
-### Mudanças em `src/pages/AdminPage.tsx`
+**1. Empty state com sugestões clicáveis (`BuscaPlanoInterface.tsx` e `BuscaArtigosInterface.tsx`)**
 
-**1. Novo estado de ordenação**
+Substituir o empty state atual (ícone + título + 1 linha de texto) por:
 
-Adicionar estado para controlar a direção da ordenação:
-```typescript
-const [sortByTokens, setSortByTokens] = useState<'none' | 'asc' | 'desc'>('none');
-```
+- Ícone maior com fundo circular `bg-primary/10`
+- Título e descrição mais orientadores
+- **Grid de sugestões clicáveis** (2 colunas, 4-6 sugestões) — cada sugestão é um botão `variant="outline"` com ícone pequeno que, ao clicar, preenche o textarea e envia automaticamente
 
-**2. Aplicar ordenação no useEffect de filtro (linhas 80-89)**
+**Sugestões para Plano de Ação:**
+- "Plano de ação para depressão em adolescentes"
+- "Intervenções para ansiedade generalizada"
+- "Estratégias para TDAH em adultos"
+- "Plano terapêutico para luto complicado"
+- "Manejo de crise em ideação suicida"
+- "Intervenções para transtorno alimentar"
 
-Após filtrar por nome, aplicar a ordenação por tokens:
-- `desc`: usuários com mais tokens primeiro
-- `asc`: usuários com menos tokens primeiro
-- `none`: ordem padrão (por data de criação)
+**Sugestões para Artigos Científicos:**
+- "Eficácia da TCC para TEPT"
+- "Mindfulness e redução de ansiedade"
+- "Neuroplasticidade e psicoterapia"
+- "Terapia de esquemas para transtornos de personalidade"
+- "Psicoterapia online vs presencial"
+- "Intervenções baseadas em evidências para depressão"
 
-Valores `null` de `TokenCount` serao tratados como `0`.
+**2. Diferenciação visual entre as duas páginas**
 
-**3. Cabeçalho clicável na coluna "Tokens" (linha ~230)**
+- **Plano de Ação**: manter ícone `Sparkles`, cor accent `bg-amber-500/10 text-amber-600` nas sugestões
+- **Artigos**: manter ícone `BookOpen`, cor accent `bg-blue-500/10 text-blue-600` nas sugestões
 
-Trocar o `<TableHead>Tokens</TableHead>` por um botao clicavel com icone de seta indicando a direção atual:
-- Clique alterna entre `none` -> `desc` -> `asc` -> `none`
-- Icone `ArrowUpDown` (neutro), `ArrowDown` (desc), `ArrowUp` (asc) do lucide-react
+Isso cria identidade visual distinta para cada ferramenta.
 
-### Detalhes Técnicos
+### Arquivos modificados
 
-- Importar `ArrowUpDown`, `ArrowDown`, `ArrowUp` do lucide-react
-- A ordenação é aplicada no frontend sobre `filteredProfiles`, sem nova query ao banco
-- O ciclo de clique: sem ordenação -> maior primeiro -> menor primeiro -> sem ordenação
+| Arquivo | Mudança |
+|---------|---------|
+| `src/components/busca-plano/BuscaPlanoInterface.tsx` | Empty state rico com sugestões clicáveis temáticas |
+| `src/components/busca-artigos/BuscaArtigosInterface.tsx` | Empty state rico com sugestões clicáveis temáticas |
 

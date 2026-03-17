@@ -164,20 +164,27 @@ const ChatSidebar = () => {
           <span>IA de Marketing</span>
         </NavLink>
 
-        <Separator className="my-3" />
-
-        {/* ADMINISTRAÇÃO */}
-        <SectionLabel>Administração</SectionLabel>
-
+        {/* ADMINISTRAÇÃO - apenas superadmin */}
         {isAdmin && (
-          <NavLink to="/admin" onClick={onNavigate} className={navLinkClass(isActive('/admin') || isActive('/admin/referrals'))}>
-            <Settings className="h-4 w-4 shrink-0" />
-            <span>Administração</span>
-          </NavLink>
+          <>
+            <Separator className="my-3" />
+            <SectionLabel>Administração</SectionLabel>
+            <NavLink to="/admin" onClick={onNavigate} className={navLinkClass(isActive('/admin'))}>
+              <Settings className="h-4 w-4 shrink-0" />
+              <span>Administração</span>
+            </NavLink>
+            <NavLink to="/admin/referrals" onClick={onNavigate} className={navLinkClass(isActive('/admin/referrals'))}>
+              <Gift className="h-4 w-4 shrink-0" />
+              <span>Validar Indicações</span>
+            </NavLink>
+          </>
         )}
+
+        {/* INDIQUE E GANHE - todos os usuários */}
+        <Separator className="my-3" />
         <NavLink to="/app/indicacoes" onClick={onNavigate} className={navLinkClass(isActive('/app/indicacoes'))}>
           <Gift className="h-4 w-4 shrink-0" />
-          <span>Indicações</span>
+          <span>Indique e Ganhe</span>
         </NavLink>
       </div>
 

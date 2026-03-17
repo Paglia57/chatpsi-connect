@@ -247,6 +247,39 @@ const MarketingInterface = () => {
 
         <TabsContent value="novo" className="flex-1 overflow-auto mt-0">
           <div className="p-4 md:p-6 max-w-4xl mx-auto w-full space-y-4 md:space-y-6">
+            {activeTab === 'novo' && prompt === '' && !profile?.seen_guides?.marketing && (
+              <FirstTimeGuide
+                guideKey="marketing"
+                icon={<Megaphone className="h-8 w-8 text-pink-500" />}
+                title="Crie conteúdo para suas redes sociais"
+                description="A IA gera textos profissionais para divulgar sua prática clínica — posts para Instagram, textos para site, legendas educativas e mais."
+                tips={[
+                  "Descreva o tema e o formato desejado (post, carrossel, artigo)",
+                  "O texto gerado é editável — ajuste o tom e estilo como preferir",
+                  "Use a aba Histórico para rever e reutilizar textos anteriores",
+                ]}
+                examples={[
+                  "Crie um post para Instagram sobre a importância da terapia para ansiedade",
+                  "Escreva um texto educativo sobre como funciona a TCC para o meu site",
+                  "Gere 5 ideias de conteúdo sobre saúde mental para redes sociais",
+                ]}
+                ctaText="Entendi, criar um texto!"
+                onDismiss={async () => {
+                  if (user) {
+                    const current = profile?.seen_guides || {};
+                    await supabase.from('profiles').update({ seen_guides: { ...current, marketing: true } }).eq('user_id', user.id);
+                    await refreshProfile();
+                  }
+                }}
+                onExampleClick={(text) => {
+                  setPrompt(text);
+                  if (user) {
+                    const current = profile?.seen_guides || {};
+                    supabase.from('profiles').update({ seen_guides: { ...current, marketing: true } }).eq('user_id', user.id).then(() => refreshProfile());
+                  }
+                }}
+              />
+            )}
             <div className="space-y-2">
               <Label htmlFor="prompt">Pedido ao assistente</Label>
               <Textarea

@@ -9,8 +9,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Search, Trash2, ClipboardList, ClipboardCopy } from "lucide-react";
+import { Search, Trash2, ClipboardList, ClipboardCopy, Pencil, X } from "lucide-react";
 import { toast } from "sonner";
+import { Textarea } from "@/components/ui/textarea";
 
 interface Evolution {
   id: string;
@@ -30,6 +31,9 @@ export default function HistoryPage() {
   const [search, setSearch] = useState("");
   const [filterApproach, setFilterApproach] = useState("all");
   const [selectedEvolution, setSelectedEvolution] = useState<Evolution | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedContent, setEditedContent] = useState("");
+  const [saving, setSaving] = useState(false);
 
   const fetchEvolutions = async () => {
     if (!user) return;
@@ -180,7 +184,7 @@ export default function HistoryPage() {
       )}
 
       {/* Detail dialog */}
-      <Dialog open={!!selectedEvolution} onOpenChange={(open) => { if (!open) setSelectedEvolution(null); }}>
+      <Dialog open={!!selectedEvolution} onOpenChange={(open) => { if (!open) { setSelectedEvolution(null); setIsEditing(false); } }}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="font-display">
@@ -197,21 +201,76 @@ export default function HistoryPage() {
                 {selectedEvolution.session_type && <span>• {selectedEvolution.session_type}</span>}
               </div>
               <Separator />
-              <div className="whitespace-pre-wrap text-sm text-foreground leading-relaxed font-sans">
-                {selectedEvolution.output_content}
-              </div>
+              {isEditing ? (
+                <Textarea
+                  value={editedContent}
+                  onChange={e => setEditedContent(e.target.value)}
+                  className="min-h-[300px] text-sm leading-relaxed font-sans"
+                />
+              ) : (
+                <div className="whitespace-pre-wrap text-sm text-foreground leading-relaxed font-sans">
+                  {selectedEvolution.output_content}
+                </div>
+              )}
               <Separator />
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  navigator.clipboard.writeText(selectedEvolution.output_content || "");
-                  toast.success("Evolução copiada!");
-                }}
-              >
-                <ClipboardCopy className="h-4 w-4" />
-                Copiar
-              </Button>
+              <div className="flex items-center gap-2 flex-wrap">
+                {isEditing ? (
+                  <>
+                    <Button
+                      variant="default"
+                      size="sm"
+                      disabled={saving}
+                      onClick={async () => {
+                        setSaving(true);
+                        const { error } = await supabase
+                          .from("evolutions")
+                          .update({ output_content: editedContent })
+                          .eq("id", selectedEvolution.id);
+                        setSaving(false);
+                        if (error) {
+                          toast.error("Erro ao salvar alterações");
+                        } else {
+                          toast.success("Evolução atualizada!");
+                          setEvolutions(prev => prev.map(e => e.id === selectedEvolution.id ? { ...e, output_content: editedContent } : e));
+                          setSelectedEvolution({ ...selectedEvolution, output_content: editedContent });
+                          setIsEditing(false);
+                        }
+                      }}
+                    >
+                      {saving ? "Salvando..." : "Salvar"}
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => setIsEditing(false)}>
+                      <X className="h-4 w-4" />
+                      Cancelar
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setEditedContent(selectedEvolution.output_content || "");
+                        setIsEditing(true);
+                      }}
+                    >
+                      <Pencil className="h-4 w-4" />
+                      Editar
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        navigator.clipboard.writeText(selectedEvolution.output_content || "");
+                        toast.success("Evolução copiada!");
+                      }}
+                    >
+                      <ClipboardCopy className="h-4 w-4" />
+                      Copiar
+                    </Button>
+                  </>
+                )}
+              </div>
             </div>
           )}
         </DialogContent>

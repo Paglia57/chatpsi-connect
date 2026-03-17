@@ -169,11 +169,23 @@ export default function HistoryPage() {
   if (loading) {
     return (
       <div className="max-w-4xl mx-auto space-y-4">
+        <AppBreadcrumb items={[
+          { label: "Clínica", href: "/app/evolucao" },
+          { label: "Evolução", href: "/app/evolucao" },
+          { label: "Histórico" },
+        ]} />
         <h1 className="font-display text-2xl font-semibold text-foreground">Histórico de Evoluções</h1>
         <div className="space-y-3">
           {[1, 2, 3].map(i => (
-            <Card key={i} className="border-border bg-card animate-pulse">
-              <CardContent className="p-4 h-20" />
+            <Card key={i} className="border-border bg-card">
+              <CardContent className="p-4 flex items-start gap-4">
+                <Skeleton className="h-10 w-10 rounded-full" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-4 w-1/3" />
+                  <Skeleton className="h-3 w-2/3" />
+                  <Skeleton className="h-3 w-1/2" />
+                </div>
+              </CardContent>
             </Card>
           ))}
         </div>

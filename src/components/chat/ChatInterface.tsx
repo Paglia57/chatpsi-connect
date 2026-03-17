@@ -30,7 +30,8 @@ type ConnectionStatus = 'connected' | 'disconnected' | 'reconnecting';
 const ChatInterface = () => {
   const {
     profile,
-    user
+    user,
+    refreshProfile
   } = useAuth();
   const {
     toast

@@ -104,13 +104,13 @@ export default function ProfilePage() {
     if (!file || !user) return;
     const filePath = `${user.id}/avatar-${Date.now()}.${file.name.split(".").pop()}`;
     const { error: uploadError } = await supabase.storage
-      .from("session-audios")
-      .upload(filePath, file);
+      .from("avatars")
+      .upload(filePath, file, { upsert: true });
     if (uploadError) {
       toast.error("Erro ao enviar foto");
       return;
     }
-    const { data: urlData } = supabase.storage.from("session-audios").getPublicUrl(filePath);
+    const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(filePath);
     const url = urlData.publicUrl;
     await supabase.from("profiles").update({ avatar_url: url }).eq("user_id", user.id);
     setAvatarUrl(url);

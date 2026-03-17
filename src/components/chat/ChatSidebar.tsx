@@ -239,10 +239,17 @@ const ChatSidebar = () => {
           <User className="h-4 w-4 mr-3 shrink-0" />
           Meu Perfil
         </NavLink>
-        <button onClick={handleSupportClick} className={`${footerBtnClass} flex items-center`}>
-          <HelpCircle className="h-4 w-4 mr-3 shrink-0" />
-          Suporte
-        </button>
+        <Popover>
+          <PopoverTrigger asChild>
+            <button className={`${footerBtnClass} flex items-center`}>
+              <HelpCircle className="h-4 w-4 mr-3 shrink-0" />
+              Suporte
+            </button>
+          </PopoverTrigger>
+          <PopoverContent side="top" align="start" className="p-2 w-auto">
+            <SupportPopoverContent />
+          </PopoverContent>
+        </Popover>
         <button onClick={signOut} className={`${footerBtnClass} flex items-center`}>
           <LogOut className="h-4 w-4 mr-3 shrink-0" />
           Sair

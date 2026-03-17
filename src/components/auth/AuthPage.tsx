@@ -6,8 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from './AuthProvider';
 import { useToast } from '@/hooks/use-toast';
-import { Heart, Shield, Stethoscope } from 'lucide-react';
+import { FileText, MessageCircle, BookOpen, Users } from 'lucide-react';
 import ForgotPasswordModal from './ForgotPasswordModal';
+
 const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
@@ -15,26 +16,20 @@ const AuthPage = () => {
   const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
-  const {
-    user,
-    signIn,
-    signUp
-  } = useAuth();
-  const {
-    toast
-  } = useToast();
+  const { user, signIn, signUp } = useAuth();
+  const { toast } = useToast();
 
-  // Redirect if already authenticated
   if (user) {
     return <Navigate to="/chat" replace />;
   }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
-      const {
-        error
-      } = isLogin ? await signIn(email, password) : await signUp(email, password, fullName);
+      const { error } = isLogin
+        ? await signIn(email, password)
+        : await signUp(email, password, fullName);
       if (error) {
         toast({
           title: "Erro de autenticação",
@@ -57,61 +52,74 @@ const AuthPage = () => {
       setLoading(false);
     }
   };
-  return <div className="min-h-screen bg-hero flex items-center justify-center p-4">
+
+  return (
+    <div className="min-h-screen bg-hero flex items-center justify-center p-4">
       <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-10 xl:gap-12 items-center">
         {/* Hero Section */}
         <div className="text-center lg:text-left space-y-5 text-white flex flex-col justify-center">
           <div className="animate-slide-up">
-            <img 
-              src="/logo.png" 
-              alt="ChatPsi" 
+            <img
+              src="/logo.png"
+              alt="ChatPsi"
               className="h-24 lg:h-28 xl:h-32 w-auto mx-auto lg:mx-0 mb-3 object-contain filter brightness-0 invert drop-shadow-[0_2px_8px_rgba(255,255,255,0.25)]"
             />
-            
+
             <p className="text-xl lg:text-2xl text-white/90 mb-4 leading-relaxed font-light">
-              Plataforma de apoio para profissionais de saúde mental com IA multimodal 
-              para otimizar suas sessões e organização.
+              Escreva evoluções clínicas, consulte artigos científicos e organize seus pacientes — tudo com IA especializada para psicólogos.
             </p>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
+            {/* Social proof */}
+            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 mb-6">
+              <Users className="h-4 w-4 text-white/90" />
+              <span className="text-sm text-white/90 font-medium">
+                Mais de 150 profissionais de saúde mental já usam o ChatPsi
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
               <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 text-center hover:bg-white/20 transition-all duration-300 hover:scale-105 card-hover">
-                <Heart className="h-10 w-10 text-cta mx-auto mb-4" />
-                <h3 className="font-display font-semibold text-white mb-3 text-lg">Cuidado Centrado</h3>
-                <p className="text-white/80 leading-relaxed">Foque no que importa: seus pacientes</p>
+                <FileText className="h-10 w-10 text-cta mx-auto mb-4" />
+                <h3 className="font-display font-semibold text-white mb-3 text-lg">Evolução por IA</h3>
+                <p className="text-white/80 leading-relaxed">Gere documentação clínica completa a partir de anotações da sessão</p>
               </div>
-              
+
               <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 text-center hover:bg-white/20 transition-all duration-300 hover:scale-105 card-hover">
-                <Shield className="h-10 w-10 text-cta mx-auto mb-4" />
-                <h3 className="font-display font-semibold text-white mb-3 text-lg">Seguro</h3>
-                <p className="text-white/80 leading-relaxed">Proteção total dos dados dos seus pacientes</p>
+                <MessageCircle className="h-10 w-10 text-cta mx-auto mb-4" />
+                <h3 className="font-display font-semibold text-white mb-3 text-lg">Chat Especializado</h3>
+                <p className="text-white/80 leading-relaxed">Consulte protocolos e abordagens terapêuticas com IA treinada</p>
               </div>
-              
+
               <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 text-center hover:bg-white/20 transition-all duration-300 hover:scale-105 card-hover">
-                <Stethoscope className="h-10 w-10 text-cta mx-auto mb-4" />
-                <h3 className="font-display font-semibold text-white mb-3 text-lg">Profissional</h3>
-                <p className="text-white/80 leading-relaxed">Desenvolvido por e para profissionais</p>
+                <BookOpen className="h-10 w-10 text-cta mx-auto mb-4" />
+                <h3 className="font-display font-semibold text-white mb-3 text-lg">Artigos Científicos</h3>
+                <p className="text-white/80 leading-relaxed">Busque evidências para embasar suas intervenções clínicas</p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Auth Card */}
-        <Card className="w-full max-w-md mx-auto place-self-center shadow-xl border border-border/60 bg-white/95 backdrop-blur-xl rounded-3xl overflow-hidden card-hover card-decorated relative">
+        {/* Auth Card — clean, no decorative blob */}
+        <Card className="w-full max-w-md mx-auto place-self-center shadow-xl border border-border/60 bg-white/95 backdrop-blur-xl rounded-3xl overflow-hidden min-h-[520px] flex flex-col">
           <CardHeader className="text-center pb-6 pt-8">
             <CardTitle className="text-3xl font-display font-bold text-primary mb-2">
               {isLogin ? 'Entrar na sua conta' : 'Criar conta'}
             </CardTitle>
             <CardDescription className="text-muted-foreground/90 text-lg">
-              {isLogin ? 'Entre com suas credenciais para acessar a plataforma' : 'Crie sua conta para começar a usar o ChatPsi'}
+              {isLogin
+                ? 'Entre com suas credenciais para acessar a plataforma'
+                : 'Crie sua conta para começar a usar o ChatPsi'}
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6 px-8 pb-8">
+          <CardContent className="space-y-6 px-8 pb-8 flex-1 flex flex-col">
             <form onSubmit={handleSubmit} className="space-y-5">
-              {!isLogin && <div className="space-y-3">
+              {!isLogin && (
+                <div className="space-y-3">
                   <Label htmlFor="fullName" className="text-foreground font-medium">Nome completo</Label>
                   <Input id="fullName" type="text" value={fullName} onChange={e => setFullName(e.target.value)} required={!isLogin} placeholder="Digite seu nome completo" disabled={loading} className="h-12 rounded-xl border-2 focus:border-primary transition-colors" />
-                </div>}
-              
+                </div>
+              )}
+
               <div className="space-y-3">
                 <Label htmlFor="email" className="text-foreground font-medium">Email</Label>
                 <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="Digite seu email" disabled={loading} className="h-12 rounded-xl border-2 focus:border-primary transition-colors" />
@@ -123,33 +131,43 @@ const AuthPage = () => {
               </div>
 
               <Button type="submit" className="w-full h-14 bg-primary hover:bg-primary-hover text-primary-foreground font-semibold rounded-xl text-lg btn-hover-lift shadow-lg" disabled={loading}>
-                {loading ? <div className="flex items-center gap-3">
+                {loading ? (
+                  <div className="flex items-center gap-3">
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
                     {isLogin ? 'Entrando...' : 'Criando conta...'}
-                  </div> : isLogin ? 'Entrar' : 'Criar conta'}
+                  </div>
+                ) : isLogin ? 'Entrar' : 'Criar conta'}
               </Button>
             </form>
 
-            {isLogin && <div className="text-center">
-                <button type="button" onClick={() => setShowForgotPassword(true)} className="text-sm text-cta hover:text-cta-hover transition-colors font-medium" disabled={loading}>
+            {isLogin && (
+              <div className="text-center">
+                <button type="button" onClick={() => setShowForgotPassword(true)} className="text-sm text-muted-foreground hover:text-foreground transition-colors" disabled={loading}>
                   Esqueceu sua senha?
                 </button>
-              </div>}
+              </div>
+            )}
 
-            <div className="text-center border-t pt-6 mt-6">
-              <p className="text-muted-foreground mb-4 text-lg">
+            <div className="text-center border-t pt-6 mt-auto">
+              <p className="text-muted-foreground mb-2">
                 {isLogin ? 'Não tem uma conta?' : 'Já tem uma conta?'}
               </p>
-              <Button type="button" variant="outline" onClick={() => setIsLogin(!isLogin)} disabled={loading} className="w-full h-12 border-2 border-cta text-cta hover:bg-cta hover:text-white transition-all duration-200 rounded-xl font-semibold btn-hover-lift">
+              <button
+                type="button"
+                onClick={() => setIsLogin(!isLogin)}
+                disabled={loading}
+                className="text-cta hover:underline font-semibold transition-colors"
+              >
                 {isLogin ? 'Criar nova conta' : 'Fazer login'}
-              </Button>
+              </button>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Modal de recuperação de senha */}
       <ForgotPasswordModal open={showForgotPassword} onOpenChange={setShowForgotPassword} />
-    </div>;
+    </div>
+  );
 };
+
 export default AuthPage;

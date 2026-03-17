@@ -1,18 +1,20 @@
-import { useState, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AutoTextarea } from '@/components/ui/auto-textarea';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Sparkles, Search, FileText, CheckCircle } from 'lucide-react';
+import { Loader2, Sparkles, Search, FileText, CheckCircle, Mic, Upload, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { toast } from 'sonner';
 
 const DURATIONS = ["30min", "40min", "50min", "60min"];
 const SESSION_TYPES = ["Presencial", "Online"];
+const ACCEPTED_AUDIO = ".mp3,.m4a,.wav,.ogg,.webm";
 const LOADING_STEPS = [
   { icon: Search, text: "Analisando suas anotações..." },
   { icon: FileText, text: "Estruturando a evolução clínica..." },
@@ -41,6 +43,10 @@ export default function StepEvolution({ selectedApproach, createdPatient, onNext
   const [textContent, setTextContent] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [loadingTextIdx, setLoadingTextIdx] = useState(0);
+  const [activeTab, setActiveTab] = useState('text');
+  const [audioFile, setAudioFile] = useState<File | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!isGenerating) return;
@@ -50,9 +56,36 @@ export default function StepEvolution({ selectedApproach, createdPatient, onNext
     return () => clearInterval(interval);
   }, [isGenerating]);
 
+  const canSubmit =
+    (activeTab === 'text' && textContent.trim().length >= 10) ||
+    (activeTab === 'audio' && audioFile !== null);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files[0];
+    if (file && /\.(mp3|m4a|wav|ogg|webm)$/i.test(file.name)) {
+      setAudioFile(file);
+    }
+  }, []);
+
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result as string;
+        resolve(result.split(',')[1]); // Remove data:...;base64, prefix
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
   const handleGenerate = async () => {
-    if (!user || textContent.trim().length < 10) {
-      toast.error('Descreva o que aconteceu na sessão (mínimo 10 caracteres)');
+    if (!user || !canSubmit) {
+      toast.error(activeTab === 'text'
+        ? 'Descreva o que aconteceu na sessão (mínimo 10 caracteres)'
+        : 'Selecione um arquivo de áudio');
       return;
     }
     setIsGenerating(true);
@@ -63,21 +96,37 @@ export default function StepEvolution({ selectedApproach, createdPatient, onNext
       const token = session.data.session?.access_token;
       if (!token) throw new Error('Sessão expirada');
 
+      let body: Record<string, any> = {
+        approach: selectedApproach,
+        patient_initials: createdPatient?.initials || 'Paciente',
+        session_number: sessionNumber ? parseInt(sessionNumber) : null,
+        session_duration: sessionDuration,
+        session_type: sessionType,
+        patient_id: createdPatient?.id || null,
+      };
+
+      if (activeTab === 'audio' && audioFile) {
+        const base64 = await fileToBase64(audioFile);
+        body = {
+          ...body,
+          input_type: 'audio',
+          audio_base64: base64,
+          audio_filename: audioFile.name,
+        };
+      } else {
+        body = {
+          ...body,
+          input_type: 'text',
+          input_content: textContent,
+        };
+      }
+
       const resp = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-evolution`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-          body: JSON.stringify({
-            input_type: 'text',
-            input_content: textContent,
-            approach: selectedApproach,
-            patient_initials: createdPatient?.initials || 'Paciente',
-            session_number: sessionNumber ? parseInt(sessionNumber) : null,
-            session_duration: sessionDuration,
-            session_type: sessionType,
-            patient_id: createdPatient?.id || null,
-          }),
+          body: JSON.stringify(body),
         }
       );
 
@@ -137,8 +186,8 @@ export default function StepEvolution({ selectedApproach, createdPatient, onNext
         session_duration: sessionDuration,
         session_type: sessionType,
         approach: selectedApproach,
-        input_type: 'text',
-        input_content: textContent,
+        input_type: activeTab,
+        input_content: activeTab === 'text' ? textContent : audioFile?.name || '',
         output_content: fullText,
         patient_id: createdPatient?.id || null,
       });
@@ -196,16 +245,79 @@ export default function StepEvolution({ selectedApproach, createdPatient, onNext
             </div>
           </div>
 
-          <div className="space-y-1.5">
-            <Label>Anotações da sessão</Label>
-            <AutoTextarea
-              value={textContent}
-              onChange={e => setTextContent(e.target.value)}
-              placeholder="Ex: Paciente relatou dificuldade com insônia e ansiedade. Trabalhamos técnicas de reestruturação cognitiva sobre pensamentos catastróficos..."
-              minRows={6}
-              maxRows={14}
-            />
-          </div>
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="w-full">
+              <TabsTrigger value="text" className="flex-1">Texto</TabsTrigger>
+              <TabsTrigger value="audio" className="flex-1">Áudio</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="text" className="mt-3">
+              <div className="space-y-1.5">
+                <Label>Anotações da sessão</Label>
+                <AutoTextarea
+                  value={textContent}
+                  onChange={e => setTextContent(e.target.value)}
+                  placeholder="Ex: Paciente relatou dificuldade com insônia e ansiedade. Trabalhamos técnicas de reestruturação cognitiva sobre pensamentos catastróficos..."
+                  minRows={6}
+                  maxRows={14}
+                />
+              </div>
+            </TabsContent>
+
+            <TabsContent value="audio" className="mt-3">
+              {audioFile ? (
+                <div className="border border-border rounded-lg p-4 space-y-3 bg-muted/30">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Mic className="h-4 w-4 text-primary shrink-0" />
+                      <span className="text-sm font-medium text-foreground truncate">{audioFile.name}</span>
+                      <span className="text-xs text-muted-foreground shrink-0">
+                        ({(audioFile.size / 1024 / 1024).toFixed(1)} MB)
+                      </span>
+                    </div>
+                    <Button variant="ghost" size="icon" onClick={() => setAudioFile(null)} className="h-7 w-7 shrink-0">
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <audio controls src={URL.createObjectURL(audioFile)} className="w-full" />
+                </div>
+              ) : (
+                <div
+                  onDragOver={e => { e.preventDefault(); setIsDragging(true); }}
+                  onDragLeave={() => setIsDragging(false)}
+                  onDrop={handleDrop}
+                  onClick={() => fileInputRef.current?.click()}
+                  className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
+                    isDragging ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground"
+                  }`}
+                >
+                  <Upload className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
+                  <p className="text-sm font-medium text-foreground">
+                    Arraste o áudio aqui ou clique para selecionar
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Formatos: .mp3, .m4a, .wav, .ogg, .webm — até 15MB
+                  </p>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept={ACCEPTED_AUDIO}
+                    className="hidden"
+                    onChange={e => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        if (file.size > 15 * 1024 * 1024) {
+                          toast.error('Arquivo muito grande. Limite de 15MB para áudio.');
+                          return;
+                        }
+                        setAudioFile(file);
+                      }
+                    }}
+                  />
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
 
@@ -228,7 +340,7 @@ export default function StepEvolution({ selectedApproach, createdPatient, onNext
           </CardContent>
         </Card>
       ) : (
-        <Button variant="cta" className="w-full" size="lg" onClick={handleGenerate} disabled={textContent.trim().length < 10}>
+        <Button variant="cta" className="w-full" size="lg" onClick={handleGenerate} disabled={!canSubmit}>
           <Sparkles className="h-4 w-4" />
           ✨ Gerar minha primeira evolução
         </Button>

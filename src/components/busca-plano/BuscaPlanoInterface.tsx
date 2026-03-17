@@ -29,6 +29,7 @@ const BuscaPlanoInterface = () => {
   const [messages, setMessages] = useState<PlanoMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(true);
   const [fetchingHistory, setFetchingHistory] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fetchHistory = useCallback(async () => {

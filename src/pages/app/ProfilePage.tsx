@@ -180,9 +180,18 @@ export default function ProfilePage() {
               <p className="text-xs text-muted-foreground">Usado no cabeçalho das evoluções clínicas</p>
             </div>
             <div className="space-y-2">
+              <Label>Apelido</Label>
+              <Input value={nickname} onChange={e => setNickname(e.target.value)} placeholder="Como quer ser chamado" />
+              <p className="text-xs text-muted-foreground">Como você quer ser chamado dentro do app</p>
+            </div>
+            <div className="space-y-2">
               <Label>CRP</Label>
               <Input value={crp} onChange={e => setCrp(e.target.value)} placeholder="Ex: 06/123456" />
               <p className="text-xs text-muted-foreground">Formato: UF/número (ex: 06/123456). Aparece nas evoluções geradas</p>
+            </div>
+            <div className="space-y-2">
+              <InternationalPhoneInput value={whatsapp} onChange={setWhatsapp} label="WhatsApp" />
+              <p className="text-xs text-muted-foreground">Usado para contato e suporte</p>
             </div>
           </div>
 

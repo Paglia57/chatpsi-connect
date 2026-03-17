@@ -28,7 +28,7 @@ export default function OnboardingWizard({ initialStep = 0, onComplete }: Onboar
   const handleSkip = async () => {
     if (!user) return;
     await supabase.from('profiles').update({
-      onboarding_step: currentStep,
+      onboarding_step: Math.max(currentStep, 1),
       has_completed_onboarding: false,
     }).eq('user_id', user.id);
     await refreshProfile();

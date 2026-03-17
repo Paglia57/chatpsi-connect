@@ -334,6 +334,7 @@ export type Database = {
           subscription_id: string | null
           subscription_tier: string | null
           threads_artigos: string | null
+          threads_marketing: string | null
           threads_plano: string | null
           TokenCount: number | null
           updated_at: string
@@ -360,6 +361,7 @@ export type Database = {
           subscription_id?: string | null
           subscription_tier?: string | null
           threads_artigos?: string | null
+          threads_marketing?: string | null
           threads_plano?: string | null
           TokenCount?: number | null
           updated_at?: string
@@ -386,6 +388,7 @@ export type Database = {
           subscription_id?: string | null
           subscription_tier?: string | null
           threads_artigos?: string | null
+          threads_marketing?: string | null
           threads_plano?: string | null
           TokenCount?: number | null
           updated_at?: string

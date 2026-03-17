@@ -1,50 +1,36 @@
 
 
-## Plano: Migrar Marketing e Plano de Ação de n8n/webhook para OpenAI Assistants API direta
+## Ordenar por Tokens no Admin
 
-### Resumo
-Mesmo padrão usado no Chat Clínico: eliminar webhooks intermediários e chamar a OpenAI Assistants API diretamente nas edge functions.
+Adicionar um botão/toggle na coluna "Tokens" da tabela de administração que permite ordenar os usuários pelo consumo de tokens (maior para menor e vice-versa).
 
-### 1. `supabase/functions/marketing_ai_dispatch/index.ts`
+### Mudanças em `src/pages/AdminPage.tsx`
 
-**Assistant:** `asst_RmdTDmgUPmKNSoXoQ4FMHip1`
+**1. Novo estado de ordenação**
 
-Reescrever para:
-- Autenticar usuário (manter lógica atual)
-- Buscar/criar thread no perfil — novo campo `threads_marketing` na tabela `profiles`
-- Enviar mensagem na thread com o `prompt`
-- Criar run com o assistant_id, poll até completar (timeout 90s, intervalo 1.5s)
-- Extrair resposta do assistant
-- Retornar `{ success: true, generated_text: "..." }` — contrato com frontend se mantém idêntico
+Adicionar estado para controlar a direção da ordenação:
+```typescript
+const [sortByTokens, setSortByTokens] = useState<'none' | 'asc' | 'desc'>('none');
+```
 
-**Remover:** toda lógica de `MARKETING_AI_WEBHOOK_URL` e fetch ao webhook
+**2. Aplicar ordenação no useEffect de filtro (linhas 80-89)**
 
-### 2. `supabase/functions/busca_plano_dispatch/index.ts`
+Após filtrar por nome, aplicar a ordenação por tokens:
+- `desc`: usuários com mais tokens primeiro
+- `asc`: usuários com menos tokens primeiro
+- `none`: ordem padrão (por data de criação)
 
-**Assistant:** `asst_esHKfSJcaMNF99QVrILGu6pW`
+Valores `null` de `TokenCount` serao tratados como `0`.
 
-Reescrever para:
-- Autenticar usuário (manter lógica atual)
-- Usar `threads_plano` já existente no perfil (criar thread se não existir)
-- Enviar `input_text` como mensagem na thread
-- Criar run, poll até completar
-- Salvar no `plano_chat_history` (manter registro como hoje)
-- Retornar `{ success: true, response: { output: "..." } }` — contrato com frontend se mantém
+**3. Cabeçalho clicável na coluna "Tokens" (linha ~230)**
 
-**Remover:** fetch ao webhook `https://webhook.seconsult.com.br/webhook/buscaplano` e lógica de API key
+Trocar o `<TableHead>Tokens</TableHead>` por um botao clicavel com icone de seta indicando a direção atual:
+- Clique alterna entre `none` -> `desc` -> `asc` -> `none`
+- Icone `ArrowUpDown` (neutro), `ArrowDown` (desc), `ArrowUp` (asc) do lucide-react
 
-### 3. Migration SQL
+### Detalhes Técnicos
 
-Adicionar coluna `threads_marketing` (text, nullable) na tabela `profiles` para persistir a thread do módulo de marketing.
-
-### Arquivos alterados
-
-| Arquivo | Mudança |
-|---------|---------|
-| `supabase/functions/marketing_ai_dispatch/index.ts` | Reescrever: webhook → OpenAI Assistants API direta |
-| `supabase/functions/busca_plano_dispatch/index.ts` | Reescrever: webhook → OpenAI Assistants API direta |
-| Migration SQL | Adicionar `threads_marketing` na tabela `profiles` |
-
-### Sem alterações no frontend
-Ambos os frontends (`MarketingInterface.tsx` e `BuscaPlanoInterface.tsx`) mantêm seus contratos de chamada e resposta inalterados.
+- Importar `ArrowUpDown`, `ArrowDown`, `ArrowUp` do lucide-react
+- A ordenação é aplicada no frontend sobre `filteredProfiles`, sem nova query ao banco
+- O ciclo de clique: sem ordenação -> maior primeiro -> menor primeiro -> sem ordenação
 

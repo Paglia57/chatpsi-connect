@@ -156,12 +156,34 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
     const secs = Math.floor(seconds % 60);
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
+  const handleRetry = () => {
+    setAudioState({
+      isPlaying: false,
+      duration: 0,
+      currentTime: 0,
+      isLoading: true,
+      hasError: false,
+      isLoaded: false
+    });
+    const audio = audioRef.current;
+    if (audio) {
+      audio.load();
+    }
+  };
+
   if (audioState.hasError) {
     return <Card className={cn("w-full max-w-sm", className)}>
         <CardContent className="p-3">
-          <div className="flex items-center gap-2 text-destructive">
-            <AlertCircle className="h-4 w-4 flex-shrink-0" />
-            <span className="text-sm">Erro ao carregar áudio</span>
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2 text-destructive">
+              <AlertCircle className="h-4 w-4 flex-shrink-0" />
+              <span className="text-sm font-medium">Erro ao carregar áudio</span>
+            </div>
+            <p className="text-xs text-muted-foreground">O link pode ter expirado ou o arquivo não está disponível.</p>
+            <Button variant="outline" size="sm" onClick={handleRetry} className="w-fit mt-1">
+              <RefreshCw className="h-3 w-3 mr-1.5" />
+              Tentar novamente
+            </Button>
           </div>
         </CardContent>
       </Card>;

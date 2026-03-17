@@ -33,6 +33,119 @@ async function openaiRequest(path: string, apiKey: string, options: RequestInit 
   return res.json();
 }
 
+// --- File processing helpers ---
+
+function getExtensionFromUrl(url: string): string {
+  try {
+    const pathname = new URL(url).pathname;
+    const ext = pathname.split('.').pop()?.toLowerCase() || '';
+    return ext;
+  } catch {
+    return '';
+  }
+}
+
+function getMimeType(ext: string): string {
+  const mimeMap: Record<string, string> = {
+    mp3: 'audio/mpeg', wav: 'audio/wav', m4a: 'audio/mp4', ogg: 'audio/ogg', webm: 'audio/webm',
+    png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp', heic: 'image/heic', heif: 'image/heif',
+    pdf: 'application/pdf', docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  };
+  return mimeMap[ext] || 'application/octet-stream';
+}
+
+async function downloadFile(url: string): Promise<{ data: Uint8Array; ext: string; mime: string }> {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Failed to download file: ${res.status}`);
+  const data = new Uint8Array(await res.arrayBuffer());
+  const ext = getExtensionFromUrl(url);
+  const mime = getMimeType(ext);
+  return { data, ext, mime };
+}
+
+/**
+ * Transcribe audio using Whisper API. Returns transcription text.
+ */
+async function transcribeAudio(fileUrl: string, apiKey: string): Promise<string> {
+  console.log('Transcribing audio via Whisper...');
+  const { data, ext } = await downloadFile(fileUrl);
+  
+  const formData = new FormData();
+  const blob = new Blob([data], { type: getMimeType(ext) });
+  formData.append('file', blob, `audio.${ext || 'mp3'}`);
+  formData.append('model', 'whisper-1');
+  formData.append('language', 'pt');
+
+  const res = await fetch(`${OPENAI_BASE}/audio/transcriptions`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${apiKey}` },
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    console.error('Whisper error:', errText);
+    throw new Error(`Whisper API error ${res.status}: ${errText}`);
+  }
+
+  const result = await res.json();
+  console.log('Whisper transcription length:', result.text?.length);
+  return result.text;
+}
+
+/**
+ * Process image: download and convert to base64 for vision content block.
+ */
+async function processImage(fileUrl: string): Promise<{ type: string; image_url: { url: string } }> {
+  console.log('Processing image for vision...');
+  const { data, ext, mime } = await downloadFile(fileUrl);
+  
+  // Convert to base64
+  let binary = '';
+  for (let i = 0; i < data.length; i++) {
+    binary += String.fromCharCode(data[i]);
+  }
+  const base64 = btoa(binary);
+  const dataUrl = `data:${mime};base64,${base64}`;
+  
+  console.log('Image encoded, size:', data.length, 'bytes');
+  return {
+    type: 'image_url',
+    image_url: { url: dataUrl },
+  };
+}
+
+/**
+ * Process document: upload to OpenAI Files API and return file_id for attachment.
+ */
+async function processDocument(fileUrl: string, apiKey: string): Promise<string> {
+  console.log('Uploading document to OpenAI Files API...');
+  const { data, ext } = await downloadFile(fileUrl);
+
+  const formData = new FormData();
+  const blob = new Blob([data], { type: getMimeType(ext) });
+  formData.append('file', blob, `document.${ext || 'pdf'}`);
+  formData.append('purpose', 'assistants');
+
+  const res = await fetch(`${OPENAI_BASE}/files`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${apiKey}` },
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    console.error('Files API error:', errText);
+    throw new Error(`Files API error ${res.status}: ${errText}`);
+  }
+
+  const result = await res.json();
+  console.log('File uploaded:', result.id);
+  return result.id;
+}
+
+// --- Main handler ---
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -74,7 +187,7 @@ serve(async (req) => {
     const validTypes = ['text', 'audio', 'image', 'video', 'document'];
     const validatedMessageType = validTypes.includes(messageType) ? messageType : 'text';
 
-    console.log('Dispatch message request:', { userId, messageType: validatedMessageType });
+    console.log('Dispatch message request:', { userId, messageType: validatedMessageType, hasFile: !!fileUrl });
 
     // Verify subscription and get thread ID
     const { data: profile, error: profileError } = await supabase
@@ -127,38 +240,83 @@ serve(async (req) => {
       threadId = threadData.id;
       console.log('Created thread:', threadId);
 
-      // Save thread ID to profile
       await supabase
         .from('profiles')
         .update({ openai_thread_id: threadId })
         .eq('user_id', userId);
     }
 
-    // 2. Build message content
-    let contentText = message || '';
+    // 2. Process file and build message content
+    let messageContent: any; // will be string or array of content blocks
+    let attachments: any[] | undefined;
+    const userText = message || '';
+
     if (fileUrl && validatedMessageType !== 'text') {
-      const typeLabels: Record<string, string> = {
-        audio: 'Áudio',
-        image: 'Imagem',
-        video: 'Vídeo',
-        document: 'Documento',
-      };
-      const label = typeLabels[validatedMessageType] || 'Arquivo';
-      contentText = contentText 
-        ? `${contentText}\n\n[${label} enviado: ${fileUrl}]`
-        : `[${label} enviado: ${fileUrl}]`;
+      try {
+        switch (validatedMessageType) {
+          case 'audio': {
+            const transcription = await transcribeAudio(fileUrl, openaiApiKey);
+            const prefix = userText ? `${userText}\n\n` : '';
+            messageContent = `${prefix}[Transcrição do áudio do paciente]: ${transcription}`;
+            break;
+          }
+
+          case 'image': {
+            const imageBlock = await processImage(fileUrl);
+            const contentBlocks: any[] = [];
+            if (userText) {
+              contentBlocks.push({ type: 'text', text: userText });
+            }
+            contentBlocks.push(imageBlock);
+            messageContent = contentBlocks;
+            break;
+          }
+
+          case 'document': {
+            const fileId = await processDocument(fileUrl, openaiApiKey);
+            messageContent = userText || 'Analise o documento enviado.';
+            attachments = [{ file_id: fileId, tools: [{ type: 'file_search' }] }];
+            break;
+          }
+
+          case 'video': {
+            // Video: no direct processing, send as description
+            messageContent = userText 
+              ? `${userText}\n\n[Vídeo enviado: ${fileUrl}]`
+              : `[Vídeo enviado: ${fileUrl}]`;
+            break;
+          }
+
+          default: {
+            messageContent = userText || 'Arquivo enviado';
+          }
+        }
+      } catch (processingError) {
+        // Fallback: send as text description if processing fails
+        console.error('File processing failed, using fallback:', processingError);
+        const typeLabels: Record<string, string> = {
+          audio: 'Áudio', image: 'Imagem', video: 'Vídeo', document: 'Documento',
+        };
+        const label = typeLabels[validatedMessageType] || 'Arquivo';
+        messageContent = userText 
+          ? `${userText}\n\n[${label} enviado: ${fileUrl}]`
+          : `[${label} enviado: ${fileUrl}]`;
+      }
+    } else {
+      messageContent = userText || 'Arquivo enviado';
     }
 
-    if (!contentText) {
-      contentText = 'Arquivo enviado';
-    }
-
-    console.log('Sending message to thread:', threadId);
+    console.log('Sending message to thread:', threadId, 'type:', typeof messageContent === 'string' ? 'text' : 'content_blocks');
 
     // 3. Add message to thread
+    const messagePayload: any = { role: 'user', content: messageContent };
+    if (attachments) {
+      messagePayload.attachments = attachments;
+    }
+
     await openaiRequest(`/threads/${threadId}/messages`, openaiApiKey, {
       method: 'POST',
-      body: JSON.stringify({ role: 'user', content: contentText }),
+      body: JSON.stringify(messagePayload),
     });
 
     // 4. Create run
@@ -202,7 +360,6 @@ serve(async (req) => {
       throw new Error('Resposta da IA não encontrada');
     }
 
-    // Extract text from content blocks
     const responseText = assistantMsg.content
       .filter((block: any) => block.type === 'text')
       .map((block: any) => block.text.value)

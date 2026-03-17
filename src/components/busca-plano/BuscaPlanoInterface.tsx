@@ -103,6 +103,7 @@ const BuscaPlanoInterface = () => {
         throw new Error(data.error || 'Erro ao processar mensagem');
       }
       await fetchHistory();
+      trial.refetch();
       toast({
         title: "Resposta recebida",
         description: "Plano de ação processado com sucesso!",

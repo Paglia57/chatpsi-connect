@@ -1,35 +1,36 @@
 
 
-## Sugestões temporárias acima do input (Chat Clínico e Plano de Ação)
+## Ordenar por Tokens no Admin
 
-Adicionar chips de sugestão compactos entre a área de mensagens e o input, visíveis apenas quando o usuário ainda não interagiu na sessão atual. Desaparecem após a primeira mensagem enviada.
+Adicionar um botão/toggle na coluna "Tokens" da tabela de administração que permite ordenar os usuários pelo consumo de tokens (maior para menor e vice-versa).
 
-### Comportamento
-- Aparecem ao carregar a página, logo acima do composer (input)
-- Desaparecem permanentemente ao enviar a primeira mensagem (ou ao clicar numa sugestão)
-- Não dependem do histórico estar vazio — sempre aparecem na primeira visita da sessão
-- Estilo: chips horizontais compactos com scroll horizontal, sem ocupar muito espaço vertical
+### Mudanças em `src/pages/AdminPage.tsx`
 
-### Mudanças
+**1. Novo estado de ordenação**
 
-**1. `src/components/chat/ChatInterface.tsx`**
+Adicionar estado para controlar a direção da ordenação:
+```typescript
+const [sortByTokens, setSortByTokens] = useState<'none' | 'asc' | 'desc'>('none');
+```
 
-- Novo estado: `const [showSuggestions, setShowSuggestions] = useState(true)`
-- Setar `setShowSuggestions(false)` dentro de `handleSendMessage` (antes do envio)
-- Renderizar entre o `ScrollArea` e o composer (dentro de `composer-container`, antes do form):
-  - 2-3 sugestões em chips horizontais (ex: "Sugira técnicas de TCC para ansiedade", "Me ajude com uma evolução de sessão")
-  - Ao clicar: preenche o input e submete automaticamente
-  - Animação de fade-out ao desaparecer
-- Manter as sugestões do empty state como estão (são para quando não há histórico)
+**2. Aplicar ordenação no useEffect de filtro (linhas 80-89)**
 
-**2. `src/components/busca-plano/BuscaPlanoInterface.tsx`**
+Após filtrar por nome, aplicar a ordenação por tokens:
+- `desc`: usuários com mais tokens primeiro
+- `asc`: usuários com menos tokens primeiro
+- `none`: ordem padrão (por data de criação)
 
-- Mesmo padrão: estado `showSuggestions`, setar false no `handleSendMessage`
-- 2-3 sugestões relevantes (ex: "Manejo de crise suicida", "Plano para TDAH em adultos")
-- Renderizar acima do form no composer
+Valores `null` de `TokenCount` serao tratados como `0`.
 
-### Estilo visual
-- Chips com `variant="outline"`, tamanho pequeno, `gap-2`, scroll horizontal (`flex overflow-x-auto`)
-- Ícone `Sparkles` ou `MessageCircle` de 3.5px antes do texto
-- Animação `animate-fade-in` ao aparecer, transição suave ao sumir
+**3. Cabeçalho clicável na coluna "Tokens" (linha ~230)**
+
+Trocar o `<TableHead>Tokens</TableHead>` por um botao clicavel com icone de seta indicando a direção atual:
+- Clique alterna entre `none` -> `desc` -> `asc` -> `none`
+- Icone `ArrowUpDown` (neutro), `ArrowDown` (desc), `ArrowUp` (asc) do lucide-react
+
+### Detalhes Técnicos
+
+- Importar `ArrowUpDown`, `ArrowDown`, `ArrowUp` do lucide-react
+- A ordenação é aplicada no frontend sobre `filteredProfiles`, sem nova query ao banco
+- O ciclo de clique: sem ordenação -> maior primeiro -> menor primeiro -> sem ordenação
 

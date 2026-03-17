@@ -29,6 +29,7 @@ const BuscaPlanoInterface = () => {
   const [messages, setMessages] = useState<PlanoMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(true);
   const [fetchingHistory, setFetchingHistory] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fetchHistory = useCallback(async () => {
@@ -78,6 +79,7 @@ const BuscaPlanoInterface = () => {
     }
     const messageText = newMessage.trim();
     setNewMessage('');
+    setShowSuggestions(false);
     setIsLoading(true);
     try {
       const {
@@ -209,6 +211,37 @@ const BuscaPlanoInterface = () => {
           </div>
         </ScrollArea>
       </div>
+
+      {/* Suggestions above composer */}
+      {showSuggestions && profile?.subscription_active && (
+        <div className="px-4 sm:px-6 md:px-8 pb-2 flex-shrink-0 animate-fade-in">
+          <div className="flex gap-2 overflow-x-auto max-w-4xl mx-auto scrollbar-none">
+            {[
+              "Manejo de crise em ideação suicida",
+              "Plano para TDAH em adultos",
+              "Intervenções para ansiedade generalizada",
+            ].map((suggestion) => (
+              <Button
+                key={suggestion}
+                variant="outline"
+                size="sm"
+                className="whitespace-nowrap text-xs gap-1.5 flex-shrink-0 bg-amber-500/5 border-amber-500/20 hover:bg-amber-500/10 hover:border-amber-500/30"
+                onClick={() => {
+                  setNewMessage(suggestion);
+                  setShowSuggestions(false);
+                  setTimeout(() => {
+                    const form = document.querySelector('.composer-container form') as HTMLFormElement | null;
+                    form?.requestSubmit();
+                  }, 50);
+                }}
+              >
+                <Sparkles className="h-3 w-3 text-amber-600" />
+                {suggestion}
+              </Button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="composer-container p-2 sm:p-3 md:p-4 flex-shrink-0">
         <div className="w-full px-3 sm:px-4 md:px-6">

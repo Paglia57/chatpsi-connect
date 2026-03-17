@@ -9,7 +9,8 @@ import { toast } from "sonner";
 import { FileText } from "lucide-react";
 
 export default function EvolutionPage() {
-  const { user } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
+  const [guideDismissed, setGuideDismissed] = useState(false);
   const [evolutionContent, setEvolutionContent] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);

@@ -77,10 +77,10 @@ const BuscaPlanoInterface = () => {
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim() || isLoading || !user) return;
-    if (!profile?.subscription_active) {
+    if (trial.hasReachedLimit) {
       toast({
-        title: "Assinatura necessária",
-        description: "Você precisa de uma assinatura ativa para usar esta funcionalidade.",
+        title: "Limite atingido",
+        description: "Você atingiu o limite de buscas gratuitas este mês. Assine para continuar.",
         variant: "destructive"
       });
       return;

@@ -375,6 +375,7 @@ const AdminPageContent = () => {
         </DialogContent>
       </Dialog>
     </div>
+    </TooltipProvider>
   );
 };
 

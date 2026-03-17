@@ -19,7 +19,8 @@ interface PlanoMessage {
 const BuscaPlanoInterface = () => {
   const {
     user,
-    profile
+    profile,
+    refreshProfile
   } = useAuth();
   const {
     toast

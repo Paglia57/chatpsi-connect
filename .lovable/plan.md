@@ -1,36 +1,36 @@
 
 
-## Ordenar por Tokens no Admin
+## Problema: Guias não aparecem após reset
 
-Adicionar um botão/toggle na coluna "Tokens" da tabela de administração que permite ordenar os usuários pelo consumo de tokens (maior para menor e vice-versa).
+Os guias (`FirstTimeGuide`) só são renderizados quando `messages.length === 0`. Se o usuário já tem histórico de conversas em qualquer ferramenta, o guia nunca é exibido — mesmo após resetar `seen_guides`.
 
-### Mudanças em `src/pages/AdminPage.tsx`
+Isso afeta: **ChatInterface**, **BuscaArtigosInterface**, **BuscaPlanoInterface**. O **MarketingInterface** usa condição diferente (`prompt === ''`) e funciona corretamente.
 
-**1. Novo estado de ordenação**
+## Solução
 
-Adicionar estado para controlar a direção da ordenação:
-```typescript
-const [sortByTokens, setSortByTokens] = useState<'none' | 'asc' | 'desc'>('none');
+Exibir o guia **antes** das mensagens (não como alternativa), quando `seen_guides` for falso. O guia aparece no topo da lista de mensagens e desaparece após o usuário interagir.
+
+### Arquivos a alterar:
+
+**1. `src/components/chat/ChatInterface.tsx` (~linha 491)**
+- Mover o `FirstTimeGuide` para **fora** do ternário `messages.length === 0 ? ... : ...`
+- Renderizar o guia **antes** do bloco de mensagens/empty state:
+```tsx
+{!profile?.seen_guides?.chat && canSendMessage && (
+  <FirstTimeGuide ... />
+)}
+{messages.length === 0 ? (
+  <div>...empty state...</div>
+) : (
+  messages.map(...)
+)}
 ```
 
-**2. Aplicar ordenação no useEffect de filtro (linhas 80-89)**
+**2. `src/components/busca-artigos/BuscaArtigosInterface.tsx` (~linha 139)**
+- Mesmo padrão: mover `FirstTimeGuide` para fora do ternário, renderizar antes do conteúdo.
 
-Após filtrar por nome, aplicar a ordenação por tokens:
-- `desc`: usuários com mais tokens primeiro
-- `asc`: usuários com menos tokens primeiro
-- `none`: ordem padrão (por data de criação)
+**3. `src/components/busca-plano/BuscaPlanoInterface.tsx` (~linha 141)**
+- Mesmo padrão.
 
-Valores `null` de `TokenCount` serao tratados como `0`.
-
-**3. Cabeçalho clicável na coluna "Tokens" (linha ~230)**
-
-Trocar o `<TableHead>Tokens</TableHead>` por um botao clicavel com icone de seta indicando a direção atual:
-- Clique alterna entre `none` -> `desc` -> `asc` -> `none`
-- Icone `ArrowUpDown` (neutro), `ArrowDown` (desc), `ArrowUp` (asc) do lucide-react
-
-### Detalhes Técnicos
-
-- Importar `ArrowUpDown`, `ArrowDown`, `ArrowUp` do lucide-react
-- A ordenação é aplicada no frontend sobre `filteredProfiles`, sem nova query ao banco
-- O ciclo de clique: sem ordenação -> maior primeiro -> menor primeiro -> sem ordenação
+Isso garante que após reset dos guias, o usuário veja as orientações ao visitar a ferramenta, independentemente de ter histórico.
 

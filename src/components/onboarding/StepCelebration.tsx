@@ -21,6 +21,7 @@ const features = [
 ];
 
 export default function StepCelebration({ evolutionContent, onFinish }: StepCelebrationProps) {
+  const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {

@@ -360,10 +360,17 @@ const ChatSidebar = () => {
               className="p-2 rounded-lg text-muted-foreground hover:text-foreground transition-colors block">
               <User className="h-4 w-4" />
             </NavLink>
-            <button onClick={handleSupportClick} title="Suporte"
-              className="p-2 rounded-lg text-muted-foreground hover:text-foreground transition-colors block">
-              <HelpCircle className="h-4 w-4" />
-            </button>
+            <Popover>
+              <PopoverTrigger asChild>
+                <button title="Suporte"
+                  className="p-2 rounded-lg text-muted-foreground hover:text-foreground transition-colors block">
+                  <HelpCircle className="h-4 w-4" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent side="right" align="end" className="p-2 w-auto">
+                <SupportPopoverContent />
+              </PopoverContent>
+            </Popover>
             <button onClick={signOut} title="Sair"
               className="p-2 rounded-lg text-muted-foreground hover:text-foreground transition-colors block">
               <LogOut className="h-4 w-4" />

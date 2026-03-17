@@ -31,6 +31,9 @@ export default function HistoryPage() {
   const [search, setSearch] = useState("");
   const [filterApproach, setFilterApproach] = useState("all");
   const [selectedEvolution, setSelectedEvolution] = useState<Evolution | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedContent, setEditedContent] = useState("");
+  const [saving, setSaving] = useState(false);
 
   const fetchEvolutions = async () => {
     if (!user) return;

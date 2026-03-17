@@ -83,7 +83,9 @@ export default function ProfilePage() {
         .from("profiles")
         .update({
           full_name: fullName || null,
+          nickname: nickname || null,
           crp: crp || null,
+          whatsapp: whatsapp || null,
           main_approach: mainApproach || null,
           specialties: specialties.length > 0 ? specialties : null,
         })

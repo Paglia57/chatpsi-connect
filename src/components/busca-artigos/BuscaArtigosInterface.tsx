@@ -19,7 +19,8 @@ interface ArtigoMessage {
 const BuscaArtigosInterface = () => {
   const {
     user,
-    profile
+    profile,
+    refreshProfile
   } = useAuth();
   const {
     toast

@@ -1,0 +1,227 @@
+import { useState, useEffect } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { AutoTextarea } from '@/components/ui/auto-textarea';
+import { Badge } from '@/components/ui/badge';
+import { Loader2, Sparkles } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/components/auth/AuthProvider';
+import { toast } from 'sonner';
+
+const DURATIONS = ["30min", "40min", "50min", "60min"];
+const SESSION_TYPES = ["Presencial", "Online"];
+const LOADING_TEXTS = [
+  "Analisando suas anotações...",
+  "Estruturando a evolução clínica...",
+  "Aplicando formato profissional...",
+];
+
+interface CreatedPatient {
+  id: string;
+  full_name: string;
+  initials: string;
+  approach: string;
+}
+
+interface StepEvolutionProps {
+  selectedApproach: string;
+  createdPatient: CreatedPatient | null;
+  onNext: (evolutionContent: string) => void;
+  onSkip: () => void;
+}
+
+export default function StepEvolution({ selectedApproach, createdPatient, onNext, onSkip }: StepEvolutionProps) {
+  const { user } = useAuth();
+  const [sessionNumber, setSessionNumber] = useState('1');
+  const [sessionDuration, setSessionDuration] = useState('50min');
+  const [sessionType, setSessionType] = useState('Presencial');
+  const [textContent, setTextContent] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [loadingTextIdx, setLoadingTextIdx] = useState(0);
+
+  useEffect(() => {
+    if (!isGenerating) return;
+    const interval = setInterval(() => {
+      setLoadingTextIdx(prev => (prev + 1) % LOADING_TEXTS.length);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [isGenerating]);
+
+  const handleGenerate = async () => {
+    if (!user || textContent.trim().length < 10) {
+      toast.error('Descreva o que aconteceu na sessão (mínimo 10 caracteres)');
+      return;
+    }
+    setIsGenerating(true);
+    setLoadingTextIdx(0);
+
+    try {
+      const session = await supabase.auth.getSession();
+      const token = session.data.session?.access_token;
+      if (!token) throw new Error('Sessão expirada');
+
+      const resp = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-evolution`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({
+            input_type: 'text',
+            input_content: textContent,
+            approach: selectedApproach,
+            patient_initials: createdPatient?.initials || 'Paciente',
+            session_number: sessionNumber ? parseInt(sessionNumber) : null,
+            session_duration: sessionDuration,
+            session_type: sessionType,
+            patient_id: createdPatient?.id || null,
+          }),
+        }
+      );
+
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({ error: 'Erro desconhecido' }));
+        throw new Error(err.error || `Erro ${resp.status}`);
+      }
+      if (!resp.body) throw new Error('Sem resposta do servidor');
+
+      const reader = resp.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let fullText = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        let newlineIdx: number;
+        while ((newlineIdx = buffer.indexOf('\n')) !== -1) {
+          let line = buffer.slice(0, newlineIdx);
+          buffer = buffer.slice(newlineIdx + 1);
+          if (line.endsWith('\r')) line = line.slice(0, -1);
+          if (line.startsWith(':') || line.trim() === '') continue;
+          if (!line.startsWith('data: ')) continue;
+          const jsonStr = line.slice(6).trim();
+          if (jsonStr === '[DONE]') break;
+          try {
+            const parsed = JSON.parse(jsonStr);
+            const delta = parsed.choices?.[0]?.delta?.content;
+            if (delta) fullText += delta;
+          } catch { buffer = line + '\n' + buffer; break; }
+        }
+      }
+
+      // Process remaining buffer
+      if (buffer.trim()) {
+        for (const raw of buffer.split('\n')) {
+          if (!raw || !raw.startsWith('data: ')) continue;
+          const j = raw.slice(6).trim();
+          if (j === '[DONE]') continue;
+          try {
+            const p = JSON.parse(j);
+            const c = p.choices?.[0]?.delta?.content;
+            if (c) fullText += c;
+          } catch {}
+        }
+      }
+
+      if (!fullText) throw new Error('Nenhum conteúdo gerado');
+
+      // Save evolution
+      await supabase.from('evolutions').insert({
+        user_id: user.id,
+        patient_initials: createdPatient?.initials || 'Paciente',
+        session_number: sessionNumber ? parseInt(sessionNumber) : null,
+        session_duration: sessionDuration,
+        session_type: sessionType,
+        approach: selectedApproach,
+        input_type: 'text',
+        input_content: textContent,
+        output_content: fullText,
+        patient_id: createdPatient?.id || null,
+      });
+
+      // Update onboarding step
+      await supabase.from('profiles').update({ onboarding_step: 3 }).eq('user_id', user.id);
+
+      onNext(fullText);
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || 'Erro ao gerar evolução');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  return (
+    <div className="max-w-lg mx-auto space-y-6 px-4">
+      <div className="text-center space-y-2">
+        <h2 className="text-2xl font-bold text-foreground font-playfair">Sua primeira evolução com IA ✨</h2>
+        <p className="text-muted-foreground">Descreva brevemente o que aconteceu na sessão. A IA faz o resto.</p>
+      </div>
+
+      {createdPatient && (
+        <div className="flex items-center gap-2 justify-center flex-wrap">
+          <Badge variant="secondary" className="bg-success/10 text-success border-success/20">
+            Paciente: {createdPatient.full_name} ✓
+          </Badge>
+          <Badge variant="secondary" className="bg-success/10 text-success border-success/20">
+            Abordagem: {selectedApproach} ✓
+          </Badge>
+        </div>
+      )}
+
+      <Card className="rounded-2xl shadow-sm border">
+        <CardContent className="p-6 space-y-4">
+          <div className="grid grid-cols-3 gap-3">
+            <div className="space-y-1.5">
+              <Label className="text-xs">Nº sessão</Label>
+              <Input type="number" value={sessionNumber} onChange={e => setSessionNumber(e.target.value)} placeholder="1" min={1} />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Duração</Label>
+              <Select value={sessionDuration} onValueChange={setSessionDuration}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>{DURATIONS.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Tipo</Label>
+              <Select value={sessionType} onValueChange={setSessionType}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>{SESSION_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label>Anotações da sessão</Label>
+            <AutoTextarea
+              value={textContent}
+              onChange={e => setTextContent(e.target.value)}
+              placeholder="Ex: Paciente relatou dificuldade com insônia e ansiedade. Trabalhamos técnicas de reestruturação cognitiva sobre pensamentos catastróficos..."
+              minRows={6}
+              maxRows={14}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {isGenerating ? (
+        <div className="text-center space-y-3 py-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
+          <p className="text-sm text-muted-foreground animate-fade-in" key={loadingTextIdx}>
+            {LOADING_TEXTS[loadingTextIdx]}
+          </p>
+        </div>
+      ) : (
+        <Button variant="cta" className="w-full" size="lg" onClick={handleGenerate} disabled={textContent.trim().length < 10}>
+          <Sparkles className="h-4 w-4" />
+          ✨ Gerar minha primeira evolução
+        </Button>
+      )}
+    </div>
+  );
+}

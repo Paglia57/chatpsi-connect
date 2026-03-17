@@ -14,6 +14,10 @@ interface Profile {
   subscription_tier?: string;
   subscription_end?: string;
   openai_thread_id?: string;
+  has_completed_onboarding: boolean;
+  onboarding_step: number;
+  main_approach?: string;
+  specialties?: string[];
 }
 
 interface AuthContextType {

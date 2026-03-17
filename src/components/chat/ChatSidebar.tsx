@@ -106,6 +106,13 @@ const ChatSidebar = () => {
       gradient: "from-primary to-cta"
     },
     {
+      title: "Histórico",
+      url: "/app/historico",
+      icon: ClipboardList,
+      description: "Evoluções salvas",
+      gradient: "from-primary to-cta"
+    },
+    {
       title: "Chat",
       url: "/chat",
       icon: MessageSquare,

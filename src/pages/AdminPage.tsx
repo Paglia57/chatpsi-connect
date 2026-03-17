@@ -25,6 +25,7 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { Search, Edit, RotateCcw, Users, ArrowUpDown, ArrowDown, ArrowUp } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -150,6 +151,7 @@ const AdminPageContent = () => {
   };
 
   return (
+    <TooltipProvider>
     <div className="container mx-auto py-8 px-4">
       <div className="mb-8">
         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
@@ -229,8 +231,8 @@ const AdminPageContent = () => {
       {loading ? (
         <div className="text-center py-8">Carregando...</div>
       ) : (
-        <div className="border rounded-lg overflow-hidden">
-          <Table>
+        <div className="border rounded-lg overflow-x-auto">
+          <Table className="min-w-[900px]">
             <TableHeader>
               <TableRow>
                 <TableHead>Email</TableHead>
@@ -258,10 +260,10 @@ const AdminPageContent = () => {
             <TableBody>
               {filteredProfiles.map((profile) => (
                 <TableRow key={profile.user_id}>
-                  <TableCell className="font-medium">{profile.email}</TableCell>
+                  <TableCell className="font-medium whitespace-nowrap">{profile.email}</TableCell>
                   <TableCell>{profile.full_name || '-'}</TableCell>
                   <TableCell>{profile.nickname || '-'}</TableCell>
-                  <TableCell>
+                  <TableCell className="whitespace-nowrap">
                     {profile.whatsapp || '-'}
                   </TableCell>
                   <TableCell>
@@ -272,15 +274,20 @@ const AdminPageContent = () => {
                   <TableCell>{profile.TokenCount || 0}</TableCell>
                   <TableCell>
                     {profile.openai_thread_id ? (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleClearThread(profile.user_id)}
-                      >
-                        Limpar Histórico
-                      </Button>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleClearThread(profile.user_id)}
+                          >
+                            <RotateCcw className="w-4 h-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Limpar Histórico</TooltipContent>
+                      </Tooltip>
                     ) : (
-                      <span className="text-muted-foreground text-sm">Sem histórico</span>
+                      <span className="text-muted-foreground text-sm">—</span>
                     )}
                   </TableCell>
                   <TableCell className="text-right">
@@ -368,6 +375,7 @@ const AdminPageContent = () => {
         </DialogContent>
       </Dialog>
     </div>
+    </TooltipProvider>
   );
 };
 

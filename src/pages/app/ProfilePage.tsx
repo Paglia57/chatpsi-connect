@@ -148,10 +148,12 @@ export default function ProfilePage() {
             <div className="space-y-2">
               <Label>Nome completo</Label>
               <Input value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Seu nome" />
+              <p className="text-xs text-muted-foreground">Usado no cabeçalho das evoluções clínicas</p>
             </div>
             <div className="space-y-2">
               <Label>CRP</Label>
               <Input value={crp} onChange={e => setCrp(e.target.value)} placeholder="Ex: 06/123456" />
+              <p className="text-xs text-muted-foreground">Formato: UF/número (ex: 06/123456). Aparece nas evoluções geradas</p>
             </div>
           </div>
 
@@ -163,6 +165,7 @@ export default function ProfilePage() {
                 {APPROACHES.map(a => <SelectItem key={a} value={a}>{a}</SelectItem>)}
               </SelectContent>
             </Select>
+            <p className="text-xs text-muted-foreground">Será pré-selecionada ao criar novas evoluções</p>
           </div>
 
           <div className="space-y-2">
@@ -178,6 +181,7 @@ export default function ProfilePage() {
                 </label>
               ))}
             </div>
+            <p className="text-xs text-muted-foreground">Ajudam a IA a personalizar sugestões e planos de ação</p>
           </div>
 
           <Button variant="cta" onClick={handleSave} disabled={saving}>

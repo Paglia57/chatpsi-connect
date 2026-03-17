@@ -152,8 +152,6 @@ export default function PatientsPage() {
                     </div>
                   ))}
                 </div>
-                  ))}
-                </div>
               ) : filtered.length === 0 ? (
                 <div className="text-center py-12">
                   <Users className="h-12 w-12 text-muted-foreground mx-auto mb-3" />

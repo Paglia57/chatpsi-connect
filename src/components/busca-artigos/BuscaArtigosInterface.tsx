@@ -141,7 +141,7 @@ const BuscaArtigosInterface = () => {
           <div className="p-3 sm:p-4 space-y-3 sm:space-y-4 max-w-4xl mx-auto pb-4">
             
             {messages.length === 0 ? (
-                !(profile?.seen_guides as any)?.artigos ? (
+                (!(profile?.seen_guides as any)?.artigos || tourActive) ? (
                   <FirstTimeGuide
                     guideKey="artigos"
                     icon={<BookOpen className="h-8 w-8 text-blue-600" />}

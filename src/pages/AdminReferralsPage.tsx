@@ -165,6 +165,10 @@ const AdminReferralsContent = () => {
 
   return (
     <div className="container mx-auto py-8 px-4">
+      <AppBreadcrumb items={[
+        { label: "Administração", href: "/admin" },
+        { label: "Validar Indicações" },
+      ]} />
 
       <h1 className="text-3xl font-bold mb-2">Programa de Indicações</h1>
       <p className="text-muted-foreground mb-6">Gerencie os resgates de códigos de indicação</p>

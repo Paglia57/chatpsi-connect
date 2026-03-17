@@ -284,24 +284,37 @@ export default function EvolutionInput({ onGenerate, isLoading, trialReached }: 
         </Tabs>
 
         {/* Submit */}
-        <Button
-          variant="cta"
-          className="w-full"
-          onClick={handleSubmit}
-          disabled={!canSubmit || isLoading}
-        >
-          {isLoading ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Gerando evolução...
-            </>
-          ) : (
-            <>
-              <Sparkles className="h-4 w-4" />
-              Gerar Evolução
-            </>
-          )}
-        </Button>
+        {trialReached ? (
+          <Button
+            variant="cta"
+            className="w-full"
+            asChild
+          >
+            <a href="https://wa.me/5511942457454?text=Olá!%20Quero%20assinar%20o%20ChatPsi" target="_blank" rel="noopener noreferrer">
+              <Lock className="h-4 w-4" />
+              Assinar para continuar gerando
+            </a>
+          </Button>
+        ) : (
+          <Button
+            variant="cta"
+            className="w-full"
+            onClick={handleSubmit}
+            disabled={!canSubmit || isLoading}
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Gerando evolução...
+              </>
+            ) : (
+              <>
+                <Sparkles className="h-4 w-4" />
+                Gerar Evolução
+              </>
+            )}
+          </Button>
+        )}
       </CardContent>
     </Card>
   );

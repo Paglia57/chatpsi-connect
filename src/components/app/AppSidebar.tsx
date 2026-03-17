@@ -1,4 +1,4 @@
-import { Plus, ClipboardList, User, LogOut } from "lucide-react";
+import { Plus, ClipboardList, User, LogOut, Users } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";

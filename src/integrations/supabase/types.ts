@@ -321,10 +321,12 @@ export type Database = {
           current_period_end: string | null
           email: string
           full_name: string | null
+          has_completed_onboarding: boolean
           id: string
           main_approach: string | null
           name: string | null
           nickname: string | null
+          onboarding_step: number
           openai_thread_id: string | null
           plan: string | null
           specialties: string[] | null
@@ -348,10 +350,12 @@ export type Database = {
           current_period_end?: string | null
           email: string
           full_name?: string | null
+          has_completed_onboarding?: boolean
           id?: string
           main_approach?: string | null
           name?: string | null
           nickname?: string | null
+          onboarding_step?: number
           openai_thread_id?: string | null
           plan?: string | null
           specialties?: string[] | null
@@ -375,10 +379,12 @@ export type Database = {
           current_period_end?: string | null
           email?: string
           full_name?: string | null
+          has_completed_onboarding?: boolean
           id?: string
           main_approach?: string | null
           name?: string | null
           nickname?: string | null
+          onboarding_step?: number
           openai_thread_id?: string | null
           plan?: string | null
           specialties?: string[] | null

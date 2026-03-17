@@ -12,7 +12,6 @@ import {
   ChevronRight, Star, MessageSquare, RotateCcw
 } from 'lucide-react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useResponsive } from '@/hooks/useResponsive';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';

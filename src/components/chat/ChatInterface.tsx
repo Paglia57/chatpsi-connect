@@ -614,7 +614,7 @@ const ChatInterface = () => {
                   setNewMessage(suggestion);
                   setShowSuggestions(false);
                   setTimeout(() => {
-                    const form = document.querySelector('.composer-container form');
+                    const form = document.querySelector('.composer-container form') as HTMLFormElement | null;
                     form?.requestSubmit();
                   }, 50);
                 }}

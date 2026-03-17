@@ -170,7 +170,7 @@ const ChatSidebar = () => {
       {/* Scrollable nav area */}
       <div className="flex-1 overflow-y-auto p-2">
         {/* INÍCIO */}
-        <NavLink to="/app" end onClick={onNavigate} className={navLinkClass(isActive('/app'))}>
+        <NavLink to="/app" end onClick={onNavigate} className={navLinkClass(isActive('/app'))} data-tour="nav-inicio">
           <Home className="h-4 w-4 shrink-0" />
           <span>Início</span>
         </NavLink>
@@ -180,7 +180,7 @@ const ChatSidebar = () => {
 
         {/* Evolução - Collapsible */}
         <Collapsible open={evolutionOpen} onOpenChange={setEvolutionOpen}>
-          <CollapsibleTrigger className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 text-sm ${
+          <CollapsibleTrigger data-tour="nav-evolucao" className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 text-sm ${
             isEvolutionRoute ? 'text-sidebar-accent-foreground font-medium' : 'text-sidebar-foreground hover:bg-sidebar-accent/50'
           }`}>
             <ClipboardList className="h-4 w-4 shrink-0" />
@@ -199,7 +199,7 @@ const ChatSidebar = () => {
           </CollapsibleContent>
         </Collapsible>
 
-        <NavLink to="/app/pacientes" onClick={onNavigate} className={navLinkClass(isActivePrefix('/app/pacientes'))}>
+        <NavLink to="/app/pacientes" onClick={onNavigate} className={navLinkClass(isActivePrefix('/app/pacientes'))} data-tour="nav-pacientes">
           <Users className="h-4 w-4 shrink-0" />
           <span>Pacientes</span>
         </NavLink>
@@ -209,15 +209,15 @@ const ChatSidebar = () => {
         {/* FERRAMENTAS IA */}
         <SectionLabel>Ferramentas IA</SectionLabel>
 
-        <NavLink to="/chat" onClick={onNavigate} className={navLinkClass(isActive('/chat'))}>
+        <NavLink to="/chat" onClick={onNavigate} className={navLinkClass(isActive('/chat'))} data-tour="nav-chat">
           <MessageCircle className="h-4 w-4 shrink-0" />
           <span>Chat Clínico</span>
         </NavLink>
-        <NavLink to="/busca-plano" onClick={onNavigate} className={navLinkClass(isActive('/busca-plano'))}>
+        <NavLink to="/busca-plano" onClick={onNavigate} className={navLinkClass(isActive('/busca-plano'))} data-tour="nav-plano">
           <Target className="h-4 w-4 shrink-0" />
           <span>Planos de Ação</span>
         </NavLink>
-        <NavLink to="/busca-artigos" onClick={onNavigate} className={navLinkClass(isActive('/busca-artigos'))}>
+        <NavLink to="/busca-artigos" onClick={onNavigate} className={navLinkClass(isActive('/busca-artigos'))} data-tour="nav-artigos">
           <BookOpen className="h-4 w-4 shrink-0" />
           <span>Artigos Científicos</span>
         </NavLink>
@@ -227,7 +227,7 @@ const ChatSidebar = () => {
         {/* MARKETING */}
         <SectionLabel>Marketing</SectionLabel>
 
-        <NavLink to="/marketing" onClick={onNavigate} className={navLinkClass(isActive('/marketing'))}>
+        <NavLink to="/marketing" onClick={onNavigate} className={navLinkClass(isActive('/marketing'))} data-tour="nav-marketing">
           <PenTool className="h-4 w-4 shrink-0" />
           <span>IA de Marketing</span>
         </NavLink>
@@ -264,7 +264,7 @@ const ChatSidebar = () => {
         </NavLink>
         <Popover>
           <PopoverTrigger asChild>
-            <button className={`${footerBtnClass} flex items-center`}>
+            <button className={`${footerBtnClass} flex items-center`} data-tour="nav-suporte">
               <HelpCircle className="h-4 w-4 mr-3 shrink-0" />
               Suporte
             </button>

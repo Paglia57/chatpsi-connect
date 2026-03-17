@@ -4,7 +4,7 @@ import { AutoTextarea } from '@/components/ui/auto-textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Send, Bot, User as UserIcon, RefreshCw, BookOpen, Search } from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthProvider';
-import FirstTimeGuide from '@/components/ui/FirstTimeGuide';
+
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { formatMessageContent } from '@/lib/utils';
@@ -136,39 +136,7 @@ const BuscaArtigosInterface = () => {
       <div className="flex-1 relative min-h-0">
         <ScrollArea className="h-full">
           <div className="p-3 sm:p-4 space-y-3 sm:space-y-4 max-w-4xl mx-auto pb-4">
-            {!profile?.seen_guides?.busca_artigos && (
-              <FirstTimeGuide
-                guideKey="busca_artigos"
-                icon={<BookOpen className="h-8 w-8 text-blue-600" />}
-                title="Busca de artigos científicos"
-                description="Encontre artigos e evidências científicas para embasar suas intervenções clínicas. A IA busca em bases de dados e resume os achados relevantes."
-                tips={[
-                  "Busque por tema, técnica ou diagnóstico específico",
-                  "A IA resume os principais achados dos artigos encontrados",
-                  "Use os resultados para embasar evoluções e planos terapêuticos",
-                ]}
-                examples={[
-                  "Evidências de eficácia da TCC para transtorno de pânico",
-                  "Artigos sobre mindfulness em tratamento de TEPT",
-                  "Revisões sistemáticas sobre psicoterapia online vs presencial",
-                ]}
-                ctaText="Entendi, buscar artigos!"
-                onDismiss={async () => {
-                  if (user) {
-                    const current = profile?.seen_guides || {};
-                    await supabase.from('profiles').update({ seen_guides: { ...current, busca_artigos: true } }).eq('user_id', user.id);
-                    await refreshProfile();
-                  }
-                }}
-                onExampleClick={(text) => {
-                  setNewMessage(text);
-                  if (user) {
-                    const current = profile?.seen_guides || {};
-                    supabase.from('profiles').update({ seen_guides: { ...current, busca_artigos: true } }).eq('user_id', user.id).then(() => refreshProfile());
-                  }
-                }}
-              />
-            )}
+            
             {messages.length === 0 ? (
                 <div className="text-center py-8 sm:py-12 px-4">
                   <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-blue-500/10 flex items-center justify-center mx-auto mb-4 sm:mb-5">

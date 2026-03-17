@@ -1,90 +1,36 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
+import { Sidebar, SidebarContent, SidebarHeader, SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { InternationalPhoneInput } from '@/components/ui/international-phone-input';
-import { MessageSquare, User, MessageCircle, LogOut, Menu, X, Sparkles, Star, Heart, BookOpen, Shield, PenTool, Gift, FileCheck, ClipboardList, Users } from 'lucide-react';
-import BetaChip from '@/components/ui/BetaChip';
-import ReferralCard from '@/components/referral/ReferralCard';
-import RedeemBanner from '@/components/referral/RedeemBanner';
-import { NavLink } from 'react-router-dom';
+import { Separator } from '@/components/ui/separator';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Badge } from '@/components/ui/badge';
+import {
+  ClipboardList, Plus, History, Users, MessageCircle, Target, BookOpen,
+  PenTool, Settings, Gift, User, HelpCircle, LogOut, Menu, ChevronDown,
+  ChevronRight, Star
+} from 'lucide-react';
+import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '@/components/auth/AuthProvider';
-import { useToast } from '@/hooks/use-toast';
 import { useResponsive } from '@/hooks/useResponsive';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 const ChatSidebar = () => {
-  const {
-    open
-  } = useSidebar();
-  const {
-    user,
-    profile,
-    isAdmin,
-    signOut,
-    updateProfileBasicInfo
-  } = useAuth();
-  const {
-    toast
-  } = useToast();
-  const {
-    isMobile
-  } = useResponsive();
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [profileData, setProfileData] = useState({
-    full_name: '',
-    nickname: '',
-    whatsapp: ''
-  });
+  const { open } = useSidebar();
+  const { user, profile, isAdmin, signOut } = useAuth();
+  const { isMobile } = useResponsive();
+  const location = useLocation();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
-  // Sincronizar dados do perfil quando carregados
-  useEffect(() => {
-    if (profile) {
-      setProfileData({
-        full_name: profile.full_name || '',
-        nickname: profile.nickname || '',
-        whatsapp: profile.whatsapp || ''
-      });
-    }
-  }, [profile]);
+  const currentPath = location.pathname;
 
-  // Atualizar dados quando o modal abrir
+  // Auto-expand evolution group when on sub-routes
+  const isEvolutionRoute = currentPath === '/app/evolucao' || currentPath === '/app/historico';
+  const [evolutionOpen, setEvolutionOpen] = useState(true);
+
   useEffect(() => {
-    if (isProfileOpen && profile) {
-      setProfileData({
-        full_name: profile.full_name || '',
-        nickname: profile.nickname || '',
-        whatsapp: profile.whatsapp || ''
-      });
-    }
-  }, [isProfileOpen, profile]);
-  
-  const handleProfileUpdate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const {
-      error
-    } = await updateProfileBasicInfo(profileData.full_name, profileData.whatsapp, profileData.nickname);
-    if (error) {
-      toast({
-        title: "Erro ao atualizar perfil",
-        description: error.message,
-        variant: "destructive"
-      });
-    } else {
-      toast({
-        title: "Perfil atualizado",
-        description: "Suas informações foram atualizadas com sucesso."
-      });
-      setIsProfileOpen(false);
-    }
-  };
-  
-  const handleSupportClick = () => {
-    window.open('https://wa.me/5511942457454', '_blank', 'noopener,noreferrer');
-  };
+    if (isEvolutionRoute) setEvolutionOpen(true);
+  }, [isEvolutionRoute]);
 
   // Toggle body class when sidebar state changes (desktop only)
   useEffect(() => {
@@ -96,485 +42,266 @@ const ChatSidebar = () => {
       root.classList.remove('sidebar-open');
     }
   }, [open]);
-  
-  const menuItems = [
-    {
-      title: "Evolução Clínica",
-      url: "/app/evolucao",
-      icon: FileCheck,
-      description: "Gerar evolução por IA",
-      gradient: "from-primary to-cta"
-    },
-    {
-      title: "Pacientes",
-      url: "/app/pacientes",
-      icon: Users,
-      description: "Gestão de pacientes",
-      gradient: "from-primary to-cta"
-    },
-    {
-      title: "Histórico",
-      url: "/app/historico",
-      icon: ClipboardList,
-      description: "Evoluções salvas",
-      gradient: "from-primary to-cta"
-    },
-    {
-      title: "Chat",
-      url: "/chat",
-      icon: MessageSquare,
-      description: "Conversar com IA especializada",
-      gradient: "from-cta to-primary"
-    },
-    {
-      title: "Busca Plano",
-      url: "/busca-plano",
-      icon: Sparkles,
-      description: "Plano de ação personalizado",
-      gradient: "from-cta to-primary"
-    },
-    {
-      title: "Busca Artigos",
-      url: "/busca-artigos",
-      icon: BookOpen,
-      description: "Artigos científicos relevantes",
-      gradient: "from-primary to-accent"
-    },
-    {
-      title: "IA de Marketing",
-      url: "/marketing",
-      icon: PenTool,
-      description: "Gerar textos de marketing",
-      gradient: "from-cta to-accent"
-    },
-    ...(isAdmin ? [{
-      title: "Administração",
-      url: "/admin",
-      icon: Shield,
-      description: "Gerenciar usuários",
-      gradient: "from-accent to-primary"
-    }, {
-      title: "Indicações",
-      url: "/admin/referrals",
-      icon: Gift,
-      description: "Programa de indicação",
-      gradient: "from-cta to-primary"
-    }] : [])
-  ];
 
-  // Generate avatar from user name/nickname
   const getAvatarText = () => {
     const name = profile?.nickname || profile?.full_name || user?.email || 'U';
     return name.charAt(0).toUpperCase();
   };
 
-  if (isMobile) {
-    return <Sheet>
-        <SheetTrigger asChild>
-          <Button variant="ghost" size="icon" className="fixed top-3 left-3 z-50 touch-target bg-primary hover:bg-primary/90 border border-primary/30 transition-all duration-200 shadow-lg hover:shadow-xl">
-            <Menu className="h-5 w-5 text-white" />
-          </Button>
-        </SheetTrigger>
-        <SheetContent side="left" className="w-80 p-0 bg-background app-sidebar">
-          <div className="flex flex-col h-full animate-slide-in-right">
-            {/* Hero Header with Solid Background */}
-            <div className="relative bg-primary p-6 text-white overflow-hidden border-b-2 border-cta/20">
-              {/* Decorative elements */}
-              <div className="absolute inset-0 opacity-10">
-                <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-white/10 -translate-y-16 translate-x-16"></div>
-                <div className="absolute bottom-0 left-0 w-24 h-24 rounded-full bg-cta/30 translate-y-12 -translate-x-12"></div>
-                <div className="absolute inset-0" style={{ backgroundImage: 'var(--pattern-dots)', backgroundSize: '15px 15px', opacity: 0.2 }}></div>
-              </div>
-              
-              <div className="relative z-10">
-                <div className="flex items-center gap-4 mb-4">
-                  <Avatar className="h-12 w-12 ring-2 ring-white/30 shadow-lg">
-                    <AvatarFallback className="bg-white/20 text-white font-semibold text-lg backdrop-blur-sm">
-                      {getAvatarText()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <h2 className="font-display font-semibold text-lg text-white truncate">
-                      {profile?.nickname || profile?.full_name || 'Usuário'}
-                    </h2>
-                    <div className="flex items-center gap-2 mt-1">
-                      {profile?.subscription_active ? <>
-                          <Star className="h-3 w-3 text-yellow-300" />
-                          <span className="text-xs text-white/90">Premium Ativo</span>
-                        </> : <span className="text-xs text-white/70">Conta Gratuita</span>}
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="flex items-center justify-center">
-                  <BetaChip variant="normal" />
-                </div>
-              </div>
-            </div>
-            
-            {/* Navigation Section */}
-            <div className="flex-1 p-4">
-              <div className="space-y-1">
-                <h3 className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-                  Navegação
-                </h3>
-                {menuItems.map(item => <NavLink key={item.title} to={item.url} className={({
-                isActive
-              }) => `group flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 touch-target ${isActive ? 'bg-primary text-primary-foreground shadow-md hover:shadow-lg border-l-4 border-cta' : 'hover:bg-muted/60 hover:shadow-sm hover:scale-[1.02]'}`}>
-                    {({
-                  isActive
-                }) => <>
-                        <div className={`p-2 rounded-md ${isActive ? 'bg-white/20' : 'bg-primary/10'}`}>
-                          <item.icon className={`h-5 w-5 ${isActive ? 'text-white' : 'text-primary'}`} />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className={`font-medium truncate ${isActive ? 'text-white' : 'text-foreground'}`}>
-                            {item.title}
-                          </p>
-                          <p className={`text-xs truncate ${isActive ? 'text-white/80' : 'text-muted-foreground'}`}>
-                            {item.description}
-                          </p>
-                        </div>
-                        {isActive && <div className="w-2 h-2 rounded-full bg-white/80 animate-pulse"></div>}
-                      </>}
-                  </NavLink>)}
-              </div>
+  const handleSupportClick = () => {
+    window.open('https://wa.me/5511942457454', '_blank', 'noopener,noreferrer');
+  };
 
-              {/* Referral Section */}
-              <div className="mt-4 space-y-3 px-1">
-                <RedeemBanner />
-                <ReferralCard />
-              </div>
-            </div>
-            
-            {/* Account Section */}
-            <div className="border-t bg-muted/30 p-4 space-y-2">
-              <h3 className="px-1 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-                Conta
-              </h3>
-              
-              <Dialog open={isProfileOpen} onOpenChange={setIsProfileOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="ghost" className="w-full justify-start touch-target group hover:bg-white hover:shadow-md transition-all duration-200">
-                    <div className="p-1.5 rounded-md bg-primary/10 group-hover:bg-primary/20 transition-colors">
-                      <User className="h-4 w-4 text-primary" />
-                    </div>
-                    <span className="ml-3 font-medium">Meu Perfil</span>
-                    <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Heart className="h-3 w-3 text-primary" />
-                    </div>
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-md">
-                  <DialogHeader>
-                    <DialogTitle className="flex items-center gap-2">
-                      <User className="h-5 w-5 text-primary" />
-                      Editar Perfil
-                    </DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="full_name">Nome completo</Label>
-                      <Input id="full_name" value={profileData.full_name} onChange={e => setProfileData(prev => ({
-                      ...prev,
-                      full_name: e.target.value
-                    }))} placeholder="Seu nome completo" className="focus-visible:ring-primary" />
-                    </div>
-                    <div>
-                      <Label htmlFor="nickname">Apelido</Label>
-                      <Input id="nickname" value={profileData.nickname} onChange={e => setProfileData(prev => ({
-                      ...prev,
-                      nickname: e.target.value
-                    }))} placeholder="Como gosta de ser chamado" className="focus-visible:ring-primary" />
-                    </div>
-                    <div>
-                      <InternationalPhoneInput
-                        value={profileData.whatsapp || ''}
-                        onChange={(value) => setProfileData(prev => ({
-                          ...prev,
-                          whatsapp: value
-                        }))}
-                        defaultCountry="55"
-                        label="WhatsApp"
-                        required
-                      />
-                    </div>
-                    <Button onClick={handleProfileUpdate} className="w-full touch-target bg-primary hover:bg-primary-hover hover:shadow-lg transition-all duration-200 border border-primary-hover/20">
-                      <Sparkles className="h-4 w-4 mr-2" />
-                      Salvar Alterações
-                    </Button>
-                  </div>
-                </DialogContent>
-              </Dialog>
-              
-              <Button variant="ghost" className="w-full justify-start touch-target group hover:bg-success/10 hover:shadow-md transition-all duration-200" onClick={handleSupportClick}>
-                <div className="p-1.5 rounded-md bg-success/10 group-hover:bg-success/20 transition-colors">
-                  <MessageCircle className="h-4 w-4 text-success" />
-                </div>
-                <span className="ml-3 font-medium">Falar com suporte</span>
-                <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Heart className="h-3 w-3 text-success" />
-                </div>
-              </Button>
-              
-              <Button variant="ghost" className="w-full justify-start touch-target group hover:bg-destructive/10 hover:shadow-md transition-all duration-200" onClick={signOut}>
-                <div className="p-1.5 rounded-md bg-destructive/10 group-hover:bg-destructive/20 transition-colors">
-                  <LogOut className="h-4 w-4 text-destructive" />
-                </div>
-                <span className="ml-3 font-medium text-destructive">Sair</span>
-                <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
-                  <X className="h-3 w-3 text-destructive" />
-                </div>
-              </Button>
-            </div>
+  const isActive = (path: string) => currentPath === path;
+  const isActivePrefix = (path: string) => currentPath.startsWith(path);
+
+  const navLinkClass = (active: boolean) =>
+    `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 text-sm ${
+      active
+        ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
+        : 'text-sidebar-foreground hover:bg-sidebar-accent/50'
+    }`;
+
+  const subNavLinkClass = (active: boolean) =>
+    `flex items-center gap-3 pl-10 pr-3 py-2 rounded-lg transition-all duration-200 text-sm ${
+      active
+        ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
+        : 'text-sidebar-foreground/80 hover:bg-sidebar-accent/50'
+    }`;
+
+  const footerBtnClass = "w-full justify-start px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-transparent transition-colors";
+
+  const SectionLabel = ({ children }: { children: React.ReactNode }) => (
+    <h3 className="px-3 mt-6 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+      {children}
+    </h3>
+  );
+
+  const SidebarNavContent = ({ onNavigate }: { onNavigate?: () => void }) => (
+    <div className="flex flex-col h-full">
+      {/* Header */}
+      <div className="p-4 border-b border-sidebar-border">
+        <div className="flex items-center gap-3">
+          <Avatar className="h-10 w-10 ring-2 ring-sidebar-border">
+            <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
+              {getAvatarText()}
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-sm text-sidebar-foreground truncate">
+              {profile?.nickname || profile?.full_name || 'Usuário'}
+            </p>
+            {profile?.subscription_active ? (
+              <Badge variant="default" className="text-[10px] px-1.5 py-0 bg-success text-success-foreground">
+                <Star className="h-2.5 w-2.5 mr-0.5" />
+                Premium Ativo
+              </Badge>
+            ) : (
+              <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                Free
+              </Badge>
+            )}
           </div>
-        </SheetContent>
-      </Sheet>;
+        </div>
+      </div>
+
+      {/* Scrollable nav area */}
+      <div className="flex-1 overflow-y-auto p-2">
+        {/* CLÍNICA */}
+        <SectionLabel>Clínica</SectionLabel>
+
+        {/* Evolução - Collapsible */}
+        <Collapsible open={evolutionOpen} onOpenChange={setEvolutionOpen}>
+          <CollapsibleTrigger className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 text-sm ${
+            isEvolutionRoute ? 'text-sidebar-accent-foreground font-medium' : 'text-sidebar-foreground hover:bg-sidebar-accent/50'
+          }`}>
+            <ClipboardList className="h-4 w-4 shrink-0" />
+            <span className="flex-1 text-left">Evolução</span>
+            {evolutionOpen ? <ChevronDown className="h-4 w-4 shrink-0" /> : <ChevronRight className="h-4 w-4 shrink-0" />}
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <NavLink to="/app/evolucao" onClick={onNavigate} className={subNavLinkClass(isActive('/app/evolucao'))}>
+              <Plus className="h-4 w-4 shrink-0" />
+              <span>Nova Evolução</span>
+            </NavLink>
+            <NavLink to="/app/historico" onClick={onNavigate} className={subNavLinkClass(isActive('/app/historico'))}>
+              <History className="h-4 w-4 shrink-0" />
+              <span>Histórico</span>
+            </NavLink>
+          </CollapsibleContent>
+        </Collapsible>
+
+        <NavLink to="/app/pacientes" onClick={onNavigate} className={navLinkClass(isActivePrefix('/app/pacientes'))}>
+          <Users className="h-4 w-4 shrink-0" />
+          <span>Pacientes</span>
+        </NavLink>
+
+        <Separator className="my-3" />
+
+        {/* FERRAMENTAS IA */}
+        <SectionLabel>Ferramentas IA</SectionLabel>
+
+        <NavLink to="/chat" onClick={onNavigate} className={navLinkClass(isActive('/chat'))}>
+          <MessageCircle className="h-4 w-4 shrink-0" />
+          <span>Chat Clínico</span>
+        </NavLink>
+        <NavLink to="/busca-plano" onClick={onNavigate} className={navLinkClass(isActive('/busca-plano'))}>
+          <Target className="h-4 w-4 shrink-0" />
+          <span>Planos de Ação</span>
+        </NavLink>
+        <NavLink to="/busca-artigos" onClick={onNavigate} className={navLinkClass(isActive('/busca-artigos'))}>
+          <BookOpen className="h-4 w-4 shrink-0" />
+          <span>Artigos Científicos</span>
+        </NavLink>
+
+        <Separator className="my-3" />
+
+        {/* MARKETING */}
+        <SectionLabel>Marketing</SectionLabel>
+
+        <NavLink to="/marketing" onClick={onNavigate} className={navLinkClass(isActive('/marketing'))}>
+          <PenTool className="h-4 w-4 shrink-0" />
+          <span>IA de Marketing</span>
+        </NavLink>
+
+        <Separator className="my-3" />
+
+        {/* ADMINISTRAÇÃO */}
+        <SectionLabel>Administração</SectionLabel>
+
+        {isAdmin && (
+          <NavLink to="/admin" onClick={onNavigate} className={navLinkClass(isActive('/admin') || isActive('/admin/referrals'))}>
+            <Settings className="h-4 w-4 shrink-0" />
+            <span>Administração</span>
+          </NavLink>
+        )}
+        <NavLink to="/app/indicacoes" onClick={onNavigate} className={navLinkClass(isActive('/app/indicacoes'))}>
+          <Gift className="h-4 w-4 shrink-0" />
+          <span>Indicações</span>
+        </NavLink>
+      </div>
+
+      {/* Footer - always visible */}
+      <div className="mt-auto border-t border-sidebar-border p-2 space-y-0.5">
+        <NavLink to="/app/perfil" onClick={onNavigate} className={footerBtnClass}>
+          <User className="h-4 w-4 mr-3 shrink-0" />
+          Meu Perfil
+        </NavLink>
+        <button onClick={handleSupportClick} className={`${footerBtnClass} flex items-center`}>
+          <HelpCircle className="h-4 w-4 mr-3 shrink-0" />
+          Suporte
+        </button>
+        <button onClick={signOut} className={`${footerBtnClass} flex items-center`}>
+          <LogOut className="h-4 w-4 mr-3 shrink-0" />
+          Sair
+        </button>
+      </div>
+    </div>
+  );
+
+  if (isMobile) {
+    return (
+      <>
+        <div className="fixed top-0 left-0 right-0 z-50 h-14 bg-background border-b border-sidebar-border flex items-center px-4">
+          <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="touch-target">
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-80 p-0 bg-sidebar-background">
+              <SidebarNavContent onNavigate={() => setMobileOpen(false)} />
+            </SheetContent>
+          </Sheet>
+          <div className="flex-1 flex justify-center">
+            <img src="/logo.png" alt="ChatPsi" className="h-8" />
+          </div>
+          <div className="w-10" /> {/* Spacer for centering */}
+        </div>
+        <div className="h-14" /> {/* Push content below fixed header */}
+      </>
+    );
   }
 
-  // Desktop sidebar with mobile-style design
-  return <Sidebar 
-      className="border-r bg-background z-30 app-sidebar" 
+  // Desktop sidebar
+  return (
+    <Sidebar
+      className="border-r border-sidebar-border bg-sidebar-background z-30"
       collapsible="icon"
       style={{
-        '--sidebar-width': '20rem',
+        '--sidebar-width': '18rem',
         '--sidebar-width-icon': '4rem'
       } as React.CSSProperties}
     >
       <SidebarTrigger className="absolute -right-4 top-6 z-40" />
-      
-      <div className="flex flex-col h-full">
-        {/* Hero Header with Solid Background */}
-        <div className={`relative bg-primary text-white overflow-hidden border-b-2 border-cta/20 ${!open ? 'p-2' : 'p-6'}`}>
-          {open && (
-            <div className="absolute inset-0 opacity-10">
-              <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-white/10 -translate-y-16 translate-x-16"></div>
-              <div className="absolute bottom-0 left-0 w-24 h-24 rounded-full bg-cta/30 translate-y-12 -translate-x-12"></div>
-              <div className="absolute inset-0" style={{ backgroundImage: 'var(--pattern-dots)', backgroundSize: '15px 15px', opacity: 0.2 }}></div>
-            </div>
-          )}
-          
-          <div className="relative z-10">
-            <div className={`flex items-center ${!open ? 'justify-center' : 'gap-4 mb-4'}`}>
-              <Avatar className={`${!open ? 'h-8 w-8' : 'h-12 w-12'} ring-2 ring-white/30 shadow-lg`}>
-                <AvatarFallback className="bg-white/20 text-white font-semibold backdrop-blur-sm">
-                  {getAvatarText()}
-                </AvatarFallback>
-              </Avatar>
-              {open && (
-                <div className="flex-1 min-w-0">
-                  <h2 className="font-display font-semibold text-lg text-white truncate">
-                    {profile?.nickname || profile?.full_name || 'Usuário'}
-                  </h2>
-                  <div className="flex items-center gap-2 mt-1">
-                    {profile?.subscription_active ? (
-                      <>
-                        <Star className="h-3 w-3 text-yellow-300" />
-                        <span className="text-xs text-white/90">Premium Ativo</span>
-                      </>
-                    ) : (
-                      <span className="text-xs text-white/70">Conta Gratuita</span>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-            
-            {open ? (
-              <div className="flex items-center justify-center mt-2">
-                <BetaChip variant="normal" />
-              </div>
-            ) : (
-              <div className="flex items-center justify-center mt-1">
-                <BetaChip variant="compact" />
-              </div>
-            )}
-          </div>
-        </div>
-        
-        {/* Navigation Section */}
-        <div className={`flex-1 ${!open ? 'p-2' : 'p-4'}`}>
-          <div className="space-y-1">
-            {open && (
-              <h3 className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-                Navegação
-              </h3>
-            )}
-            
-            {menuItems.map(item => (
-              <NavLink 
-                key={item.title} 
-                to={item.url} 
-                title={!open ? item.title : undefined}
-                className={({ isActive }) => 
-                  `group flex items-center ${!open ? 'justify-center p-2' : 'gap-3 px-3 py-3'} rounded-lg transition-all duration-200 ${
-                    isActive 
-                      ? 'bg-primary text-primary-foreground shadow-md hover:shadow-lg border-l-4 border-cta' 
-                      : 'hover:bg-muted/60 hover:shadow-sm hover:scale-[1.02]'
-                  }`
-                }
-              >
-                {({ isActive }) => (
-                  <>
-                    <div className={`${!open ? 'p-1.5' : 'p-2'} rounded-md ${isActive ? 'bg-white/20' : 'bg-primary/10'}`}>
-                      <item.icon className={`${!open ? 'h-4 w-4' : 'h-5 w-5'} ${isActive ? 'text-white' : 'text-primary'}`} />
-                    </div>
-                    {open && (
-                      <>
-                        <div className="min-w-0 flex-1">
-                          <p className={`font-medium truncate ${isActive ? 'text-white' : 'text-foreground'}`}>
-                            {item.title}
-                          </p>
-                          <p className={`text-xs truncate ${isActive ? 'text-white/80' : 'text-muted-foreground'}`}>
-                            {item.description}
-                          </p>
-                        </div>
-                        {isActive && <div className="w-2 h-2 rounded-full bg-white/80 animate-pulse"></div>}
-                      </>
-                    )}
-                  </>
-                )}
-              </NavLink>
-            ))}
-          </div>
 
-          {/* Referral Section - Desktop */}
-          {open && (
-            <div className="px-4 pb-2 space-y-3">
-              <RedeemBanner />
-              <ReferralCard />
-            </div>
+      {open ? (
+        <SidebarNavContent />
+      ) : (
+        /* Collapsed icon-only view */
+        <div className="flex flex-col h-full items-center py-4 gap-2">
+          <Avatar className="h-8 w-8 mb-2">
+            <AvatarFallback className="bg-primary text-primary-foreground text-xs font-semibold">
+              {getAvatarText()}
+            </AvatarFallback>
+          </Avatar>
+          <Separator className="w-6 my-1" />
+          {[
+            { icon: ClipboardList, path: '/app/evolucao', title: 'Evolução' },
+            { icon: Users, path: '/app/pacientes', title: 'Pacientes' },
+          ].map(item => (
+            <NavLink key={item.path} to={item.path} title={item.title}
+              className={`p-2 rounded-lg transition-colors ${isActive(item.path) || (item.path === '/app/evolucao' && isActive('/app/historico')) ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground hover:bg-sidebar-accent/50'}`}>
+              <item.icon className="h-4 w-4" />
+            </NavLink>
+          ))}
+          <Separator className="w-6 my-1" />
+          {[
+            { icon: MessageCircle, path: '/chat', title: 'Chat Clínico' },
+            { icon: Target, path: '/busca-plano', title: 'Planos de Ação' },
+            { icon: BookOpen, path: '/busca-artigos', title: 'Artigos Científicos' },
+          ].map(item => (
+            <NavLink key={item.path} to={item.path} title={item.title}
+              className={`p-2 rounded-lg transition-colors ${isActive(item.path) ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground hover:bg-sidebar-accent/50'}`}>
+              <item.icon className="h-4 w-4" />
+            </NavLink>
+          ))}
+          <Separator className="w-6 my-1" />
+          <NavLink to="/marketing" title="IA de Marketing"
+            className={`p-2 rounded-lg transition-colors ${isActive('/marketing') ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground hover:bg-sidebar-accent/50'}`}>
+            <PenTool className="h-4 w-4" />
+          </NavLink>
+          <Separator className="w-6 my-1" />
+          {isAdmin && (
+            <NavLink to="/admin" title="Administração"
+              className={`p-2 rounded-lg transition-colors ${isActive('/admin') ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground hover:bg-sidebar-accent/50'}`}>
+              <Settings className="h-4 w-4" />
+            </NavLink>
           )}
+          <NavLink to="/app/indicacoes" title="Indicações"
+            className={`p-2 rounded-lg transition-colors ${isActive('/app/indicacoes') ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground hover:bg-sidebar-accent/50'}`}>
+            <Gift className="h-4 w-4" />
+          </NavLink>
+
+          {/* Footer icons */}
+          <div className="mt-auto space-y-1">
+            <NavLink to="/app/perfil" title="Meu Perfil"
+              className="p-2 rounded-lg text-muted-foreground hover:text-foreground transition-colors block">
+              <User className="h-4 w-4" />
+            </NavLink>
+            <button onClick={handleSupportClick} title="Suporte"
+              className="p-2 rounded-lg text-muted-foreground hover:text-foreground transition-colors block">
+              <HelpCircle className="h-4 w-4" />
+            </button>
+            <button onClick={signOut} title="Sair"
+              className="p-2 rounded-lg text-muted-foreground hover:text-foreground transition-colors block">
+              <LogOut className="h-4 w-4" />
+            </button>
+          </div>
         </div>
-        
-        {/* Account Section */}
-        <div className={`border-t bg-muted/30 space-y-2 ${!open ? 'p-2' : 'p-4'}`}>
-          {open && (
-            <h3 className="px-1 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-              Conta
-            </h3>
-          )}
-          
-          <Dialog open={isProfileOpen} onOpenChange={setIsProfileOpen}>
-            <DialogTrigger asChild>
-              <Button 
-                variant="ghost" 
-                className={`w-full group hover:bg-white hover:shadow-md transition-all duration-200 ${
-                  !open ? 'px-2 py-2' : 'justify-start'
-                }`}
-                title={!open ? "Meu Perfil" : undefined}
-              >
-                <div className={`${!open ? 'p-1' : 'p-1.5'} rounded-md bg-primary/10 group-hover:bg-primary/20 transition-colors`}>
-                  <User className={`${!open ? 'h-3 w-3' : 'h-4 w-4'} text-primary`} />
-                </div>
-                {open && (
-                  <>
-                    <span className="ml-3 font-medium">Meu Perfil</span>
-                    <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Heart className="h-3 w-3 text-primary" />
-                    </div>
-                  </>
-                )}
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
-                  <User className="h-5 w-5 text-primary" />
-                  Editar Perfil
-                </DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="full_name">Nome completo</Label>
-                  <Input 
-                    id="full_name" 
-                    value={profileData.full_name} 
-                    onChange={e => setProfileData(prev => ({
-                      ...prev,
-                      full_name: e.target.value
-                    }))} 
-                    placeholder="Seu nome completo" 
-                    className="focus-visible:ring-primary" 
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="nickname">Apelido</Label>
-                  <Input 
-                    id="nickname" 
-                    value={profileData.nickname} 
-                    onChange={e => setProfileData(prev => ({
-                      ...prev,
-                      nickname: e.target.value
-                    }))} 
-                    placeholder="Como gosta de ser chamado" 
-                    className="focus-visible:ring-primary" 
-                  />
-                </div>
-                <div>
-                  <InternationalPhoneInput
-                    value={profileData.whatsapp || ''}
-                    onChange={(value) => setProfileData(prev => ({
-                      ...prev,
-                      whatsapp: value
-                    }))}
-                    defaultCountry="55"
-                    label="WhatsApp"
-                    required
-                  />
-                </div>
-                <Button onClick={handleProfileUpdate} className="w-full bg-primary hover:bg-primary-hover hover:shadow-lg transition-all duration-200 border border-primary-hover/20">
-                  <Sparkles className="h-4 w-4 mr-2" />
-                  Salvar Alterações
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
-          
-          <Button 
-            variant="ghost" 
-            className={`w-full group hover:bg-success/10 hover:shadow-md transition-all duration-200 ${
-              !open ? 'px-2 py-2' : 'justify-start'
-            }`} 
-            onClick={handleSupportClick}
-            title={!open ? "Falar com suporte" : undefined}
-          >
-            <div className={`${!open ? 'p-1' : 'p-1.5'} rounded-md bg-success/10 group-hover:bg-success/20 transition-colors`}>
-              <MessageCircle className={`${!open ? 'h-3 w-3' : 'h-4 w-4'} text-success`} />
-            </div>
-            {open && (
-              <>
-                <span className="ml-3 font-medium">Falar com suporte</span>
-                <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Heart className="h-3 w-3 text-success" />
-                </div>
-              </>
-            )}
-          </Button>
-          
-          <Button 
-            variant="ghost" 
-            className={`w-full group hover:bg-destructive/10 hover:shadow-md transition-all duration-200 ${
-              !open ? 'px-2 py-2' : 'justify-start'
-            }`} 
-            onClick={signOut}
-            title={!open ? "Sair" : undefined}
-          >
-            <div className={`${!open ? 'p-1' : 'p-1.5'} rounded-md bg-destructive/10 group-hover:bg-destructive/20 transition-colors`}>
-              <LogOut className={`${!open ? 'h-3 w-3' : 'h-4 w-4'} text-destructive`} />
-            </div>
-            {open && (
-              <>
-                <span className="ml-3 font-medium text-destructive">Sair</span>
-                <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
-                  <X className="h-3 w-3 text-destructive" />
-                </div>
-              </>
-            )}
-          </Button>
-        </div>
-      </div>
-    </Sidebar>;
+      )}
+    </Sidebar>
+  );
 };
 
 export default ChatSidebar;

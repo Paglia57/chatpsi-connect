@@ -1,36 +1,26 @@
 
 
-## Ordenar por Tokens no Admin
+## Mostrar FirstTimeGuide quando tour ativo OU módulo vazio
 
-Adicionar um botão/toggle na coluna "Tokens" da tabela de administração que permite ordenar os usuários pelo consumo de tokens (maior para menor e vice-versa).
+### Problema
+Atualmente o `FirstTimeGuide` só aparece quando `!seen_guides?.X` E o módulo está vazio. Se o usuário já dismissou o guide mas depois ativa o tour (via "Revisitar orientações"), as orientações não aparecem.
 
-### Mudanças em `src/pages/AdminPage.tsx`
+### Solução
 
-**1. Novo estado de ordenação**
+1. **Compartilhar estado do tour via Outlet context** — Em `AppLayout.tsx`, passar `runTour` via `<Outlet context={{ tourActive: runTour }} />`.
 
-Adicionar estado para controlar a direção da ordenação:
-```typescript
-const [sortByTokens, setSortByTokens] = useState<'none' | 'asc' | 'desc'>('none');
-```
+2. **Consumir nos módulos** — Em cada módulo (Chat, Plano, Artigos, Evolução, Marketing), usar `useOutletContext()` para obter `tourActive` e mudar a condição de exibição do `FirstTimeGuide`:
+   - **De**: `messages.length === 0 && !seen_guides?.X`
+   - **Para**: `messages.length === 0 && (!seen_guides?.X || tourActive)`
+   - Para Evolução (sem messages): `(!seen_guides?.evolution || tourActive) && !guideDismissed`
 
-**2. Aplicar ordenação no useEffect de filtro (linhas 80-89)**
+3. **Não persistir dismiss durante tour** — Quando o tour está ativo, o `onDismiss` do FirstTimeGuide NÃO deve gravar `seen_guides` (para não marcar como visto permanentemente durante o tour). Apenas setar o state local `guideDismissed`.
 
-Após filtrar por nome, aplicar a ordenação por tokens:
-- `desc`: usuários com mais tokens primeiro
-- `asc`: usuários com menos tokens primeiro
-- `none`: ordem padrão (por data de criação)
-
-Valores `null` de `TokenCount` serao tratados como `0`.
-
-**3. Cabeçalho clicável na coluna "Tokens" (linha ~230)**
-
-Trocar o `<TableHead>Tokens</TableHead>` por um botao clicavel com icone de seta indicando a direção atual:
-- Clique alterna entre `none` -> `desc` -> `asc` -> `none`
-- Icone `ArrowUpDown` (neutro), `ArrowDown` (desc), `ArrowUp` (asc) do lucide-react
-
-### Detalhes Técnicos
-
-- Importar `ArrowUpDown`, `ArrowDown`, `ArrowUp` do lucide-react
-- A ordenação é aplicada no frontend sobre `filteredProfiles`, sem nova query ao banco
-- O ciclo de clique: sem ordenação -> maior primeiro -> menor primeiro -> sem ordenação
+### Arquivos a alterar
+- `src/components/app/AppLayout.tsx` — adicionar `context` ao `<Outlet>`
+- `src/components/chat/ChatInterface.tsx` — consumir `tourActive`, ajustar condição
+- `src/components/busca-plano/BuscaPlanoInterface.tsx` — idem
+- `src/components/busca-artigos/BuscaArtigosInterface.tsx` — idem
+- `src/pages/app/EvolutionPage.tsx` — idem
+- `src/components/marketing/MarketingInterface.tsx` — idem (se aplicável)
 

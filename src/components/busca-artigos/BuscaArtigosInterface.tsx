@@ -143,6 +143,15 @@ const BuscaArtigosInterface = () => {
       <div className="flex-1 relative min-h-0">
         <ScrollArea className="h-full">
           <div className="p-3 sm:p-4 space-y-3 sm:space-y-4 max-w-4xl mx-auto pb-4">
+            {!trial.isSubscribed && (
+              <TrialLimitBanner
+                usageCount={trial.usageCount}
+                limit={trial.limit}
+                hasReachedLimit={trial.hasReachedLimit}
+                featureLabel="buscas"
+                isLoading={trial.isLoading}
+              />
+            )}
             
             {messages.length === 0 ? (
                 (!(profile?.seen_guides as any)?.artigos || tourActive) ? (

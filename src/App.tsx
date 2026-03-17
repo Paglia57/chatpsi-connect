@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import Index from "./pages/Index";
 import AuthPage from "@/components/auth/AuthPage";
@@ -22,6 +22,7 @@ import ProfilePage from "./pages/app/ProfilePage";
 import PatientsPage from "./pages/app/PatientsPage";
 import PatientDetailPage from "./pages/app/PatientDetailPage";
 import ReferralsPage from "./pages/app/ReferralsPage";
+import HomePage from "./pages/app/HomePage";
 
 const queryClient = new QueryClient();
 
@@ -40,7 +41,7 @@ const App = () => (
             {/* All authenticated routes under AppLayout with persistent sidebar */}
             <Route element={<AppLayout />}>
               <Route path="/app">
-                <Route index element={<Navigate to="/app/evolucao" replace />} />
+                <Route index element={<HomePage />} />
                 <Route path="evolucao" element={<EvolutionPage />} />
                 <Route path="pacientes" element={<PatientsPage />} />
                 <Route path="pacientes/:id" element={<PatientDetailPage />} />

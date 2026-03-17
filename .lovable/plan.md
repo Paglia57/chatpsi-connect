@@ -1,55 +1,36 @@
 
 
-## Tela Inicial do App (Dashboard) com atalhos, sugestões e foco em Evolução
+## Ordenar por Tokens no Admin
 
-Atualmente, `/app` redireciona direto para `/app/evolucao`. A proposta é criar uma página inicial (Home/Dashboard) que funcione como hub de acesso rápido, com destaque para a funcionalidade principal (Evolução) e o programa de indicação.
+Adicionar um botão/toggle na coluna "Tokens" da tabela de administração que permite ordenar os usuários pelo consumo de tokens (maior para menor e vice-versa).
 
-### Nova página: `src/pages/app/HomePage.tsx`
+### Mudanças em `src/pages/AdminPage.tsx`
 
-**Estrutura da tela:**
+**1. Novo estado de ordenação**
 
-1. **Saudação personalizada** — "Olá, {nickname || primeiro nome}! 👋" com subtítulo "O que vamos fazer hoje?"
+Adicionar estado para controlar a direção da ordenação:
+```typescript
+const [sortByTokens, setSortByTokens] = useState<'none' | 'asc' | 'desc'>('none');
+```
 
-2. **Card principal destaque — Nova Evolução** (ocupa largura total, fundo com gradiente `bg-hero` ou `primary`):
-   - Ícone `FileText`, título "Gerar Evolução Clínica", descrição curta "Transforme suas anotações de sessão em documentação clínica completa com IA"
-   - Botão CTA `variant="cta"` → navega para `/app/evolucao`
+**2. Aplicar ordenação no useEffect de filtro (linhas 80-89)**
 
-3. **Grid de atalhos rápidos** (3 colunas desktop, 1 mobile) — cards clicáveis:
-   - **Chat Clínico** (`MessageCircle`) → `/chat` — "Consulte protocolos e abordagens terapêuticas"
-   - **Buscar Artigos** (`BookOpen`) → `/busca-artigos` — "Encontre evidências científicas para suas intervenções"
-   - **Buscar Plano** (`Target`) → `/busca-plano` — "Monte planos terapêuticos com apoio de IA"
+Após filtrar por nome, aplicar a ordenação por tokens:
+- `desc`: usuários com mais tokens primeiro
+- `asc`: usuários com menos tokens primeiro
+- `none`: ordem padrão (por data de criação)
 
-4. **Seção "Dicas de uso"** — 2-3 sugestões rápidas em formato compacto:
-   - "Grave o áudio da sessão e gere a evolução automaticamente"
-   - "Cadastre seus pacientes para manter o histórico organizado"
-   - "Use o Chat Clínico para discutir casos complexos com a IA"
+Valores `null` de `TokenCount` serao tratados como `0`.
 
-5. **Card Indique e Ganhe** — reutiliza o componente `ReferralCard` existente, posicionado na lateral (desktop) ou abaixo (mobile), com wrapper que adiciona título de seção "Indique e Ganhe"
+**3. Cabeçalho clicável na coluna "Tokens" (linha ~230)**
 
-### Alterações no roteamento: `src/App.tsx`
+Trocar o `<TableHead>Tokens</TableHead>` por um botao clicavel com icone de seta indicando a direção atual:
+- Clique alterna entre `none` -> `desc` -> `asc` -> `none`
+- Icone `ArrowUpDown` (neutro), `ArrowDown` (desc), `ArrowUp` (asc) do lucide-react
 
-- Importar `HomePage`
-- Trocar `<Route index element={<Navigate to="/app/evolucao" replace />} />` por `<Route index element={<HomePage />} />`
+### Detalhes Técnicos
 
-### Alterações na sidebar: `src/components/chat/ChatSidebar.tsx`
-
-- Adicionar item "Início" (`Home` icon) no topo do menu, apontando para `/app`
-
-### Layout responsivo
-
-- Desktop: grid 2 colunas — conteúdo principal (col-span-8) + lateral com ReferralCard (col-span-4)
-- Mobile: tudo empilhado em coluna única
-
-### Arquivo criado
-
-| Arquivo | Descrição |
-|---------|-----------|
-| `src/pages/app/HomePage.tsx` | Nova tela inicial com saudação, CTA de evolução, atalhos, dicas e referral |
-
-### Arquivos alterados
-
-| Arquivo | Mudança |
-|---------|---------|
-| `src/App.tsx` | Importar HomePage, trocar Navigate por HomePage na rota index do `/app` |
-| `src/components/chat/ChatSidebar.tsx` | Adicionar item "Início" no menu |
+- Importar `ArrowUpDown`, `ArrowDown`, `ArrowUp` do lucide-react
+- A ordenação é aplicada no frontend sobre `filteredProfiles`, sem nova query ao banco
+- O ciclo de clique: sem ordenação -> maior primeiro -> menor primeiro -> sem ordenação
 

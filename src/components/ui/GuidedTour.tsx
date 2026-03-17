@@ -1,54 +1,73 @@
-import React, { useState } from 'react';
-import Joyride, { CallBackProps, STATUS, Step, TooltipRenderProps } from 'react-joyride';
+import React, { useState, useEffect, useCallback } from 'react';
+import Joyride, { CallBackProps, ACTIONS, EVENTS, STATUS, Step, TooltipRenderProps } from 'react-joyride';
+import { useNavigate, useLocation } from 'react-router-dom';
+
+interface TourStep extends Step {
+  data?: { route?: string };
+}
 
 interface GuidedTourProps {
   run: boolean;
   onFinish: () => void;
 }
 
-const steps: Step[] = [
+const tourSteps: TourStep[] = [
   {
-    target: '[data-tour="nav-inicio"]',
-    content: 'Este é seu painel principal. Aqui você acompanha estatísticas e tem uma visão geral da sua atividade.',
+    target: '[data-tour="page-home"]',
+    content: 'Este é seu painel principal. Aqui você acompanha estatísticas, acessa atalhos e tem uma visão geral da sua atividade.',
     title: '🏠 Início',
     disableBeacon: true,
-    placement: 'right',
+    placement: 'bottom',
+    data: { route: '/app' },
   },
   {
-    target: '[data-tour="nav-evolucao"]',
+    target: '[data-tour="page-evolution"]',
     content: 'Crie evoluções clínicas com auxílio de IA. Envie texto ou áudio e receba evoluções estruturadas automaticamente.',
-    title: '📋 Evolução',
-    placement: 'right',
+    title: '📋 Evolução Clínica',
+    placement: 'bottom',
+    data: { route: '/app/evolucao' },
   },
   {
-    target: '[data-tour="nav-pacientes"]',
-    content: 'Gerencie seus pacientes, fichas clínicas, diagnósticos e histórico de sessões.',
+    target: '[data-tour="page-patients"]',
+    content: 'Gerencie seus pacientes, fichas clínicas, diagnósticos e histórico de sessões. Cada paciente tem um contexto próprio para a IA.',
     title: '👥 Pacientes',
-    placement: 'right',
+    placement: 'bottom',
+    data: { route: '/app/pacientes' },
   },
   {
-    target: '[data-tour="nav-chat"]',
-    content: 'Consulte protocolos, peça sugestões de intervenções e tire dúvidas clínicas com a IA.',
+    target: '[data-tour="page-chat"]',
+    content: 'Consulte protocolos, peça sugestões de intervenções e tire dúvidas clínicas com a IA em tempo real.',
     title: '💬 Chat Clínico',
-    placement: 'right',
+    placement: 'bottom',
+    data: { route: '/chat' },
   },
   {
-    target: '[data-tour="nav-plano"]',
-    content: 'Busque planos de ação terapêuticos e materiais psicoeducativos para diferentes quadros.',
+    target: '[data-tour="page-plano"]',
+    content: 'Busque planos de ação terapêuticos e materiais psicoeducativos para diferentes quadros clínicos.',
     title: '🎯 Planos de Ação',
-    placement: 'right',
+    placement: 'bottom',
+    data: { route: '/busca-plano' },
   },
   {
-    target: '[data-tour="nav-artigos"]',
+    target: '[data-tour="page-artigos"]',
     content: 'Encontre artigos e evidências científicas para embasar suas intervenções clínicas.',
     title: '📖 Artigos Científicos',
-    placement: 'right',
+    placement: 'bottom',
+    data: { route: '/busca-artigos' },
   },
   {
-    target: '[data-tour="nav-marketing"]',
-    content: 'Crie conteúdo para redes sociais e materiais de divulgação para sua prática.',
+    target: '[data-tour="page-marketing"]',
+    content: 'Crie conteúdo para redes sociais e materiais de divulgação para sua prática clínica.',
     title: '✏️ Marketing',
-    placement: 'right',
+    placement: 'bottom',
+    data: { route: '/marketing' },
+  },
+  {
+    target: '[data-tour="page-indicacoes"]',
+    content: 'Compartilhe seu código de indicação com colegas. Quando alguém se cadastrar e assinar, vocês dois ganham!',
+    title: '🎁 Indique e Ganhe',
+    placement: 'bottom',
+    data: { route: '/app/indicacoes' },
   },
   {
     target: '[data-tour="nav-suporte"]',
@@ -59,7 +78,6 @@ const steps: Step[] = [
 ];
 
 const CustomTooltip: React.FC<TooltipRenderProps> = ({
-  continuous,
   index,
   step,
   backProps,
@@ -111,21 +129,74 @@ const CustomTooltip: React.FC<TooltipRenderProps> = ({
 );
 
 const GuidedTour: React.FC<GuidedTourProps> = ({ run, onFinish }) => {
-  const handleCallback = (data: CallBackProps) => {
-    const { status } = data;
-    if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
-      onFinish();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [stepIndex, setStepIndex] = useState(0);
+  const [isNavigating, setIsNavigating] = useState(false);
+  const [internalRun, setInternalRun] = useState(false);
+
+  // Sync internal run with prop, navigate to first step route
+  useEffect(() => {
+    if (run) {
+      const firstRoute = tourSteps[0]?.data?.route;
+      if (firstRoute && location.pathname !== firstRoute) {
+        navigate(firstRoute);
+      }
+      setStepIndex(0);
+      // Delay to let page render
+      const timer = setTimeout(() => setInternalRun(true), 500);
+      return () => clearTimeout(timer);
+    } else {
+      setInternalRun(false);
+      setStepIndex(0);
     }
-  };
+  }, [run]);
+
+  const handleCallback = useCallback((data: CallBackProps) => {
+    const { action, index, type, status } = data;
+
+    // Tour finished or skipped
+    if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
+      setInternalRun(false);
+      // Navigate back to home
+      navigate('/app');
+      onFinish();
+      return;
+    }
+
+    if (type === EVENTS.STEP_AFTER) {
+      const nextIndex = action === ACTIONS.PREV ? index - 1 : index + 1;
+
+      if (nextIndex < 0 || nextIndex >= tourSteps.length) return;
+
+      const nextStep = tourSteps[nextIndex];
+      const targetRoute = nextStep.data?.route;
+
+      if (targetRoute && location.pathname !== targetRoute) {
+        setIsNavigating(true);
+        setInternalRun(false);
+        navigate(targetRoute);
+        // Wait for page to render before showing tooltip
+        setTimeout(() => {
+          setStepIndex(nextIndex);
+          setInternalRun(true);
+          setIsNavigating(false);
+        }, 600);
+      } else {
+        setStepIndex(nextIndex);
+      }
+    }
+  }, [navigate, location.pathname, onFinish]);
 
   return (
     <Joyride
-      steps={steps}
-      run={run}
+      steps={tourSteps}
+      run={internalRun && !isNavigating}
+      stepIndex={stepIndex}
       continuous
       showSkipButton
-      scrollToFirstStep
       disableOverlayClose
+      disableScrolling={false}
       tooltipComponent={CustomTooltip}
       callback={handleCallback}
       locale={{

@@ -149,7 +149,7 @@ const HomePage = () => {
   }
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto">
+    <div className="space-y-6 max-w-5xl mx-auto" data-tour="page-home">
       {/* Resume onboarding banner */}
       {showBanner && (
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center justify-between gap-3">

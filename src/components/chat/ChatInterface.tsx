@@ -476,7 +476,7 @@ const ChatInterface = () => {
         </div>
       </div>;
   }
-  return <div className="flex-1 flex flex-col h-full min-h-0 no-horizontal-scroll">
+  return <div className="flex-1 flex flex-col h-full min-h-0 no-horizontal-scroll" data-tour="page-chat">
       {/* Header */}
       <header className="app-header my-0 ml-[65px] w-full px-6 py-[23px]">
         <div className="header-center mx-[68px]">

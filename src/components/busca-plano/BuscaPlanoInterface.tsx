@@ -128,7 +128,7 @@ const BuscaPlanoInterface = () => {
         </div>
       </div>;
   }
-  return <div className="flex-1 flex flex-col h-full min-h-0 no-horizontal-scroll">
+  return <div className="flex-1 flex flex-col h-full min-h-0 no-horizontal-scroll" data-tour="page-plano">
       <header className="app-header">
         <div className="header-center">
           <img src="/logo.png" alt="ChatPsi" className="brand-logo" />

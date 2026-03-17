@@ -168,7 +168,7 @@ export default function EvolutionPage() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
+    <div className="max-w-3xl mx-auto space-y-6" data-tour="page-evolution">
       <AppBreadcrumb items={[
         { label: "Clínica", href: "/app/evolucao" },
         { label: "Evolução", href: "/app/evolucao" },

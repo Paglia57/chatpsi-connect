@@ -490,7 +490,7 @@ const ChatInterface = () => {
                 <p className="text-sm sm:text-base text-muted-foreground mb-4 text-overflow-anywhere">
                   {canSendMessage ? "Envie mensagens, áudios, imagens ou documentos para começar a conversar com a IA." : "Você precisa de uma assinatura ativa para começar a conversar."}
                 </p>
-                {!canSendMessage && <Button variant="default" className="touch-target">
+                {!canSendMessage && <Button variant="cta" className="touch-target">
                     Ativar Assinatura
                   </Button>}
               </div> : messages.map(message => <div key={message.id} className={`flex gap-2 sm:gap-3 animate-fade-in ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}>

@@ -22,6 +22,7 @@ import ProfilePage from "./pages/app/ProfilePage";
 import PatientsPage from "./pages/app/PatientsPage";
 import PatientDetailPage from "./pages/app/PatientDetailPage";
 import ReferralsPage from "./pages/app/ReferralsPage";
+import HomePage from "./pages/app/HomePage";
 
 const queryClient = new QueryClient();
 

@@ -138,40 +138,40 @@ const BuscaPlanoInterface = () => {
       <div className="flex-1 relative min-h-0">
         <ScrollArea className="h-full">
           <div className="p-3 sm:p-4 space-y-3 sm:space-y-4 max-w-4xl mx-auto pb-4">
+            {!profile?.seen_guides?.busca_plano && (
+              <FirstTimeGuide
+                guideKey="busca_plano"
+                icon={<Target className="h-8 w-8 text-primary" />}
+                title="Planos de ação terapêuticos"
+                description="Busque planos de ação prontos e materiais psicoeducativos para diferentes quadros clínicos. A IA encontra os recursos mais relevantes para seu caso."
+                tips={[
+                  "Busque por diagnóstico ou tema (ex: depressão, TDAH, luto)",
+                  "Os planos incluem materiais que você pode usar diretamente com pacientes",
+                  "Você pode pedir planos específicos para faixas etárias ou contextos",
+                ]}
+                examples={[
+                  "Plano de ação para manejo de ansiedade em adultos",
+                  "Material psicoeducativo sobre TDAH para adolescentes",
+                  "Estratégias de ativação comportamental para depressão",
+                ]}
+                ctaText="Entendi, buscar um plano!"
+                onDismiss={async () => {
+                  if (user) {
+                    const current = profile?.seen_guides || {};
+                    await supabase.from('profiles').update({ seen_guides: { ...current, busca_plano: true } }).eq('user_id', user.id);
+                    await refreshProfile();
+                  }
+                }}
+                onExampleClick={(text) => {
+                  setNewMessage(text);
+                  if (user) {
+                    const current = profile?.seen_guides || {};
+                    supabase.from('profiles').update({ seen_guides: { ...current, busca_plano: true } }).eq('user_id', user.id).then(() => refreshProfile());
+                  }
+                }}
+              />
+            )}
             {messages.length === 0 ? (
-              !profile?.seen_guides?.busca_plano ? (
-                <FirstTimeGuide
-                  guideKey="busca_plano"
-                  icon={<Target className="h-8 w-8 text-primary" />}
-                  title="Planos de ação terapêuticos"
-                  description="Busque planos de ação prontos e materiais psicoeducativos para diferentes quadros clínicos. A IA encontra os recursos mais relevantes para seu caso."
-                  tips={[
-                    "Busque por diagnóstico ou tema (ex: depressão, TDAH, luto)",
-                    "Os planos incluem materiais que você pode usar diretamente com pacientes",
-                    "Você pode pedir planos específicos para faixas etárias ou contextos",
-                  ]}
-                  examples={[
-                    "Plano de ação para manejo de ansiedade em adultos",
-                    "Material psicoeducativo sobre TDAH para adolescentes",
-                    "Estratégias de ativação comportamental para depressão",
-                  ]}
-                  ctaText="Entendi, buscar um plano!"
-                  onDismiss={async () => {
-                    if (user) {
-                      const current = profile?.seen_guides || {};
-                      await supabase.from('profiles').update({ seen_guides: { ...current, busca_plano: true } }).eq('user_id', user.id);
-                      await refreshProfile();
-                    }
-                  }}
-                  onExampleClick={(text) => {
-                    setNewMessage(text);
-                    if (user) {
-                      const current = profile?.seen_guides || {};
-                      supabase.from('profiles').update({ seen_guides: { ...current, busca_plano: true } }).eq('user_id', user.id).then(() => refreshProfile());
-                    }
-                  }}
-                />
-              ) : (
                 <div className="text-center py-8 sm:py-12 px-4">
                   <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-4 sm:mb-5">
                     <Sparkles className="h-8 w-8 sm:h-10 sm:w-10 text-amber-600" />
@@ -194,7 +194,6 @@ const BuscaPlanoInterface = () => {
                     ))}
                   </div>
                 </div>
-              )
             ) : messages.map(msg => <React.Fragment key={msg.id}>
                   <div className="flex gap-2 sm:gap-3 justify-end">
                     <div className="bg-primary text-primary-foreground rounded-lg px-3 sm:px-4 py-2 sm:py-3 max-w-[80%] chat-message-content">

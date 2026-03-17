@@ -9,7 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Badge } from '@/components/ui/badge';
 import {
   Home, ClipboardList, Plus, History, Users, MessageCircle, Target, BookOpen,
-  PenTool, Settings, Gift, User, HelpCircle, LogOut, Menu, ChevronDown,
+  PenTool, Settings, Gift, CircleUser, HelpCircle, LogOut, Menu, ChevronDown,
   ChevronRight, Star, MessageSquare, RotateCcw
 } from 'lucide-react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';

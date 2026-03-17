@@ -12,6 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { InternationalPhoneInput } from "@/components/ui/international-phone-input";
 
 const APPROACHES = [
   "TCC (Terapia Cognitivo-Comportamental)",

@@ -23,7 +23,7 @@ export default function StepCelebration({ evolutionContent, onFinish }: StepCele
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    confetti({ particleCount: 50, spread: 60, origin: { y: 0.7 } });
+    confetti({ particleCount: 60, spread: 70, origin: { y: 0.6 }, colors: ['#0d9488', '#ec4899', '#f59e0b'] });
   }, []);
 
   const handleCopy = async () => {

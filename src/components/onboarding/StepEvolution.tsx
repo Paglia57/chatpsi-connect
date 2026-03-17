@@ -6,17 +6,17 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AutoTextarea } from '@/components/ui/auto-textarea';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Sparkles } from 'lucide-react';
+import { Loader2, Sparkles, Search, FileText, CheckCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { toast } from 'sonner';
 
 const DURATIONS = ["30min", "40min", "50min", "60min"];
 const SESSION_TYPES = ["Presencial", "Online"];
-const LOADING_TEXTS = [
-  "Analisando suas anotações...",
-  "Estruturando a evolução clínica...",
-  "Aplicando formato profissional...",
+const LOADING_STEPS = [
+  { icon: Search, text: "Analisando suas anotações..." },
+  { icon: FileText, text: "Estruturando a evolução clínica..." },
+  { icon: CheckCircle, text: "Aplicando formato profissional..." },
 ];
 
 interface CreatedPatient {
@@ -45,7 +45,7 @@ export default function StepEvolution({ selectedApproach, createdPatient, onNext
   useEffect(() => {
     if (!isGenerating) return;
     const interval = setInterval(() => {
-      setLoadingTextIdx(prev => (prev + 1) % LOADING_TEXTS.length);
+      setLoadingTextIdx(prev => (prev + 1) % LOADING_STEPS.length);
     }, 3000);
     return () => clearInterval(interval);
   }, [isGenerating]);
@@ -210,12 +210,23 @@ export default function StepEvolution({ selectedApproach, createdPatient, onNext
       </Card>
 
       {isGenerating ? (
-        <div className="text-center space-y-3 py-4">
-          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
-          <p className="text-sm text-muted-foreground animate-fade-in" key={loadingTextIdx}>
-            {LOADING_TEXTS[loadingTextIdx]}
-          </p>
-        </div>
+        <Card className="rounded-2xl shadow-md border">
+          <CardContent className="p-6 flex flex-col items-center space-y-5">
+            {(() => {
+              const step = LOADING_STEPS[loadingTextIdx];
+              const Icon = step.icon;
+              return (
+                <div key={loadingTextIdx} className="flex flex-col items-center gap-3 animate-fade-in">
+                  <Icon className="h-8 w-8 text-primary" />
+                  <p className="text-sm font-medium text-foreground">{step.text}</p>
+                </div>
+              );
+            })()}
+            <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
+              <div className="h-full w-1/3 bg-primary rounded-full animate-[indeterminate_1.5s_ease-in-out_infinite]" />
+            </div>
+          </CardContent>
+        </Card>
       ) : (
         <Button variant="cta" className="w-full" size="lg" onClick={handleGenerate} disabled={textContent.trim().length < 10}>
           <Sparkles className="h-4 w-4" />

@@ -375,7 +375,12 @@ export default function HistoryPage() {
                         }
                       }}
                     >
-                      {saving ? "Salvando..." : "Salvar"}
+                      {saving ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Salvando...
+                        </>
+                      ) : "Salvar"}
                     </Button>
                     <Button variant="ghost" size="sm" onClick={() => setIsEditing(false)}>
                       <X className="h-4 w-4" />

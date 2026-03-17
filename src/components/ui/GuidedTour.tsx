@@ -11,10 +11,35 @@ interface GuidedTourProps {
   onFinish: () => void;
 }
 
+const Tip: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <li className="flex items-start gap-2 text-sm text-muted-foreground">
+    <span className="text-primary mt-0.5">•</span>
+    <span>{children}</span>
+  </li>
+);
+
+const StepContent: React.FC<{ desc: string; tips: string[] }> = ({ desc, tips }) => (
+  <div className="space-y-3">
+    <p className="text-sm text-muted-foreground leading-relaxed">{desc}</p>
+    <ul className="space-y-1.5">
+      {tips.map((t, i) => <Tip key={i}>{t}</Tip>)}
+    </ul>
+  </div>
+);
+
 const tourSteps: TourStep[] = [
   {
     target: '[data-tour="page-home"]',
-    content: 'Este é seu painel principal. Aqui você acompanha estatísticas, acessa atalhos e tem uma visão geral da sua atividade.',
+    content: (
+      <StepContent
+        desc="Seu painel principal com visão geral da sua atividade."
+        tips={[
+          'Acompanhe estatísticas de sessões e evoluções',
+          'Use os atalhos rápidos para acessar qualquer módulo',
+          'Veja pacientes recentes e atividade do dia',
+        ]}
+      />
+    ),
     title: '🏠 Início',
     disableBeacon: true,
     placement: 'bottom',
@@ -22,57 +47,136 @@ const tourSteps: TourStep[] = [
   },
   {
     target: '[data-tour="page-evolution"]',
-    content: 'Crie evoluções clínicas com auxílio de IA. Envie texto ou áudio e receba evoluções estruturadas automaticamente.',
+    content: (
+      <StepContent
+        desc="Crie evoluções clínicas estruturadas com auxílio de IA."
+        tips={[
+          'Envie texto livre ou grave um áudio da sessão',
+          'A IA gera a evolução formatada automaticamente',
+          'Selecione o paciente para contextualizar a evolução',
+        ]}
+      />
+    ),
     title: '📋 Evolução Clínica',
+    disableBeacon: true,
     placement: 'bottom',
     data: { route: '/app/evolucao' },
   },
   {
     target: '[data-tour="page-patients"]',
-    content: 'Gerencie seus pacientes, fichas clínicas, diagnósticos e histórico de sessões. Cada paciente tem um contexto próprio para a IA.',
+    content: (
+      <StepContent
+        desc="Gerencie seus pacientes e fichas clínicas completas."
+        tips={[
+          'Cadastre pacientes com diagnóstico CID-10 e DSM-5',
+          'Adicione queixa principal, medicação e abordagem',
+          'A IA usa o contexto do paciente nas evoluções',
+        ]}
+      />
+    ),
     title: '👥 Pacientes',
+    disableBeacon: true,
     placement: 'bottom',
     data: { route: '/app/pacientes' },
   },
   {
     target: '[data-tour="page-chat"]',
-    content: 'Consulte protocolos, peça sugestões de intervenções e tire dúvidas clínicas com a IA em tempo real.',
+    content: (
+      <StepContent
+        desc="Tire dúvidas clínicas e peça sugestões em tempo real."
+        tips={[
+          'Pergunte sobre protocolos e técnicas de intervenção',
+          'Peça sugestões de atividades para quadros específicos',
+          'Consulte critérios diagnósticos e materiais psicoeducativos',
+        ]}
+      />
+    ),
     title: '💬 Chat Clínico',
+    disableBeacon: true,
     placement: 'bottom',
     data: { route: '/chat' },
   },
   {
     target: '[data-tour="page-plano"]',
-    content: 'Busque planos de ação terapêuticos e materiais psicoeducativos para diferentes quadros clínicos.',
+    content: (
+      <StepContent
+        desc="Monte planos de ação terapêuticos personalizados."
+        tips={[
+          'Busque planos por quadro clínico ou demanda do paciente',
+          'Receba sugestões de objetivos e intervenções',
+          'Adapte os planos à sua abordagem terapêutica',
+        ]}
+      />
+    ),
     title: '🎯 Planos de Ação',
+    disableBeacon: true,
     placement: 'bottom',
     data: { route: '/busca-plano' },
   },
   {
     target: '[data-tour="page-artigos"]',
-    content: 'Encontre artigos e evidências científicas para embasar suas intervenções clínicas.',
+    content: (
+      <StepContent
+        desc="Encontre evidências científicas para suas intervenções."
+        tips={[
+          'Busque artigos por tema, técnica ou transtorno',
+          'Use as referências para embasar seus relatórios',
+          'Acesse resumos e links para os estudos completos',
+        ]}
+      />
+    ),
     title: '📖 Artigos Científicos',
+    disableBeacon: true,
     placement: 'bottom',
     data: { route: '/busca-artigos' },
   },
   {
     target: '[data-tour="page-marketing"]',
-    content: 'Crie conteúdo para redes sociais e materiais de divulgação para sua prática clínica.',
+    content: (
+      <StepContent
+        desc="Crie conteúdo profissional para divulgar sua prática."
+        tips={[
+          'Gere posts para Instagram, LinkedIn e outras redes',
+          'Crie textos educativos e carrosséis informativos',
+          'Adapte o tom e estilo ao seu público-alvo',
+        ]}
+      />
+    ),
     title: '✏️ Marketing',
+    disableBeacon: true,
     placement: 'bottom',
     data: { route: '/marketing' },
   },
   {
     target: '[data-tour="page-indicacoes"]',
-    content: 'Compartilhe seu código de indicação com colegas. Quando alguém se cadastrar e assinar, vocês dois ganham!',
+    content: (
+      <StepContent
+        desc="Indique colegas e ganhe benefícios exclusivos."
+        tips={[
+          'Compartilhe seu código de indicação com colegas',
+          'Quando alguém assinar, vocês dois são recompensados',
+          'Acompanhe suas indicações e resgates aqui',
+        ]}
+      />
+    ),
     title: '🎁 Indique e Ganhe',
+    disableBeacon: true,
     placement: 'bottom',
     data: { route: '/app/indicacoes' },
   },
   {
     target: '[data-tour="nav-suporte"]',
-    content: 'Precisa de ajuda? Aqui você pode falar com o suporte ou revisitar este tour a qualquer momento.',
+    content: (
+      <StepContent
+        desc="Acesse suporte e revisite este tour quando precisar."
+        tips={[
+          'Clique em "Revisitar orientações" para rever este guia',
+          'Use "Falar com suporte" para contato direto via WhatsApp',
+        ]}
+      />
+    ),
     title: '❓ Suporte',
+    disableBeacon: true,
     placement: 'top',
   },
 ];
@@ -92,9 +196,9 @@ const CustomTooltip: React.FC<TooltipRenderProps> = ({
     className="bg-card border border-border rounded-2xl shadow-xl p-5 max-w-sm animate-in fade-in zoom-in-95 duration-200"
   >
     {step.title && (
-      <h3 className="text-base font-bold text-foreground mb-1">{step.title}</h3>
+      <h3 className="text-base font-bold text-foreground mb-2">{step.title}</h3>
     )}
-    <p className="text-sm text-muted-foreground leading-relaxed">{step.content}</p>
+    <div>{step.content}</div>
 
     <div className="flex items-center justify-between mt-4 gap-2">
       <span className="text-xs text-muted-foreground">
@@ -135,7 +239,6 @@ const GuidedTour: React.FC<GuidedTourProps> = ({ run, onFinish }) => {
   const [isNavigating, setIsNavigating] = useState(false);
   const [internalRun, setInternalRun] = useState(false);
 
-  // Sync internal run with prop, navigate to first step route
   useEffect(() => {
     if (run) {
       const firstRoute = tourSteps[0]?.data?.route;
@@ -143,7 +246,6 @@ const GuidedTour: React.FC<GuidedTourProps> = ({ run, onFinish }) => {
         navigate(firstRoute);
       }
       setStepIndex(0);
-      // Delay to let page render
       const timer = setTimeout(() => setInternalRun(true), 500);
       return () => clearTimeout(timer);
     } else {
@@ -155,10 +257,8 @@ const GuidedTour: React.FC<GuidedTourProps> = ({ run, onFinish }) => {
   const handleCallback = useCallback((data: CallBackProps) => {
     const { action, index, type, status } = data;
 
-    // Tour finished or skipped
     if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
       setInternalRun(false);
-      // Navigate back to home
       navigate('/app');
       onFinish();
       return;
@@ -176,7 +276,6 @@ const GuidedTour: React.FC<GuidedTourProps> = ({ run, onFinish }) => {
         setIsNavigating(true);
         setInternalRun(false);
         navigate(targetRoute);
-        // Wait for page to render before showing tooltip
         setTimeout(() => {
           setStepIndex(nextIndex);
           setInternalRun(true);

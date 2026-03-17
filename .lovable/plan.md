@@ -1,32 +1,36 @@
 
 
-## Ajustes no Tour Guiado
+## Ordenar por Tokens no Admin
 
-### 1. Remover o ponto vermelho (beacon)
+Adicionar um botão/toggle na coluna "Tokens" da tabela de administração que permite ordenar os usuários pelo consumo de tokens (maior para menor e vice-versa).
 
-O ponto rosa/vermelho pulsante é o **beacon** padrão do `react-joyride`. Ele aparece nos steps que não têm `disableBeacon: true`. Atualmente só o primeiro step tem essa configuração. A solução é adicionar `disableBeacon: true` em **todos** os steps do tour.
+### Mudanças em `src/pages/AdminPage.tsx`
 
-### 2. Enriquecer os tooltips com orientações de uso
+**1. Novo estado de ordenação**
 
-Atualmente os tooltips têm apenas uma frase descritiva. Vamos expandir o conteúdo de cada step para incluir **dicas práticas** (como os antigos `FirstTimeGuide` tinham com tips e exemplos), de forma condensada para caber no tooltip. Cada step terá:
-- Descrição principal (1-2 frases)
-- 2-3 dicas curtas como lista com bullets dentro do tooltip
+Adicionar estado para controlar a direção da ordenação:
+```typescript
+const [sortByTokens, setSortByTokens] = useState<'none' | 'asc' | 'desc'>('none');
+```
 
-O componente `CustomTooltip` será ajustado para renderizar conteúdo JSX (React nodes) no campo `content`, permitindo listas formatadas dentro do popup.
+**2. Aplicar ordenação no useEffect de filtro (linhas 80-89)**
 
-### Arquivos a alterar
+Após filtrar por nome, aplicar a ordenação por tokens:
+- `desc`: usuários com mais tokens primeiro
+- `asc`: usuários com menos tokens primeiro
+- `none`: ordem padrão (por data de criação)
 
-**`src/components/ui/GuidedTour.tsx`**:
-- Adicionar `disableBeacon: true` em todos os 9 steps
-- Trocar o `content` de string para JSX com descrição + dicas práticas por módulo:
-  - **Início**: Estatísticas, atalhos rápidos
-  - **Evolução**: Envie texto ou áudio, receba evolução estruturada, selecione paciente
-  - **Pacientes**: Cadastre pacientes, adicione diagnósticos, contexto para IA
-  - **Chat Clínico**: Pergunte sobre protocolos, peça sugestões de intervenção
-  - **Planos de Ação**: Busque planos terapêuticos por quadro clínico
-  - **Artigos**: Encontre evidências científicas para intervenções
-  - **Marketing**: Crie posts, carrosseis, textos educativos
-  - **Indicações**: Compartilhe código, ganhe benefícios
-  - **Suporte**: Revisitar tour, falar com suporte
-- Ajustar `CustomTooltip` para renderizar `step.content` como ReactNode (já suportado pelo Joyride)
+Valores `null` de `TokenCount` serao tratados como `0`.
+
+**3. Cabeçalho clicável na coluna "Tokens" (linha ~230)**
+
+Trocar o `<TableHead>Tokens</TableHead>` por um botao clicavel com icone de seta indicando a direção atual:
+- Clique alterna entre `none` -> `desc` -> `asc` -> `none`
+- Icone `ArrowUpDown` (neutro), `ArrowDown` (desc), `ArrowUp` (asc) do lucide-react
+
+### Detalhes Técnicos
+
+- Importar `ArrowUpDown`, `ArrowDown`, `ArrowUp` do lucide-react
+- A ordenação é aplicada no frontend sobre `filteredProfiles`, sem nova query ao banco
+- O ciclo de clique: sem ordenação -> maior primeiro -> menor primeiro -> sem ordenação
 

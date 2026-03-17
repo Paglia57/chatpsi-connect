@@ -5,7 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
-import { ClipboardCopy, Pencil, Save, RefreshCw, Download, Check } from "lucide-react";
+import { ClipboardCopy, Pencil, Save, RefreshCw, Download, Check, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { parseEvolutionContent, exportEvolutionPdf } from "@/lib/evolutionParser";
 

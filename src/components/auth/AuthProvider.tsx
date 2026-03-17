@@ -66,7 +66,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
 
-      setProfile(data);
+      setProfile({ ...data, seen_guides: (data.seen_guides as Record<string, boolean>) || {} });
 
       // Check admin status
       const { data: adminStatus } = await supabase.rpc('is_admin');

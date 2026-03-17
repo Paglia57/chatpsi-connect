@@ -354,6 +354,7 @@ const ChatInterface = () => {
       return;
     }
     if (!newMessage.trim() && !attachedFile || isAssistantTyping || !user) return;
+    setShowSuggestions(false);
     const messageType = attachedFile ? attachedFile.type : 'text';
     const messageContent = attachedFile ? attachedFile.name : newMessage.trim();
     const tempId = `temp-${Date.now()}-${Math.random()}`;

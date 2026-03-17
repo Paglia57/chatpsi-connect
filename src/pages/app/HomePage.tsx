@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import ReferralCard from '@/components/referral/ReferralCard';
+import RedeemBanner from '@/components/referral/RedeemBanner';
 import OnboardingWizard from '@/components/onboarding/OnboardingWizard';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';

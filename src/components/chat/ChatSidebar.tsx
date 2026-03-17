@@ -278,14 +278,21 @@ const ChatSidebar = () => {
             className={`p-2 rounded-lg transition-colors ${isActive('/marketing') ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground hover:bg-sidebar-accent/50'}`}>
             <PenTool className="h-4 w-4" />
           </NavLink>
-          <Separator className="w-6 my-1" />
           {isAdmin && (
-            <NavLink to="/admin" title="Administração"
-              className={`p-2 rounded-lg transition-colors ${isActive('/admin') ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground hover:bg-sidebar-accent/50'}`}>
-              <Settings className="h-4 w-4" />
-            </NavLink>
+            <>
+              <Separator className="w-6 my-1" />
+              <NavLink to="/admin" title="Administração"
+                className={`p-2 rounded-lg transition-colors ${isActive('/admin') ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground hover:bg-sidebar-accent/50'}`}>
+                <Settings className="h-4 w-4" />
+              </NavLink>
+              <NavLink to="/admin/referrals" title="Validar Indicações"
+                className={`p-2 rounded-lg transition-colors ${isActive('/admin/referrals') ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground hover:bg-sidebar-accent/50'}`}>
+                <Gift className="h-4 w-4" />
+              </NavLink>
+            </>
           )}
-          <NavLink to="/app/indicacoes" title="Indicações"
+          <Separator className="w-6 my-1" />
+          <NavLink to="/app/indicacoes" title="Indique e Ganhe"
             className={`p-2 rounded-lg transition-colors ${isActive('/app/indicacoes') ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground hover:bg-sidebar-accent/50'}`}>
             <Gift className="h-4 w-4" />
           </NavLink>

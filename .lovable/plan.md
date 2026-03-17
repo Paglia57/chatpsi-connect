@@ -1,36 +1,37 @@
 
 
-## Ordenar por Tokens no Admin
+## Plano: Redesign da Página de Evolução
 
-Adicionar um botão/toggle na coluna "Tokens" da tabela de administração que permite ordenar os usuários pelo consumo de tokens (maior para menor e vice-versa).
+### Mudanças
 
-### Mudanças em `src/pages/AdminPage.tsx`
+**1. Layout coluna única (`EvolutionPage.tsx`)**
+- Remover `grid grid-cols-1 lg:grid-cols-2` → usar coluna única `max-w-3xl mx-auto`
+- `EvolutionOutput` renderiza abaixo do `EvolutionInput` (só aparece quando há conteúdo ou está gerando)
+- Eliminar o empty state com ícone placeholder — sem conteúdo, simplesmente não renderiza o output
 
-**1. Novo estado de ordenação**
+**2. Textarea maior (`EvolutionInput.tsx`)**
+- Trocar `Textarea` por `AutoTextarea` (já existe no projeto) com `minRows={8}` (~200px) e `maxRows={20}`
+- Auto-resize conforme o texto cresce
 
-Adicionar estado para controlar a direção da ordenação:
-```typescript
-const [sortByTokens, setSortByTokens] = useState<'none' | 'asc' | 'desc'>('none');
-```
+**3. Grid dos 3 campos de sessão (`EvolutionInput.tsx`)**
+- Manter `grid grid-cols-1 sm:grid-cols-3 gap-4`
+- Adicionar `min-w-0` nos containers filhos para evitar overflow
+- Usar labels mais curtos: "Nº sessão", "Duração", "Tipo"
 
-**2. Aplicar ordenação no useEffect de filtro (linhas 80-89)**
+**4. "Sem paciente cadastrado" como Switch (`EvolutionInput.tsx`)**
+- Substituir o link de texto por um `Switch` do shadcn + label "Sem paciente cadastrado"
+- Quando ativo, mostra o campo de iniciais; quando desativado, mostra o `PatientSelector`
+- Mais visível e claro que um link azul
 
-Após filtrar por nome, aplicar a ordenação por tokens:
-- `desc`: usuários com mais tokens primeiro
-- `asc`: usuários com menos tokens primeiro
-- `none`: ordem padrão (por data de criação)
+**5. Renomear "Evolução Clínica" → "Evolução" no output**
+- Atualizar títulos em `EvolutionOutput.tsx`
+- Atualizar texto do botão "Gerar Evolução Clínica" → "Gerar Evolução"
 
-Valores `null` de `TokenCount` serao tratados como `0`.
+### Arquivos modificados
 
-**3. Cabeçalho clicável na coluna "Tokens" (linha ~230)**
-
-Trocar o `<TableHead>Tokens</TableHead>` por um botao clicavel com icone de seta indicando a direção atual:
-- Clique alterna entre `none` -> `desc` -> `asc` -> `none`
-- Icone `ArrowUpDown` (neutro), `ArrowDown` (desc), `ArrowUp` (asc) do lucide-react
-
-### Detalhes Técnicos
-
-- Importar `ArrowUpDown`, `ArrowDown`, `ArrowUp` do lucide-react
-- A ordenação é aplicada no frontend sobre `filteredProfiles`, sem nova query ao banco
-- O ciclo de clique: sem ordenação -> maior primeiro -> menor primeiro -> sem ordenação
+| Arquivo | Mudança |
+|---------|---------|
+| `src/pages/app/EvolutionPage.tsx` | Layout coluna única, output condicional |
+| `src/components/evolution/EvolutionInput.tsx` | AutoTextarea, labels curtos, Switch para modo avulso, renomear botão |
+| `src/components/evolution/EvolutionOutput.tsx` | Remover empty state, renomear títulos |
 

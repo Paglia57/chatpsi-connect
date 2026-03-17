@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/components/auth/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -7,7 +8,8 @@ import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Save, Sparkles, Plus, Trash2 } from 'lucide-react';
+import { Loader2, Save, Sparkles, Plus, Trash2, Megaphone } from 'lucide-react';
+import FirstTimeGuide from '@/components/ui/FirstTimeGuide';
 import {
   AlertDialog,
   AlertDialogAction,

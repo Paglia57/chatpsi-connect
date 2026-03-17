@@ -47,7 +47,7 @@ const MarketingInterface = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const [activeTab, setActiveTab] = useState('novo');
-
+  const trial = useTrialLimit('marketing_texts', 2);
   useEffect(() => {
     fetchHistory();
   }, []);

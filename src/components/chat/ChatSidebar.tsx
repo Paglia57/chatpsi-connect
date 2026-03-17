@@ -91,13 +91,23 @@ const ChatSidebar = () => {
         </div>
       </button>
       <button
-        onClick={handleResetOnboarding}
+        onClick={handleResetGuides}
         className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-foreground hover:bg-muted transition-colors text-left"
       >
         <RotateCcw className="h-4 w-4 shrink-0 text-primary" />
         <div>
           <p className="font-medium">Revisitar orientações</p>
-          <p className="text-xs text-muted-foreground">Rever onboarding e guias</p>
+          <p className="text-xs text-muted-foreground">Rever guias das ferramentas</p>
+        </div>
+      </button>
+      <button
+        onClick={handleResetOnboarding}
+        className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-foreground hover:bg-muted transition-colors text-left"
+      >
+        <RotateCcw className="h-4 w-4 shrink-0 text-muted-foreground" />
+        <div>
+          <p className="font-medium">Refazer onboarding</p>
+          <p className="text-xs text-muted-foreground">Reiniciar wizard completo</p>
         </div>
       </button>
     </div>

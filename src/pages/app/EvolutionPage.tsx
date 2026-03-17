@@ -174,6 +174,7 @@ export default function EvolutionPage() {
         { label: "Evolução", href: "/app/evolucao" },
         { label: "Nova Evolução" },
       ]} />
+      <EvolutionInput onGenerate={handleGenerate} isLoading={isGenerating} />
       {(evolutionContent || isGenerating) && (
         <EvolutionOutput
           content={evolutionContent}

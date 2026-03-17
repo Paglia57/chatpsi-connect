@@ -1,30 +1,36 @@
 
 
-## Ajustes: WhatsApp no Perfil + Suporte expandido
+## Ordenar por Tokens no Admin
 
-### 1. Campo WhatsApp na página de Perfil
+Adicionar um botão/toggle na coluna "Tokens" da tabela de administração que permite ordenar os usuários pelo consumo de tokens (maior para menor e vice-versa).
 
-**Problema:** O `InternationalPhoneInput` está dentro de um grid `sm:grid-cols-2`, mas ele já renderiza seu próprio `Label` + 3 inputs lado a lado, ficando apertado na metade da tela. A descrição também está genérica.
+### Mudanças em `src/pages/AdminPage.tsx`
 
-**Solução em `ProfilePage.tsx`:**
-- Mover o campo WhatsApp para fora do grid de 2 colunas, dando-lhe largura total (`col-span-full` ou bloco separado abaixo do grid)
-- Atualizar a descrição para: "Usado para contato, suporte e futura integração com WhatsApp"
+**1. Novo estado de ordenação**
 
-### 2. Suporte com duas opções no ChatSidebar
+Adicionar estado para controlar a direção da ordenação:
+```typescript
+const [sortByTokens, setSortByTokens] = useState<'none' | 'asc' | 'desc'>('none');
+```
 
-**Atualmente:** O botão "Suporte" abre direto o WhatsApp (`wa.me/5511942457454`).
+**2. Aplicar ordenação no useEffect de filtro (linhas 80-89)**
 
-**Solução em `ChatSidebar.tsx`:**
-- Substituir o botão simples por um `Popover` ou `Collapsible` com duas opções:
-  1. **Falar com o suporte** — mantém o link WhatsApp atual (`wa.me/5511942457454`)
-  2. **Revisitar onboarding e orientações** — reseta `has_completed_onboarding` para false e `onboarding_step` para 0 no Supabase, reseta `seen_guides` para `{}`, e navega para `/app` (onde o onboarding será acionado)
+Após filtrar por nome, aplicar a ordenação por tokens:
+- `desc`: usuários com mais tokens primeiro
+- `asc`: usuários com menos tokens primeiro
+- `none`: ordem padrão (por data de criação)
 
-- No modo collapsed (ícones), o clique no ícone de Suporte abre o mesmo Popover
+Valores `null` de `TokenCount` serao tratados como `0`.
 
-**Arquivos a alterar:**
+**3. Cabeçalho clicável na coluna "Tokens" (linha ~230)**
 
-| Arquivo | Mudança |
-|---------|---------|
-| `src/pages/app/ProfilePage.tsx` | WhatsApp em largura total + nova descrição |
-| `src/components/chat/ChatSidebar.tsx` | Suporte com Popover de 2 opções (WhatsApp + revisitar onboarding) |
+Trocar o `<TableHead>Tokens</TableHead>` por um botao clicavel com icone de seta indicando a direção atual:
+- Clique alterna entre `none` -> `desc` -> `asc` -> `none`
+- Icone `ArrowUpDown` (neutro), `ArrowDown` (desc), `ArrowUp` (asc) do lucide-react
+
+### Detalhes Técnicos
+
+- Importar `ArrowUpDown`, `ArrowDown`, `ArrowUp` do lucide-react
+- A ordenação é aplicada no frontend sobre `filteredProfiles`, sem nova query ao banco
+- O ciclo de clique: sem ordenação -> maior primeiro -> menor primeiro -> sem ordenação
 

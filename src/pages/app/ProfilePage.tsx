@@ -189,10 +189,11 @@ export default function ProfilePage() {
               <Input value={crp} onChange={e => setCrp(e.target.value)} placeholder="Ex: 06/123456" />
               <p className="text-xs text-muted-foreground">Formato: UF/número (ex: 06/123456). Aparece nas evoluções geradas</p>
             </div>
-            <div className="space-y-2">
-              <InternationalPhoneInput value={whatsapp} onChange={setWhatsapp} label="WhatsApp" />
-              <p className="text-xs text-muted-foreground">Usado para contato e suporte</p>
-            </div>
+          </div>
+
+          <div className="space-y-2">
+            <InternationalPhoneInput value={whatsapp} onChange={setWhatsapp} label="WhatsApp" />
+            <p className="text-xs text-muted-foreground">Usado para contato, suporte e futura integração com WhatsApp</p>
           </div>
 
           <div className="space-y-2">

@@ -4,14 +4,16 @@ import { Sidebar, SidebarContent, SidebarHeader, SidebarTrigger, useSidebar } fr
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Badge } from '@/components/ui/badge';
 import {
   Home, ClipboardList, Plus, History, Users, MessageCircle, Target, BookOpen,
   PenTool, Settings, Gift, User, HelpCircle, LogOut, Menu, ChevronDown,
-  ChevronRight, Star
+  ChevronRight, Star, MessageSquare, RotateCcw
 } from 'lucide-react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { supabase } from '@/integrations/supabase/client';
 import { useResponsive } from '@/hooks/useResponsive';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
@@ -20,6 +22,7 @@ const ChatSidebar = () => {
   const { user, profile, isAdmin, signOut } = useAuth();
   const { isMobile } = useResponsive();
   const location = useLocation();
+  const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const currentPath = location.pathname;
@@ -48,9 +51,45 @@ const ChatSidebar = () => {
     return name.charAt(0).toUpperCase();
   };
 
-  const handleSupportClick = () => {
+  const handleSupportWhatsApp = () => {
     window.open('https://wa.me/5511942457454', '_blank', 'noopener,noreferrer');
   };
+
+  const handleResetOnboarding = async () => {
+    if (!user) return;
+    await supabase.from('profiles').update({
+      has_completed_onboarding: false,
+      onboarding_step: 0,
+      seen_guides: {},
+    }).eq('user_id', user.id);
+    navigate('/app');
+    window.location.reload();
+  };
+
+  const SupportPopoverContent = () => (
+    <div className="flex flex-col gap-1 w-56">
+      <button
+        onClick={handleSupportWhatsApp}
+        className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-foreground hover:bg-muted transition-colors text-left"
+      >
+        <MessageSquare className="h-4 w-4 shrink-0 text-green-600" />
+        <div>
+          <p className="font-medium">Falar com o suporte</p>
+          <p className="text-xs text-muted-foreground">Via WhatsApp</p>
+        </div>
+      </button>
+      <button
+        onClick={handleResetOnboarding}
+        className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-foreground hover:bg-muted transition-colors text-left"
+      >
+        <RotateCcw className="h-4 w-4 shrink-0 text-primary" />
+        <div>
+          <p className="font-medium">Revisitar orientações</p>
+          <p className="text-xs text-muted-foreground">Rever onboarding e guias</p>
+        </div>
+      </button>
+    </div>
+  );
 
   const isActive = (path: string) => currentPath === path;
   const isActivePrefix = (path: string) => currentPath.startsWith(path);
@@ -200,10 +239,17 @@ const ChatSidebar = () => {
           <User className="h-4 w-4 mr-3 shrink-0" />
           Meu Perfil
         </NavLink>
-        <button onClick={handleSupportClick} className={`${footerBtnClass} flex items-center`}>
-          <HelpCircle className="h-4 w-4 mr-3 shrink-0" />
-          Suporte
-        </button>
+        <Popover>
+          <PopoverTrigger asChild>
+            <button className={`${footerBtnClass} flex items-center`}>
+              <HelpCircle className="h-4 w-4 mr-3 shrink-0" />
+              Suporte
+            </button>
+          </PopoverTrigger>
+          <PopoverContent side="top" align="start" className="p-2 w-auto">
+            <SupportPopoverContent />
+          </PopoverContent>
+        </Popover>
         <button onClick={signOut} className={`${footerBtnClass} flex items-center`}>
           <LogOut className="h-4 w-4 mr-3 shrink-0" />
           Sair
@@ -314,10 +360,17 @@ const ChatSidebar = () => {
               className="p-2 rounded-lg text-muted-foreground hover:text-foreground transition-colors block">
               <User className="h-4 w-4" />
             </NavLink>
-            <button onClick={handleSupportClick} title="Suporte"
-              className="p-2 rounded-lg text-muted-foreground hover:text-foreground transition-colors block">
-              <HelpCircle className="h-4 w-4" />
-            </button>
+            <Popover>
+              <PopoverTrigger asChild>
+                <button title="Suporte"
+                  className="p-2 rounded-lg text-muted-foreground hover:text-foreground transition-colors block">
+                  <HelpCircle className="h-4 w-4" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent side="right" align="end" className="p-2 w-auto">
+                <SupportPopoverContent />
+              </PopoverContent>
+            </Popover>
             <button onClick={signOut} title="Sair"
               className="p-2 rounded-lg text-muted-foreground hover:text-foreground transition-colors block">
               <LogOut className="h-4 w-4" />

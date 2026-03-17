@@ -267,7 +267,7 @@ const MarketingInterface = () => {
                 ]}
                 ctaText="Entendi, criar um texto!"
                 onDismiss={async () => {
-                  if (user) {
+                  if (user && !tourActive) {
                     const current = profile?.seen_guides || {};
                     await supabase.from('profiles').update({ seen_guides: { ...current, marketing: true } }).eq('user_id', user.id);
                     await refreshProfile();
@@ -275,7 +275,7 @@ const MarketingInterface = () => {
                 }}
                 onExampleClick={(text) => {
                   setPrompt(text);
-                  if (user) {
+                  if (user && !tourActive) {
                     const current = profile?.seen_guides || {};
                     supabase.from('profiles').update({ seen_guides: { ...current, marketing: true } }).eq('user_id', user.id).then(() => refreshProfile());
                   }

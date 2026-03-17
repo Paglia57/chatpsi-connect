@@ -161,7 +161,7 @@ const BuscaPlanoInterface = () => {
                     ]}
                     ctaText="Entendi, buscar um plano!"
                     onDismiss={async () => {
-                      if (user) {
+                      if (user && !tourActive) {
                         const current = (profile?.seen_guides as any) || {};
                         await supabase.from('profiles').update({ seen_guides: { ...current, plano: true } }).eq('user_id', user.id);
                         await refreshProfile();
@@ -170,7 +170,7 @@ const BuscaPlanoInterface = () => {
                     onExampleClick={(text) => {
                       setNewMessage(text);
                       setShowSuggestions(false);
-                      if (user) {
+                      if (user && !tourActive) {
                         const current = (profile?.seen_guides as any) || {};
                         supabase.from('profiles').update({ seen_guides: { ...current, plano: true } }).eq('user_id', user.id).then(() => refreshProfile());
                         setTimeout(() => {

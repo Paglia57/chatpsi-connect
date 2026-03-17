@@ -198,7 +198,7 @@ export default function EvolutionPage() {
           ctaText="Entendi, criar uma evolução!"
           onDismiss={async () => {
             setGuideDismissed(true);
-            if (user) {
+            if (user && !tourActive) {
               const current = (profile?.seen_guides as any) || {};
               await supabase.from('profiles').update({ seen_guides: { ...current, evolution: true } }).eq('user_id', user.id);
               await refreshProfile();
@@ -206,7 +206,7 @@ export default function EvolutionPage() {
           }}
           onExampleClick={(text) => {
             setGuideDismissed(true);
-            if (user) {
+            if (user && !tourActive) {
               const current = (profile?.seen_guides as any) || {};
               supabase.from('profiles').update({ seen_guides: { ...current, evolution: true } }).eq('user_id', user.id).then(() => refreshProfile());
             }

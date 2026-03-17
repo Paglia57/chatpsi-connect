@@ -159,7 +159,7 @@ const BuscaArtigosInterface = () => {
                     ]}
                     ctaText="Entendi, buscar artigos!"
                     onDismiss={async () => {
-                      if (user) {
+                      if (user && !tourActive) {
                         const current = (profile?.seen_guides as any) || {};
                         await supabase.from('profiles').update({ seen_guides: { ...current, artigos: true } }).eq('user_id', user.id);
                         await refreshProfile();
@@ -167,7 +167,7 @@ const BuscaArtigosInterface = () => {
                     }}
                     onExampleClick={(text) => {
                       setNewMessage(text);
-                      if (user) {
+                      if (user && !tourActive) {
                         const current = (profile?.seen_guides as any) || {};
                         supabase.from('profiles').update({ seen_guides: { ...current, artigos: true } }).eq('user_id', user.id).then(() => refreshProfile());
                         setTimeout(() => {

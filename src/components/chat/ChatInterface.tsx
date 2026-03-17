@@ -511,7 +511,7 @@ const ChatInterface = () => {
                     ]}
                     ctaText="Entendi, começar a conversar!"
                     onDismiss={async () => {
-                      if (user) {
+                      if (user && !tourActive) {
                         const current = (profile?.seen_guides as any) || {};
                         await supabase.from('profiles').update({ seen_guides: { ...current, chat: true } }).eq('user_id', user.id);
                         await refreshProfile();
@@ -520,7 +520,7 @@ const ChatInterface = () => {
                     onExampleClick={(text) => {
                       setNewMessage(text);
                       setShowSuggestions(false);
-                      if (user) {
+                      if (user && !tourActive) {
                         const current = (profile?.seen_guides as any) || {};
                         supabase.from('profiles').update({ seen_guides: { ...current, chat: true } }).eq('user_id', user.id).then(() => refreshProfile());
                       }

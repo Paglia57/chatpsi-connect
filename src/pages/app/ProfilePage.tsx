@@ -54,13 +54,15 @@ export default function ProfilePage() {
     if (!user) return;
     supabase
       .from("profiles")
-      .select("full_name, crp, main_approach, specialties, avatar_url")
+      .select("full_name, nickname, crp, whatsapp, main_approach, specialties, avatar_url")
       .eq("user_id", user.id)
       .single()
       .then(({ data }) => {
         if (data) {
           setFullName(data.full_name || "");
+          setNickname(data.nickname || "");
           setCrp(data.crp || "");
+          setWhatsapp(data.whatsapp || "");
           setMainApproach(data.main_approach || "");
           setSpecialties(data.specialties || []);
           setAvatarUrl(data.avatar_url);

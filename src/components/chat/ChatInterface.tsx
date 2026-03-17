@@ -493,6 +493,30 @@ const ChatInterface = () => {
                 {!canSendMessage && <Button variant="cta" className="touch-target">
                     Ativar Assinatura
                   </Button>}
+                {canSendMessage && <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-w-lg mx-auto mt-6">
+                    {[
+                      "Como estruturar uma evolução de sessão?",
+                      "Sugira técnicas de TCC para ansiedade",
+                      "Me ajude a montar um plano terapêutico",
+                      "Quais registros devo manter do paciente?"
+                    ].map((prompt) => (
+                      <Button
+                        key={prompt}
+                        variant="outline"
+                        className="text-left text-sm h-auto py-3 px-4 justify-start gap-2 hover:bg-muted whitespace-normal"
+                        onClick={() => {
+                          setNewMessage(prompt);
+                          setTimeout(() => {
+                            const form = document.querySelector('form');
+                            if (form) form.requestSubmit();
+                          }, 50);
+                        }}
+                      >
+                        <MessageCircle className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+                        <span>{prompt}</span>
+                      </Button>
+                    ))}
+                  </div>}
               </div> : messages.map(message => <div key={message.id} className={`flex gap-2 sm:gap-3 animate-fade-in ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
                   {message.sender === 'ai' && <div className="flex-shrink-0">
                       <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary/10 flex items-center justify-center">

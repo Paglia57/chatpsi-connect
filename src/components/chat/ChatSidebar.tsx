@@ -56,6 +56,17 @@ const ChatSidebar = () => {
     window.open('https://wa.me/5511942457454', '_blank', 'noopener,noreferrer');
   };
 
+  const handleResetGuides = async () => {
+    if (!user) return;
+    const { error } = await supabase.from('profiles').update({
+      seen_guides: {},
+    }).eq('user_id', user.id);
+    if (!error) {
+      toast.success('Guias reativados! Visite cada ferramenta para revê-los.');
+      navigate('/app');
+    }
+  };
+
   const handleResetOnboarding = async () => {
     if (!user) return;
     await supabase.from('profiles').update({

@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { AdminGuard } from '@/components/admin/AdminGuard';
+import AppBreadcrumb from "@/components/ui/AppBreadcrumb";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';

@@ -62,7 +62,11 @@ export default function StepPatient({ selectedApproach, onNext, onSkip }: StepPa
           await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-patient-thread`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-            body: JSON.stringify({ patient_id: data.id }),
+            body: JSON.stringify({
+              patient_name: data.full_name,
+              patient_initials: data.initials,
+              approach: data.approach,
+            }),
           });
         }
       } catch { /* thread creation is non-blocking */ }

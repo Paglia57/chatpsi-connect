@@ -63,7 +63,7 @@ const RedeemBanner = () => {
     checkEligibility();
   }, [user, profile]);
 
-  if (eligible === null || eligible === false) return null;
+  if (eligible === null || (eligible === false && !isAdmin)) return null;
 
   if (redeemed) {
     return (

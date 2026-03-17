@@ -259,7 +259,7 @@ const ChatSidebar = () => {
       {/* Footer - always visible */}
       <div className="mt-auto border-t border-sidebar-border p-2 space-y-0.5">
         <NavLink to="/app/perfil" onClick={onNavigate} className={footerBtnClass}>
-          <User className="h-4 w-4 mr-3 shrink-0" />
+          <CircleUser className="h-4 w-4 mr-3 shrink-0" />
           Meu Perfil
         </NavLink>
         <Popover>

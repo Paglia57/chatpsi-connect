@@ -11,6 +11,7 @@ import { FileText } from "lucide-react";
 
 export default function EvolutionPage() {
   const { user, profile, refreshProfile } = useAuth();
+  const { tourActive } = (useOutletContext<{ tourActive?: boolean }>() || {});
   const [guideDismissed, setGuideDismissed] = useState(false);
   const [evolutionContent, setEvolutionContent] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);

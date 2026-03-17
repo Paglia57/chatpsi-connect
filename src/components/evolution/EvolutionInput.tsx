@@ -40,9 +40,10 @@ interface EvolutionInputProps {
     patient_id?: string;
   }) => void;
   isLoading: boolean;
+  trialReached?: boolean;
 }
 
-export default function EvolutionInput({ onGenerate, isLoading }: EvolutionInputProps) {
+export default function EvolutionInput({ onGenerate, isLoading, trialReached }: EvolutionInputProps) {
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
   const [selectedPatient, setSelectedPatient] = useState<SelectedPatient | null>(null);

@@ -229,8 +229,8 @@ const AdminPageContent = () => {
       {loading ? (
         <div className="text-center py-8">Carregando...</div>
       ) : (
-        <div className="border rounded-lg overflow-hidden">
-          <Table>
+        <div className="border rounded-lg overflow-x-auto">
+          <Table className="min-w-[900px]">
             <TableHeader>
               <TableRow>
                 <TableHead>Email</TableHead>

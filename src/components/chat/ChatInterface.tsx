@@ -9,7 +9,6 @@ import { AudioPlayer } from '@/components/ui/AudioPlayer';
 import { Send, Paperclip, Crown, AlertCircle, Bot, User as UserIcon, Lock, Upload, Mic, Image as ImageIcon, Video, File, Wifi, WifiOff, AlertTriangle, RefreshCw, MessageCircle, Sparkles } from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import FirstTimeGuide from '@/components/ui/FirstTimeGuide';
-import { supabase as supabaseClient } from '@/integrations/supabase/client';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useFileUpload, UploadedFile } from '@/hooks/useFileUpload';

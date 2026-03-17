@@ -41,7 +41,7 @@ const App = () => (
             {/* All authenticated routes under AppLayout with persistent sidebar */}
             <Route element={<AppLayout />}>
               <Route path="/app">
-                <Route index element={<Navigate to="/app/evolucao" replace />} />
+                <Route index element={<HomePage />} />
                 <Route path="evolucao" element={<EvolutionPage />} />
                 <Route path="pacientes" element={<PatientsPage />} />
                 <Route path="pacientes/:id" element={<PatientDetailPage />} />

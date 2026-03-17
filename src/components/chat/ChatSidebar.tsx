@@ -253,6 +253,11 @@ const ChatSidebar = () => {
             </AvatarFallback>
           </Avatar>
           <Separator className="w-6 my-1" />
+          <NavLink to="/app" end title="Início"
+            className={`p-2 rounded-lg transition-colors ${isActive('/app') ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground hover:bg-sidebar-accent/50'}`}>
+            <Home className="h-4 w-4" />
+          </NavLink>
+          <Separator className="w-6 my-1" />
           {[
             { icon: ClipboardList, path: '/app/evolucao', title: 'Evolução' },
             { icon: Users, path: '/app/pacientes', title: 'Pacientes' },

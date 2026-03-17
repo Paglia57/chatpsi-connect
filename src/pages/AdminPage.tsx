@@ -258,7 +258,7 @@ const AdminPageContent = () => {
             <TableBody>
               {filteredProfiles.map((profile) => (
                 <TableRow key={profile.user_id}>
-                  <TableCell className="font-medium">{profile.email}</TableCell>
+                  <TableCell className="font-medium whitespace-nowrap">{profile.email}</TableCell>
                   <TableCell>{profile.full_name || '-'}</TableCell>
                   <TableCell>{profile.nickname || '-'}</TableCell>
                   <TableCell>

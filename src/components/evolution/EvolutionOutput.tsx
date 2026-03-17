@@ -66,28 +66,14 @@ export default function EvolutionOutput({ content, isLoading, onRegenerate, onSa
     printWindow.print();
   };
 
-  // Empty state
-  if (!content && !isLoading) {
-    return (
-      <Card className="border-border bg-card text-card-foreground shadow-sm h-full flex flex-col">
-        <CardHeader>
-          <CardTitle className="font-display text-xl text-foreground">Evolução Clínica</CardTitle>
-        </CardHeader>
-        <CardContent className="flex-1 flex flex-col items-center justify-center text-center py-12">
-          <FileCheck className="h-16 w-16 text-muted-foreground mb-4" />
-          <p className="text-lg font-medium text-foreground">Sua evolução clínica aparecerá aqui</p>
-          <p className="text-sm text-muted-foreground mt-1">Preencha os dados da sessão e clique em gerar</p>
-        </CardContent>
-      </Card>
-    );
-  }
+  // Empty state — not rendered anymore (parent controls visibility)
 
   // Loading state
   if (isLoading && !content) {
     return (
       <Card className="border-border bg-card text-card-foreground shadow-sm">
         <CardHeader>
-          <CardTitle className="font-display text-xl text-foreground">Evolução Clínica</CardTitle>
+          <CardTitle className="font-display text-xl text-foreground">Evolução</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground">Analisando sessão e gerando evolução...</p>
@@ -113,7 +99,7 @@ export default function EvolutionOutput({ content, isLoading, onRegenerate, onSa
   return (
     <Card className="border-border bg-card text-card-foreground shadow-sm">
       <CardHeader>
-        <CardTitle className="font-display text-xl text-foreground">Evolução Clínica</CardTitle>
+        <CardTitle className="font-display text-xl text-foreground">Evolução</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         {isEditing ? (

@@ -3,10 +3,11 @@ import { useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { AutoTextarea } from "@/components/ui/auto-textarea";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { Sparkles, Mic, Upload, X, Loader2 } from "lucide-react";
 import PatientSelector, { type SelectedPatient } from "@/components/patients/PatientSelector";
 import { supabase } from "@/integrations/supabase/client";
@@ -60,7 +61,6 @@ export default function EvolutionInput({ onGenerate, isLoading }: EvolutionInput
 
   const ACCEPTED_AUDIO = ".mp3,.m4a,.wav,.ogg,.webm";
 
-  // Load patient from URL param
   useEffect(() => {
     const patientId = searchParams.get("patient");
     if (patientId && user) {
@@ -79,7 +79,6 @@ export default function EvolutionInput({ onGenerate, isLoading }: EvolutionInput
     }
   }, [searchParams, user]);
 
-  // Auto-fill from patient
   useEffect(() => {
     if (selectedPatient) {
       if (selectedPatient.approach) setApproach(selectedPatient.approach);
@@ -134,40 +133,40 @@ export default function EvolutionInput({ onGenerate, isLoading }: EvolutionInput
         <CardTitle className="font-display text-xl text-foreground">Nova Evolução</CardTitle>
       </CardHeader>
       <CardContent className="space-y-5">
-        {/* Patient selector */}
-        {!avulsoMode ? (
-          <div className="space-y-2">
+        {/* Patient selector with Switch toggle */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
             <Label className="text-sm font-medium text-foreground">Paciente *</Label>
+            <div className="flex items-center gap-2">
+              <Label htmlFor="avulso-switch" className="text-xs text-muted-foreground cursor-pointer">
+                Sem paciente cadastrado
+              </Label>
+              <Switch
+                id="avulso-switch"
+                checked={avulsoMode}
+                onCheckedChange={(checked) => {
+                  setAvulsoMode(checked);
+                  if (checked) handleClearPatient();
+                }}
+              />
+            </div>
+          </div>
+          {avulsoMode ? (
+            <div className="space-y-1.5">
+              <Input
+                value={patientInitials}
+                onChange={e => setPatientInitials(e.target.value)}
+                placeholder="Nome ou iniciais do paciente (ex: J.S.)"
+              />
+              <p className="text-xs text-muted-foreground">Evoluções sem paciente cadastrado não acumulam contexto na IA</p>
+            </div>
+          ) : (
             <PatientSelector value={selectedPatient} onChange={(p) => {
               setSelectedPatient(p);
               if (!p) handleClearPatient();
             }} />
-            <button
-              type="button"
-              onClick={() => { setAvulsoMode(true); handleClearPatient(); }}
-              className="text-xs text-muted-foreground hover:text-foreground underline transition-colors"
-            >
-              Gerar evolução sem paciente cadastrado
-            </button>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            <Label className="text-sm font-medium text-foreground">Nome ou iniciais do paciente *</Label>
-            <Input
-              value={patientInitials}
-              onChange={e => setPatientInitials(e.target.value)}
-              placeholder="Ex: J.S."
-            />
-            <p className="text-xs text-muted-foreground">Evoluções sem paciente cadastrado não acumulam contexto na IA</p>
-            <button
-              type="button"
-              onClick={() => setAvulsoMode(false)}
-              className="text-xs text-primary hover:underline transition-colors"
-            >
-              ← Selecionar paciente cadastrado
-            </button>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* Approach */}
         <div className="space-y-2">
@@ -180,10 +179,10 @@ export default function EvolutionInput({ onGenerate, isLoading }: EvolutionInput
           </Select>
         </div>
 
-        {/* Session info */}
+        {/* Session info - shorter labels */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="space-y-2">
-            <Label className="text-sm font-medium text-foreground">Nº da sessão</Label>
+          <div className="space-y-2 min-w-0">
+            <Label className="text-sm font-medium text-foreground">Nº sessão</Label>
             <Input
               type="number"
               value={sessionNumber}
@@ -192,8 +191,8 @@ export default function EvolutionInput({ onGenerate, isLoading }: EvolutionInput
               min={1}
             />
           </div>
-          <div className="space-y-2">
-            <Label className="text-sm font-medium text-foreground">Duração da sessão</Label>
+          <div className="space-y-2 min-w-0">
+            <Label className="text-sm font-medium text-foreground">Duração</Label>
             <Select value={sessionDuration} onValueChange={setSessionDuration}>
               <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
               <SelectContent>
@@ -201,8 +200,8 @@ export default function EvolutionInput({ onGenerate, isLoading }: EvolutionInput
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-2">
-            <Label className="text-sm font-medium text-foreground">Tipo de atendimento</Label>
+          <div className="space-y-2 min-w-0">
+            <Label className="text-sm font-medium text-foreground">Tipo</Label>
             <Select value={sessionType} onValueChange={setSessionType}>
               <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
               <SelectContent>
@@ -221,11 +220,12 @@ export default function EvolutionInput({ onGenerate, isLoading }: EvolutionInput
 
           <TabsContent value="text" className="mt-4">
             <div className="relative">
-              <Textarea
+              <AutoTextarea
                 value={textContent}
                 onChange={e => setTextContent(e.target.value)}
                 placeholder="Descreva o que aconteceu na sessão: queixas do paciente, temas abordados, intervenções realizadas, observações clínicas, humor, comportamento observado..."
-                className="min-h-[180px] resize-y"
+                minRows={8}
+                maxRows={20}
               />
               <span className="absolute bottom-2 right-3 text-xs text-muted-foreground">
                 {textContent.length} caracteres
@@ -297,7 +297,7 @@ export default function EvolutionInput({ onGenerate, isLoading }: EvolutionInput
           ) : (
             <>
               <Sparkles className="h-4 w-4" />
-              Gerar Evolução Clínica
+              Gerar Evolução
             </>
           )}
         </Button>

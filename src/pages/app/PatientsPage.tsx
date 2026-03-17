@@ -65,7 +65,7 @@ export default function PatientsPage() {
     });
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
+    <div className="max-w-5xl mx-auto space-y-6" data-tour="page-patients">
       <AppBreadcrumb items={[
         { label: "Clínica", href: "/app/pacientes" },
         { label: "Pacientes" },

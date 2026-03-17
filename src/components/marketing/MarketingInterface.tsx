@@ -219,7 +219,7 @@ const MarketingInterface = () => {
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full" data-tour="page-marketing">
       <div className="p-4 md:p-6 border-b">
         <div className="flex items-center justify-between">
           <div>

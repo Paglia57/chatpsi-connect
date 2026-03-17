@@ -164,10 +164,6 @@ const AdminReferralsContent = () => {
 
   return (
     <div className="container mx-auto py-8 px-4">
-      <Button variant="ghost" onClick={() => navigate('/admin')} className="mb-4">
-        <ArrowLeft className="w-4 h-4 mr-2" />
-        Voltar para Administração
-      </Button>
 
       <h1 className="text-3xl font-bold mb-2">Programa de Indicações</h1>
       <p className="text-muted-foreground mb-6">Gerencie os resgates de códigos de indicação</p>

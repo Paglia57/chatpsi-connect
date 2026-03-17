@@ -4,7 +4,7 @@ import { AutoTextarea } from '@/components/ui/auto-textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Send, Bot, User as UserIcon, RefreshCw, Sparkles, Lightbulb, Target } from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthProvider';
-import FirstTimeGuide from '@/components/ui/FirstTimeGuide';
+
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { formatMessageContent } from '@/lib/utils';

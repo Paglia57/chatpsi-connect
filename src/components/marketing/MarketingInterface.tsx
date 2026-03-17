@@ -2,14 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
+import { useTrialLimit } from '@/hooks/useTrialLimit';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Save, Sparkles, Plus, Trash2, Megaphone } from 'lucide-react';
+import { Loader2, Save, Sparkles, Plus, Trash2, Megaphone, Lock } from 'lucide-react';
 import FirstTimeGuide from '@/components/ui/FirstTimeGuide';
+import TrialLimitBanner from '@/components/ui/TrialLimitBanner';
 import { useOutletContext } from 'react-router-dom';
 import {
   AlertDialog,
@@ -45,7 +47,7 @@ const MarketingInterface = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const [activeTab, setActiveTab] = useState('novo');
-
+  const trial = useTrialLimit('marketing_texts', 2);
   useEffect(() => {
     fetchHistory();
   }, []);
@@ -93,6 +95,7 @@ const MarketingInterface = () => {
       if (data?.success) {
         setGeneratedText(data.generated_text);
         toast({ title: 'Sucesso', description: 'Texto gerado com IA!' });
+        trial.refetch();
       } else {
         throw new Error(data?.error || 'Erro ao gerar texto');
       }
@@ -249,6 +252,15 @@ const MarketingInterface = () => {
 
         <TabsContent value="novo" className="flex-1 overflow-auto mt-0">
           <div className="p-4 md:p-6 max-w-4xl mx-auto w-full space-y-4 md:space-y-6">
+            {!trial.isSubscribed && (
+              <TrialLimitBanner
+                usageCount={trial.usageCount}
+                limit={trial.limit}
+                hasReachedLimit={trial.hasReachedLimit}
+                featureLabel="gerações"
+                isLoading={trial.isLoading}
+              />
+            )}
             {activeTab === 'novo' && prompt === '' && (!profile?.seen_guides?.marketing || tourActive) && (
               <FirstTimeGuide
                 guideKey="marketing"
@@ -307,24 +319,33 @@ const MarketingInterface = () => {
             </div>
 
             <div className="flex flex-col md:flex-row gap-3">
-              <Button
-                onClick={handleGenerate}
-                disabled={isGenerating || !prompt.trim()}
-                variant="cta"
-                className="flex-1"
-              >
-                {isGenerating ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Gerando...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="mr-2 h-4 w-4" />
-                    Gerar com IA
-                  </>
-                )}
-              </Button>
+              {trial.hasReachedLimit ? (
+                <Button variant="cta" className="flex-1" asChild>
+                  <a href="https://wa.me/5511942457454?text=Olá!%20Quero%20assinar%20o%20ChatPsi" target="_blank" rel="noopener noreferrer">
+                    <Lock className="mr-2 h-4 w-4" />
+                    Assinar para continuar gerando
+                  </a>
+                </Button>
+              ) : (
+                <Button
+                  onClick={handleGenerate}
+                  disabled={isGenerating || !prompt.trim()}
+                  variant="cta"
+                  className="flex-1"
+                >
+                  {isGenerating ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Gerando...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="mr-2 h-4 w-4" />
+                      Gerar com IA
+                    </>
+                  )}
+                </Button>
+              )}
 
               <Button
                 onClick={handleSave}

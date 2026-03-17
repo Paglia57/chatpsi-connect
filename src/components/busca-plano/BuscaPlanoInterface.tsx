@@ -2,9 +2,11 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { AutoTextarea } from '@/components/ui/auto-textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Send, Bot, User as UserIcon, RefreshCw, Sparkles, Lightbulb, Target } from 'lucide-react';
+import { Send, Bot, User as UserIcon, RefreshCw, Sparkles, Lightbulb, Target, Lock } from 'lucide-react';
 import FirstTimeGuide from '@/components/ui/FirstTimeGuide';
+import TrialLimitBanner from '@/components/ui/TrialLimitBanner';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { useTrialLimit } from '@/hooks/useTrialLimit';
 
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -37,6 +39,7 @@ const BuscaPlanoInterface = () => {
   const [showSuggestions, setShowSuggestions] = useState(true);
   const [fetchingHistory, setFetchingHistory] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const trial = useTrialLimit('plano_chat_history', 3);
   const fetchHistory = useCallback(async () => {
     if (!user) return;
     setFetchingHistory(true);
@@ -74,10 +77,10 @@ const BuscaPlanoInterface = () => {
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim() || isLoading || !user) return;
-    if (!profile?.subscription_active) {
+    if (trial.hasReachedLimit) {
       toast({
-        title: "Assinatura necessária",
-        description: "Você precisa de uma assinatura ativa para usar esta funcionalidade.",
+        title: "Limite atingido",
+        description: "Você atingiu o limite de buscas gratuitas este mês. Assine para continuar.",
         variant: "destructive"
       });
       return;
@@ -100,6 +103,7 @@ const BuscaPlanoInterface = () => {
         throw new Error(data.error || 'Erro ao processar mensagem');
       }
       await fetchHistory();
+      trial.refetch();
       toast({
         title: "Resposta recebida",
         description: "Plano de ação processado com sucesso!",
@@ -141,6 +145,15 @@ const BuscaPlanoInterface = () => {
       <div className="flex-1 relative min-h-0">
         <ScrollArea className="h-full">
           <div className="p-3 sm:p-4 space-y-3 sm:space-y-4 max-w-4xl mx-auto pb-4">
+            {!trial.isSubscribed && (
+              <TrialLimitBanner
+                usageCount={trial.usageCount}
+                limit={trial.limit}
+                hasReachedLimit={trial.hasReachedLimit}
+                featureLabel="buscas"
+                isLoading={trial.isLoading}
+              />
+            )}
             
             {messages.length === 0 ? (
                 (!(profile?.seen_guides as any)?.plano || tourActive) ? (
@@ -247,7 +260,7 @@ const BuscaPlanoInterface = () => {
       </div>
 
       {/* Suggestions above composer */}
-      {showSuggestions && profile?.subscription_active && (
+      {showSuggestions && !trial.hasReachedLimit && (
         <div className="px-4 sm:px-6 md:px-8 pb-2 flex-shrink-0 animate-fade-in">
           <div className="flex gap-2 overflow-x-auto max-w-4xl mx-auto scrollbar-none">
             {[
@@ -281,14 +294,14 @@ const BuscaPlanoInterface = () => {
         <div className="w-full px-3 sm:px-4 md:px-6">
           <form onSubmit={handleSendMessage} className="flex gap-2 sm:gap-3 items-end mx-[30px]">
             <div className="flex-1 min-w-0 w-full">
-              <AutoTextarea value={newMessage} onChange={e => setNewMessage(e.target.value)} placeholder="Digite sua pergunta sobre plano de ação..." disabled={isLoading || !profile?.subscription_active} minRows={isMobile ? 1 : 2} maxRows={isMobile ? 4 : 6} className="w-full max-w-full text-base resize-none" onKeyDown={e => {
+              <AutoTextarea value={newMessage} onChange={e => setNewMessage(e.target.value)} placeholder="Digite sua pergunta sobre plano de ação..." disabled={isLoading || trial.hasReachedLimit} minRows={isMobile ? 1 : 2} maxRows={isMobile ? 4 : 6} className="w-full max-w-full text-base resize-none" onKeyDown={e => {
               if (e.key === 'Enter' && !e.shiftKey && !isMobile) {
                 e.preventDefault();
                 handleSendMessage(e);
               }
             }} />
             </div>
-            <Button type="submit" disabled={!newMessage.trim() || isLoading || !profile?.subscription_active} size="icon" variant="cta" className="touch-target flex-shrink-0 h-11 w-11" aria-label="Enviar mensagem">
+            <Button type="submit" disabled={!newMessage.trim() || isLoading || trial.hasReachedLimit} size="icon" variant="cta" className="touch-target flex-shrink-0 h-11 w-11" aria-label="Enviar mensagem">
               {isLoading ? <RefreshCw className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
             </Button>
           </form>

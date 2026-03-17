@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Sparkles, Mic, Upload, X, Loader2 } from "lucide-react";
+import { Sparkles, Mic, Upload, X, Loader2, Lock } from "lucide-react";
 import PatientSelector, { type SelectedPatient } from "@/components/patients/PatientSelector";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -40,9 +40,10 @@ interface EvolutionInputProps {
     patient_id?: string;
   }) => void;
   isLoading: boolean;
+  trialReached?: boolean;
 }
 
-export default function EvolutionInput({ onGenerate, isLoading }: EvolutionInputProps) {
+export default function EvolutionInput({ onGenerate, isLoading, trialReached }: EvolutionInputProps) {
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
   const [selectedPatient, setSelectedPatient] = useState<SelectedPatient | null>(null);
@@ -283,24 +284,37 @@ export default function EvolutionInput({ onGenerate, isLoading }: EvolutionInput
         </Tabs>
 
         {/* Submit */}
-        <Button
-          variant="cta"
-          className="w-full"
-          onClick={handleSubmit}
-          disabled={!canSubmit || isLoading}
-        >
-          {isLoading ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Gerando evolução...
-            </>
-          ) : (
-            <>
-              <Sparkles className="h-4 w-4" />
-              Gerar Evolução
-            </>
-          )}
-        </Button>
+        {trialReached ? (
+          <Button
+            variant="cta"
+            className="w-full"
+            asChild
+          >
+            <a href="https://wa.me/5511942457454?text=Olá!%20Quero%20assinar%20o%20ChatPsi" target="_blank" rel="noopener noreferrer">
+              <Lock className="h-4 w-4" />
+              Assinar para continuar gerando
+            </a>
+          </Button>
+        ) : (
+          <Button
+            variant="cta"
+            className="w-full"
+            onClick={handleSubmit}
+            disabled={!canSubmit || isLoading}
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Gerando evolução...
+              </>
+            ) : (
+              <>
+                <Sparkles className="h-4 w-4" />
+                Gerar Evolução
+              </>
+            )}
+          </Button>
+        )}
       </CardContent>
     </Card>
   );

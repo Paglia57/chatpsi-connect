@@ -3,8 +3,10 @@ import EvolutionInput from "@/components/evolution/EvolutionInput";
 import EvolutionOutput from "@/components/evolution/EvolutionOutput";
 import AppBreadcrumb from "@/components/ui/AppBreadcrumb";
 import FirstTimeGuide from "@/components/ui/FirstTimeGuide";
+import TrialLimitBanner from "@/components/ui/TrialLimitBanner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { useTrialLimit } from "@/hooks/useTrialLimit";
 import { useOutletContext } from "react-router-dom";
 import { toast } from "sonner";
 import { FileText } from "lucide-react";
@@ -17,6 +19,7 @@ export default function EvolutionPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const lastParamsRef = useRef<any>(null);
+  const trial = useTrialLimit("evolutions", 2);
 
   const handleGenerate = async (data: {
     approach: string;
@@ -165,6 +168,7 @@ export default function EvolutionPage() {
       });
       if (error) throw error;
       toast.success("Evolução salva com sucesso!");
+      trial.refetch();
     } catch (err: any) {
       toast.error("Erro ao salvar: " + (err.message || "Erro desconhecido"));
     } finally {
@@ -179,6 +183,15 @@ export default function EvolutionPage() {
         { label: "Evolução", href: "/app/evolucao" },
         { label: "Nova Evolução" },
       ]} />
+      {!trial.isSubscribed && (
+        <TrialLimitBanner
+          usageCount={trial.usageCount}
+          limit={trial.limit}
+          hasReachedLimit={trial.hasReachedLimit}
+          featureLabel="evoluções"
+          isLoading={trial.isLoading}
+        />
+      )}
       {!guideDismissed && (!(profile?.seen_guides as any)?.evolution || tourActive) ? (
         <FirstTimeGuide
           guideKey="evolution"
@@ -213,7 +226,7 @@ export default function EvolutionPage() {
           }}
         />
       ) : (
-        <EvolutionInput onGenerate={handleGenerate} isLoading={isGenerating} />
+        <EvolutionInput onGenerate={handleGenerate} isLoading={isGenerating} trialReached={trial.hasReachedLimit} />
       )}
       {(evolutionContent || isGenerating) && (
         <EvolutionOutput

@@ -6,41 +6,83 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+// Link preview card detection
+interface LinkCardInfo {
+  icon: string; // 'docs' | 'sheets' | 'slides' | 'drive' | 'external'
+  label: string;
+  truncatedUrl: string;
+}
+
+function detectLinkCard(url: string): LinkCardInfo | null {
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.toLowerCase();
+    
+    if (host.includes('docs.google.com')) {
+      return { icon: 'docs', label: 'Documento Google Docs', truncatedUrl: parsed.hostname + '/...' };
+    }
+    if (host.includes('sheets.google.com')) {
+      return { icon: 'sheets', label: 'Planilha Google Sheets', truncatedUrl: parsed.hostname + '/...' };
+    }
+    if (host.includes('slides.google.com')) {
+      return { icon: 'slides', label: 'Apresentação Google Slides', truncatedUrl: parsed.hostname + '/...' };
+    }
+    if (host.includes('drive.google.com')) {
+      return { icon: 'drive', label: 'Arquivo Google Drive', truncatedUrl: parsed.hostname + '/...' };
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function createLinkCard(url: string, cardInfo: LinkCardInfo, key: number | string): React.ReactNode {
+  const iconMap: Record<string, string> = {
+    docs: '📄',
+    sheets: '📊',
+    slides: '📽️',
+    drive: '📁',
+    external: '🔗',
+  };
+
+  return React.createElement('a', {
+    key,
+    href: url,
+    target: '_blank',
+    rel: 'noopener noreferrer',
+    className: 'flex items-center gap-3 p-3 my-1 rounded-lg border border-border bg-muted/50 hover:bg-muted transition-colors cursor-pointer no-underline block max-w-sm',
+  },
+    React.createElement('span', { className: 'text-xl flex-shrink-0' }, iconMap[cardInfo.icon] || iconMap.external),
+    React.createElement('span', { className: 'min-w-0 flex flex-col' },
+      React.createElement('span', { className: 'text-sm font-medium text-foreground truncate' }, cardInfo.label),
+      React.createElement('span', { className: 'text-xs text-muted-foreground truncate' }, cardInfo.truncatedUrl)
+    )
+  );
+}
+
 export function formatMessageContent(content: string): React.ReactNode {
   if (!content) return content;
 
   // Step 0: Normalizar quebras de linha
-  //  - converte "\n" literal em quebra real
-  //  - unifica CRLF/CR para LF
   let normalizedContent = content
-    .replace(/\\n/g, '\n')      // literal \n → quebra real
-    .replace(/\r\n?/g, '\n');   // CRLF e CR → LF
+    .replace(/\\n/g, '\n')
+    .replace(/\r\n?/g, '\n');
 
   // Step 1: Normalize line breaks and spacing
   let cleanedContent = normalizedContent
-    // Ensure line breaks before numbered items (1., 2., 3., etc.)
     .replace(/(\d+\.\s*Plano de ação:)/g, '\n\n$1')
-    // Ensure line break before "Link:"
     .replace(/(Link:)/g, '\n$1')
-    // Convert "Link: URL" to clickable format [Acessar Link](URL) - capture full URLs with query params
     .replace(/Link:\s*(https?:\/\/[^\s)<]+)/g, '[Acessar Link]($1)')
-    // Clean up any duplicate "Acessar Link" text after the Markdown link
     .replace(/(\[Acessar Link\]\([^)]+\))\s*Acessar Link/g, '$1')
-    // Clean up duplicate URLs after Markdown links
     .replace(/(\[([^\]]+)\]\(([^)]+)\))\s*\3\s*\|?\s*/g, '$1 ')
-    // Clean up standalone pipes
     .replace(/\s*\|\s*$/gm, '')
-    // Colapsar apenas espaços/tabs horizontais (preserva \n)
     .replace(/[ \t]{2,}/g, ' ')
-    // Clean up extra line breaks (max 2 consecutive)
     .replace(/\n{3,}/g, '\n\n');
 
   // Split content into parts while preserving the delimiters
-  // Captures: **bold**, [text](url), direct URLs (with full query params support), and line breaks
   const parts = cleanedContent.split(/(\*\*[^*]+\*\*|\[([^\]]+)\]\(([^)]+)\)|https?:\/\/[^\s)<]+|\n+)/g);
   
   return parts.map((part, index) => {
-    // Skip undefined/empty parts from regex groups
     if (!part) return null;
     
     // Handle captured line breaks as <br> elements
@@ -66,6 +108,10 @@ export function formatMessageContent(content: string): React.ReactNode {
     if (markdownLinkMatch) {
       const linkText = markdownLinkMatch[1];
       const linkUrl = markdownLinkMatch[2];
+      const cardInfo = detectLinkCard(linkUrl);
+      if (cardInfo) {
+        return createLinkCard(linkUrl, cardInfo, index);
+      }
       return React.createElement('a', {
         key: index,
         href: linkUrl,
@@ -77,6 +123,10 @@ export function formatMessageContent(content: string): React.ReactNode {
     
     // Check if it's a direct URL
     if (part.match(/^https?:\/\/[^\s)<]+$/)) {
+      const cardInfo = detectLinkCard(part);
+      if (cardInfo) {
+        return createLinkCard(part, cardInfo, index);
+      }
       return React.createElement('a', {
         key: index,
         href: part,

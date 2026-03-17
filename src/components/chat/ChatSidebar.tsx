@@ -21,6 +21,7 @@ const ChatSidebar = () => {
   const { user, profile, isAdmin, signOut } = useAuth();
   const { isMobile } = useResponsive();
   const location = useLocation();
+  const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const currentPath = location.pathname;

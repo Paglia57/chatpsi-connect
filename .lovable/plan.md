@@ -1,36 +1,22 @@
 
 
-## Ordenar por Tokens no Admin
+## Trial Limitado para Usuários Não-Assinantes — IMPLEMENTADO ✅
 
-Adicionar um botão/toggle na coluna "Tokens" da tabela de administração que permite ordenar os usuários pelo consumo de tokens (maior para menor e vice-versa).
+### Limites por feature
+| Feature | Limite mensal | Tabela |
+|---------|-------------|--------|
+| Evolução Clínica | 2 | `evolutions` |
+| IA de Marketing | 2 | `marketing_texts` |
+| Planos de Ação | 3 | `plano_chat_history` |
+| Artigos Científicos | 3 | `artigos_chat_history` |
 
-### Mudanças em `src/pages/AdminPage.tsx`
+### Arquivos criados
+- `src/hooks/useTrialLimit.ts`
+- `src/components/ui/TrialLimitBanner.tsx`
 
-**1. Novo estado de ordenação**
-
-Adicionar estado para controlar a direção da ordenação:
-```typescript
-const [sortByTokens, setSortByTokens] = useState<'none' | 'asc' | 'desc'>('none');
-```
-
-**2. Aplicar ordenação no useEffect de filtro (linhas 80-89)**
-
-Após filtrar por nome, aplicar a ordenação por tokens:
-- `desc`: usuários com mais tokens primeiro
-- `asc`: usuários com menos tokens primeiro
-- `none`: ordem padrão (por data de criação)
-
-Valores `null` de `TokenCount` serao tratados como `0`.
-
-**3. Cabeçalho clicável na coluna "Tokens" (linha ~230)**
-
-Trocar o `<TableHead>Tokens</TableHead>` por um botao clicavel com icone de seta indicando a direção atual:
-- Clique alterna entre `none` -> `desc` -> `asc` -> `none`
-- Icone `ArrowUpDown` (neutro), `ArrowDown` (desc), `ArrowUp` (asc) do lucide-react
-
-### Detalhes Técnicos
-
-- Importar `ArrowUpDown`, `ArrowDown`, `ArrowUp` do lucide-react
-- A ordenação é aplicada no frontend sobre `filteredProfiles`, sem nova query ao banco
-- O ciclo de clique: sem ordenação -> maior primeiro -> menor primeiro -> sem ordenação
-
+### Arquivos modificados
+- `src/pages/app/EvolutionPage.tsx`
+- `src/components/evolution/EvolutionInput.tsx`
+- `src/components/marketing/MarketingInterface.tsx`
+- `src/components/busca-plano/BuscaPlanoInterface.tsx`
+- `src/components/busca-artigos/BuscaArtigosInterface.tsx`

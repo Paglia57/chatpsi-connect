@@ -8,7 +8,7 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
-const ASSISTANT_ID = 'asst_ghTrVWfzgh5vtW28qDs5MnRB';
+const ASSISTANT_ID = 'asst_4sei53DAsGVYUhyZzp3BsLJZ';
 const OPENAI_BASE = 'https://api.openai.com/v1';
 
 function sleep(ms: number) {

@@ -301,6 +301,7 @@ const ChatSidebar = () => {
         /* Collapsed icon-only view */
         <div className="flex flex-col h-full items-center py-4 gap-2">
           <Avatar className="h-8 w-8 mb-2">
+            <AvatarImage src={profile?.avatar_url || undefined} />
             <AvatarFallback className="bg-primary text-primary-foreground text-xs font-semibold">
               {getAvatarText()}
             </AvatarFallback>

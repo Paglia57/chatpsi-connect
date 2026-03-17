@@ -43,7 +43,9 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [fullName, setFullName] = useState("");
+  const [nickname, setNickname] = useState("");
   const [crp, setCrp] = useState("");
+  const [whatsapp, setWhatsapp] = useState("");
   const [mainApproach, setMainApproach] = useState("");
   const [specialties, setSpecialties] = useState<string[]>([]);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);

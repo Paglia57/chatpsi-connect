@@ -47,6 +47,7 @@ const ChatInterface = () => {
   const [realtimeChannel, setRealtimeChannel] = useState<any>(null);
   const [showNewMessageIndicator, setShowNewMessageIndicator] = useState(false);
   const [isNearBottom, setIsNearBottom] = useState(true);
+  const [showSuggestions, setShowSuggestions] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);

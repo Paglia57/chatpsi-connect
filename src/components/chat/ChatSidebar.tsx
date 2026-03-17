@@ -264,7 +264,7 @@ const ChatSidebar = () => {
         </NavLink>
         <Popover>
           <PopoverTrigger asChild>
-            <button className={`${footerBtnClass} flex items-center`}>
+            <button className={`${footerBtnClass} flex items-center`} data-tour="nav-suporte">
               <HelpCircle className="h-4 w-4 mr-3 shrink-0" />
               Suporte
             </button>

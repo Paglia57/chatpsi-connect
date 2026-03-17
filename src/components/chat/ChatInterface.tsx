@@ -7,6 +7,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AudioPlayer } from '@/components/ui/AudioPlayer';
 import { Send, Paperclip, Crown, AlertCircle, Bot, User as UserIcon, Lock, Upload, Mic, Image as ImageIcon, Video, File, Wifi, WifiOff, AlertTriangle, RefreshCw, MessageCircle, Sparkles } from 'lucide-react';
+import FirstTimeGuide from '@/components/ui/FirstTimeGuide';
 import { useAuth } from '@/components/auth/AuthProvider';
 
 import { supabase } from '@/integrations/supabase/client';
@@ -490,6 +491,40 @@ const ChatInterface = () => {
           <div className="p-3 sm:p-4 space-y-3 sm:space-y-4 max-w-4xl mx-auto pb-4">
             
             {messages.length === 0 ? (
+                !(profile?.seen_guides as any)?.chat ? (
+                  <FirstTimeGuide
+                    guideKey="chat"
+                    icon={<MessageCircle className="h-8 w-8 text-primary" />}
+                    title="Chat Clínico com IA"
+                    description="Tire dúvidas clínicas, peça sugestões de intervenção e consulte protocolos em tempo real."
+                    tips={[
+                      "Envie texto, áudio, imagens ou documentos para a IA analisar",
+                      "Pergunte sobre técnicas, protocolos e critérios diagnósticos",
+                      "Peça sugestões de atividades e materiais psicoeducativos",
+                    ]}
+                    examples={[
+                      "Quais técnicas de TCC para ansiedade?",
+                      "Sugira atividades para um paciente com depressão",
+                      "Critérios diagnósticos do TDAH no DSM-5",
+                    ]}
+                    ctaText="Entendi, começar a conversar!"
+                    onDismiss={async () => {
+                      if (user) {
+                        const current = (profile?.seen_guides as any) || {};
+                        await supabase.from('profiles').update({ seen_guides: { ...current, chat: true } }).eq('user_id', user.id);
+                        await refreshProfile();
+                      }
+                    }}
+                    onExampleClick={(text) => {
+                      setNewMessage(text);
+                      setShowSuggestions(false);
+                      if (user) {
+                        const current = (profile?.seen_guides as any) || {};
+                        supabase.from('profiles').update({ seen_guides: { ...current, chat: true } }).eq('user_id', user.id).then(() => refreshProfile());
+                      }
+                    }}
+                  />
+                ) : (
                 <div className="text-center py-8 sm:py-12 px-4">
                   <Bot className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground mx-auto mb-3 sm:mb-4" />
                   <h3 className="text-base sm:text-lg font-medium mb-2">Bem-vindo ao ChatPsi!</h3>
@@ -506,6 +541,7 @@ const ChatInterface = () => {
                       ))}
                     </div>}
                 </div>
+                )
             ) : messages.map(message => <div key={message.id} className={`flex gap-2 sm:gap-3 animate-fade-in ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
                   {message.sender === 'ai' && <div className="flex-shrink-0">
                       <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary/10 flex items-center justify-center">

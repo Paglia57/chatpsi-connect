@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { AutoTextarea } from '@/components/ui/auto-textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Send, Bot, User as UserIcon, RefreshCw, BookOpen, Search } from 'lucide-react';
+import FirstTimeGuide from '@/components/ui/FirstTimeGuide';
 import { useAuth } from '@/components/auth/AuthProvider';
 
 import { supabase } from '@/integrations/supabase/client';
@@ -138,6 +139,43 @@ const BuscaArtigosInterface = () => {
           <div className="p-3 sm:p-4 space-y-3 sm:space-y-4 max-w-4xl mx-auto pb-4">
             
             {messages.length === 0 ? (
+                !(profile?.seen_guides as any)?.artigos ? (
+                  <FirstTimeGuide
+                    guideKey="artigos"
+                    icon={<BookOpen className="h-8 w-8 text-blue-600" />}
+                    title="Busca Artigos Científicos"
+                    description="Encontre evidências científicas para embasar suas intervenções e relatórios clínicos."
+                    tips={[
+                      "Pesquise por tema, técnica ou quadro clínico específico",
+                      "Use as referências em relatórios e evoluções clínicas",
+                      "Combine termos para resultados mais precisos",
+                    ]}
+                    examples={[
+                      "Artigos sobre eficácia da TCC para TOC",
+                      "Evidências sobre mindfulness na ansiedade",
+                      "Estudos recentes sobre EMDR",
+                    ]}
+                    ctaText="Entendi, buscar artigos!"
+                    onDismiss={async () => {
+                      if (user) {
+                        const current = (profile?.seen_guides as any) || {};
+                        await supabase.from('profiles').update({ seen_guides: { ...current, artigos: true } }).eq('user_id', user.id);
+                        await refreshProfile();
+                      }
+                    }}
+                    onExampleClick={(text) => {
+                      setNewMessage(text);
+                      if (user) {
+                        const current = (profile?.seen_guides as any) || {};
+                        supabase.from('profiles').update({ seen_guides: { ...current, artigos: true } }).eq('user_id', user.id).then(() => refreshProfile());
+                        setTimeout(() => {
+                          const form = document.querySelector('form');
+                          form?.requestSubmit();
+                        }, 50);
+                      }
+                    }}
+                  />
+                ) : (
                 <div className="text-center py-8 sm:py-12 px-4">
                   <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-blue-500/10 flex items-center justify-center mx-auto mb-4 sm:mb-5">
                     <BookOpen className="h-8 w-8 sm:h-10 sm:w-10 text-blue-600" />
@@ -160,6 +198,7 @@ const BuscaArtigosInterface = () => {
                     ))}
                   </div>
                 </div>
+                )
             ) : messages.map(msg => <React.Fragment key={msg.id}>
                   <div className="flex gap-2 sm:gap-3 justify-end">
                     <div className="bg-primary text-primary-foreground rounded-lg px-3 sm:px-4 py-2 sm:py-3 max-w-[80%] chat-message-content">

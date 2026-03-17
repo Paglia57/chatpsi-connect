@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { AutoTextarea } from '@/components/ui/auto-textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Send, Bot, User as UserIcon, RefreshCw, Sparkles, Lightbulb, Target } from 'lucide-react';
+import FirstTimeGuide from '@/components/ui/FirstTimeGuide';
 import { useAuth } from '@/components/auth/AuthProvider';
 
 import { supabase } from '@/integrations/supabase/client';
@@ -140,6 +141,44 @@ const BuscaPlanoInterface = () => {
           <div className="p-3 sm:p-4 space-y-3 sm:space-y-4 max-w-4xl mx-auto pb-4">
             
             {messages.length === 0 ? (
+                !(profile?.seen_guides as any)?.plano ? (
+                  <FirstTimeGuide
+                    guideKey="plano"
+                    icon={<Target className="h-8 w-8 text-amber-600" />}
+                    title="Busca Plano de Ação"
+                    description="Descreva o caso clínico e receba um plano de ação terapêutico personalizado com base em evidências."
+                    tips={[
+                      "Descreva o quadro clínico, idade e contexto do paciente",
+                      "Peça intervenções específicas por abordagem terapêutica",
+                      "Use os planos como base e adapte à sua prática clínica",
+                    ]}
+                    examples={[
+                      "Plano de ação para depressão em adolescentes",
+                      "Intervenções para ansiedade generalizada",
+                      "Estratégias para TDAH em adultos",
+                    ]}
+                    ctaText="Entendi, buscar um plano!"
+                    onDismiss={async () => {
+                      if (user) {
+                        const current = (profile?.seen_guides as any) || {};
+                        await supabase.from('profiles').update({ seen_guides: { ...current, plano: true } }).eq('user_id', user.id);
+                        await refreshProfile();
+                      }
+                    }}
+                    onExampleClick={(text) => {
+                      setNewMessage(text);
+                      setShowSuggestions(false);
+                      if (user) {
+                        const current = (profile?.seen_guides as any) || {};
+                        supabase.from('profiles').update({ seen_guides: { ...current, plano: true } }).eq('user_id', user.id).then(() => refreshProfile());
+                        setTimeout(() => {
+                          const form = document.querySelector('.composer-container form') as HTMLFormElement | null;
+                          form?.requestSubmit();
+                        }, 50);
+                      }
+                    }}
+                  />
+                ) : (
                 <div className="text-center py-8 sm:py-12 px-4">
                   <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-4 sm:mb-5">
                     <Sparkles className="h-8 w-8 sm:h-10 sm:w-10 text-amber-600" />
@@ -162,6 +201,7 @@ const BuscaPlanoInterface = () => {
                     ))}
                   </div>
                 </div>
+                )
             ) : messages.map(msg => <React.Fragment key={msg.id}>
                   <div className="flex gap-2 sm:gap-3 justify-end">
                     <div className="bg-primary text-primary-foreground rounded-lg px-3 sm:px-4 py-2 sm:py-3 max-w-[80%] chat-message-content">

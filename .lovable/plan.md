@@ -1,28 +1,36 @@
 
 
-## Add FirstTimeGuide orientations to all AI modules
+## Ordenar por Tokens no Admin
 
-Currently only the Marketing module has the rich `FirstTimeGuide` component (with icon, title, tips, example suggestions, and CTA). The other modules (Chat Clínico, Busca Plano, Busca Artigos, Evolução) have basic empty states without the guided orientation format. During the tour, users should see these orientations on each module page.
+Adicionar um botão/toggle na coluna "Tokens" da tabela de administração que permite ordenar os usuários pelo consumo de tokens (maior para menor e vice-versa).
 
-### What changes
+### Mudanças em `src/pages/AdminPage.tsx`
 
-**Add `FirstTimeGuide` to 4 modules**, following the same pattern as Marketing (using `seen_guides` from profile to track dismissal):
+**1. Novo estado de ordenação**
 
-1. **`ChatInterface.tsx`** — Add FirstTimeGuide above the empty state, shown when `!profile?.seen_guides?.chat` and no messages exist. Tips about sending text/audio, asking clinical questions, consulting protocols. Examples: "Quais técnicas de TCC para ansiedade?", "Sugira atividades para um paciente com depressão", "Critérios diagnósticos do TDAH no DSM-5".
+Adicionar estado para controlar a direção da ordenação:
+```typescript
+const [sortByTokens, setSortByTokens] = useState<'none' | 'asc' | 'desc'>('none');
+```
 
-2. **`BuscaPlanoInterface.tsx`** — Add FirstTimeGuide shown when `!profile?.seen_guides?.plano` and no messages. Tips about describing clinical cases, getting personalized plans. Examples: "Plano de ação para depressão em adolescentes", "Intervenções para ansiedade generalizada", "Estratégias para TDAH em adultos".
+**2. Aplicar ordenação no useEffect de filtro (linhas 80-89)**
 
-3. **`BuscaArtigosInterface.tsx`** — Add FirstTimeGuide shown when `!profile?.seen_guides?.artigos` and no messages. Tips about searching by topic/technique, using references in reports. Examples: "Artigos sobre eficácia da TCC para TOC", "Evidências sobre mindfulness na ansiedade", "Estudos recentes sobre EMDR".
+Após filtrar por nome, aplicar a ordenação por tokens:
+- `desc`: usuários com mais tokens primeiro
+- `asc`: usuários com menos tokens primeiro
+- `none`: ordem padrão (por data de criação)
 
-4. **`EvolutionPage.tsx`** (or `EvolutionInput.tsx`) — Add FirstTimeGuide shown when `!profile?.seen_guides?.evolution`. Tips about text/audio input, selecting patient for context, editing the generated output. Examples won't apply here since it's a form, so the CTA will dismiss and reveal the form.
+Valores `null` de `TokenCount` serao tratados como `0`.
 
-### Why this works with the tour
+**3. Cabeçalho clicável na coluna "Tokens" (linha ~230)**
 
-The tour navigates to each page. New users won't have `seen_guides` set, so the `FirstTimeGuide` will naturally be visible when the tour arrives at each module — no special tour integration needed. Each guide dismisses independently via the CTA button or example click, persisting to `seen_guides` in the profile.
+Trocar o `<TableHead>Tokens</TableHead>` por um botao clicavel com icone de seta indicando a direção atual:
+- Clique alterna entre `none` -> `desc` -> `asc` -> `none`
+- Icone `ArrowUpDown` (neutro), `ArrowDown` (desc), `ArrowUp` (asc) do lucide-react
 
-### Files to modify
-- `src/components/chat/ChatInterface.tsx`
-- `src/components/busca-plano/BuscaPlanoInterface.tsx`
-- `src/components/busca-artigos/BuscaArtigosInterface.tsx`
-- `src/pages/app/EvolutionPage.tsx` (or `src/components/evolution/EvolutionInput.tsx`)
+### Detalhes Técnicos
+
+- Importar `ArrowUpDown`, `ArrowDown`, `ArrowUp` do lucide-react
+- A ordenação é aplicada no frontend sobre `filteredProfiles`, sem nova query ao banco
+- O ciclo de clique: sem ordenação -> maior primeiro -> menor primeiro -> sem ordenação
 

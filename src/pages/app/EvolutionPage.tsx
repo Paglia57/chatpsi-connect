@@ -2,12 +2,15 @@ import { useState, useRef } from "react";
 import EvolutionInput from "@/components/evolution/EvolutionInput";
 import EvolutionOutput from "@/components/evolution/EvolutionOutput";
 import AppBreadcrumb from "@/components/ui/AppBreadcrumb";
+import FirstTimeGuide from "@/components/ui/FirstTimeGuide";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { toast } from "sonner";
+import { FileText } from "lucide-react";
 
 export default function EvolutionPage() {
-  const { user } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
+  const [guideDismissed, setGuideDismissed] = useState(false);
   const [evolutionContent, setEvolutionContent] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -174,7 +177,42 @@ export default function EvolutionPage() {
         { label: "Evolução", href: "/app/evolucao" },
         { label: "Nova Evolução" },
       ]} />
-      <EvolutionInput onGenerate={handleGenerate} isLoading={isGenerating} />
+      {!guideDismissed && !(profile?.seen_guides as any)?.evolution ? (
+        <FirstTimeGuide
+          guideKey="evolution"
+          icon={<FileText className="h-8 w-8 text-primary" />}
+          title="Evolução Clínica com IA"
+          description="Gere evoluções estruturadas a partir de texto ou áudio das suas sessões."
+          tips={[
+            "Envie anotações em texto ou grave/envie áudio da sessão",
+            "Selecione o paciente para contextualizar a evolução automaticamente",
+            "O texto gerado é editável — ajuste antes de salvar",
+          ]}
+          examples={[
+            "Sessão de TCC com foco em reestruturação cognitiva",
+            "Paciente relatou melhora nos sintomas de ansiedade",
+            "Trabalhamos técnicas de regulação emocional",
+          ]}
+          ctaText="Entendi, criar uma evolução!"
+          onDismiss={async () => {
+            setGuideDismissed(true);
+            if (user) {
+              const current = (profile?.seen_guides as any) || {};
+              await supabase.from('profiles').update({ seen_guides: { ...current, evolution: true } }).eq('user_id', user.id);
+              await refreshProfile();
+            }
+          }}
+          onExampleClick={(text) => {
+            setGuideDismissed(true);
+            if (user) {
+              const current = (profile?.seen_guides as any) || {};
+              supabase.from('profiles').update({ seen_guides: { ...current, evolution: true } }).eq('user_id', user.id).then(() => refreshProfile());
+            }
+          }}
+        />
+      ) : (
+        <EvolutionInput onGenerate={handleGenerate} isLoading={isGenerating} />
+      )}
       {(evolutionContent || isGenerating) && (
         <EvolutionOutput
           content={evolutionContent}

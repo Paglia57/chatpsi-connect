@@ -106,6 +106,13 @@ const ChatSidebar = () => {
       gradient: "from-primary to-cta"
     },
     {
+      title: "Pacientes",
+      url: "/app/pacientes",
+      icon: Users,
+      description: "Gestão de pacientes",
+      gradient: "from-primary to-cta"
+    },
+    {
       title: "Histórico",
       url: "/app/historico",
       icon: ClipboardList,

@@ -9,8 +9,9 @@ import { Badge } from '@/components/ui/badge';
 import {
   Home, ClipboardList, Plus, History, Users, MessageCircle, Target, BookOpen,
   PenTool, Settings, Gift, User, HelpCircle, LogOut, Menu, ChevronDown,
-  ChevronRight, Star
+  ChevronRight, Star, MessageSquare, RotateCcw
 } from 'lucide-react';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useResponsive } from '@/hooks/useResponsive';

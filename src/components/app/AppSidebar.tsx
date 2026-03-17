@@ -1,4 +1,4 @@
-import { Plus, ClipboardList, User, LogOut } from "lucide-react";
+import { Plus, ClipboardList, User, LogOut, Users } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -20,6 +20,7 @@ import { useEffect, useState } from "react";
 
 const menuItems = [
   { title: "Nova Evolução", url: "/app/evolucao", icon: Plus },
+  { title: "Pacientes", url: "/app/pacientes", icon: Users },
   { title: "Histórico", url: "/app/historico", icon: ClipboardList },
   { title: "Perfil", url: "/app/perfil", icon: User },
 ];

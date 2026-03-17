@@ -19,6 +19,8 @@ import AppLayout from "@/components/app/AppLayout";
 import EvolutionPage from "./pages/app/EvolutionPage";
 import HistoryPage from "./pages/app/HistoryPage";
 import ProfilePage from "./pages/app/ProfilePage";
+import PatientsPage from "./pages/app/PatientsPage";
+import PatientDetailPage from "./pages/app/PatientDetailPage";
 
 const queryClient = new QueryClient();
 
@@ -44,6 +46,8 @@ const App = () => (
             <Route path="/app" element={<AppLayout />}>
               <Route index element={<Navigate to="/app/evolucao" replace />} />
               <Route path="evolucao" element={<EvolutionPage />} />
+              <Route path="pacientes" element={<PatientsPage />} />
+              <Route path="pacientes/:id" element={<PatientDetailPage />} />
               <Route path="historico" element={<HistoryPage />} />
               <Route path="perfil" element={<ProfilePage />} />
             </Route>

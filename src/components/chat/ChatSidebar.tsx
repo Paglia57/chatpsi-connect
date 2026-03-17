@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { InternationalPhoneInput } from '@/components/ui/international-phone-input';
-import { MessageSquare, User, MessageCircle, LogOut, Menu, X, Sparkles, Star, Heart, BookOpen, Shield, PenTool, Gift, FileCheck } from 'lucide-react';
+import { MessageSquare, User, MessageCircle, LogOut, Menu, X, Sparkles, Star, Heart, BookOpen, Shield, PenTool, Gift, FileCheck, ClipboardList } from 'lucide-react';
 import BetaChip from '@/components/ui/BetaChip';
 import ReferralCard from '@/components/referral/ReferralCard';
 import RedeemBanner from '@/components/referral/RedeemBanner';
@@ -103,6 +103,13 @@ const ChatSidebar = () => {
       url: "/app/evolucao",
       icon: FileCheck,
       description: "Gerar evolução por IA",
+      gradient: "from-primary to-cta"
+    },
+    {
+      title: "Histórico",
+      url: "/app/historico",
+      icon: ClipboardList,
+      description: "Evoluções salvas",
       gradient: "from-primary to-cta"
     },
     {

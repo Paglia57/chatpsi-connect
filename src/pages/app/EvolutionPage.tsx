@@ -2,9 +2,11 @@ import { useState, useRef } from "react";
 import EvolutionInput from "@/components/evolution/EvolutionInput";
 import EvolutionOutput from "@/components/evolution/EvolutionOutput";
 import AppBreadcrumb from "@/components/ui/AppBreadcrumb";
+import FirstTimeGuide from "@/components/ui/FirstTimeGuide";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { toast } from "sonner";
+import { FileText } from "lucide-react";
 
 export default function EvolutionPage() {
   const { user } = useAuth();

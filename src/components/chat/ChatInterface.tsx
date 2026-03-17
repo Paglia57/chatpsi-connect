@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AudioPlayer } from '@/components/ui/AudioPlayer';
-import { Send, Paperclip, Crown, AlertCircle, Bot, User as UserIcon, Lock, Upload, Mic, Image as ImageIcon, Video, File, Wifi, WifiOff, AlertTriangle, RefreshCw, MessageCircle } from 'lucide-react';
+import { Send, Paperclip, Crown, AlertCircle, Bot, User as UserIcon, Lock, Upload, Mic, Image as ImageIcon, Video, File, Wifi, WifiOff, AlertTriangle, RefreshCw, MessageCircle, Sparkles } from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';

@@ -1,36 +1,28 @@
 
 
-## Ordenar por Tokens no Admin
+## Tornar cards de features clicáveis no StepCelebration
 
-Adicionar um botão/toggle na coluna "Tokens" da tabela de administração que permite ordenar os usuários pelo consumo de tokens (maior para menor e vice-versa).
+### Mudança
 
-### Mudanças em `src/pages/AdminPage.tsx`
+No `src/components/onboarding/StepCelebration.tsx`:
 
-**1. Novo estado de ordenação**
-
-Adicionar estado para controlar a direção da ordenação:
+1. Adicionar rota a cada feature:
 ```typescript
-const [sortByTokens, setSortByTokens] = useState<'none' | 'asc' | 'desc'>('none');
+const features = [
+  { ..., route: '/chat' },
+  { ..., route: '/busca-artigos' },
+  { ..., route: '/busca-plano' },
+  { ..., route: '/marketing' },
+];
 ```
 
-**2. Aplicar ordenação no useEffect de filtro (linhas 80-89)**
+2. Aceitar `onFinish` como callback que completa o onboarding (já existe). Adicionar uma nova prop `onNavigate` ou usar `useNavigate` diretamente.
 
-Após filtrar por nome, aplicar a ordenação por tokens:
-- `desc`: usuários com mais tokens primeiro
-- `asc`: usuários com menos tokens primeiro
-- `none`: ordem padrão (por data de criação)
+3. Ao clicar num card: completar o onboarding (mesma lógica do `onFinish`) e depois navegar para a rota correspondente via `useNavigate`.
 
-Valores `null` de `TokenCount` serao tratados como `0`.
+4. Adicionar estilo hover nos cards (`hover:border-primary/40 cursor-pointer transition-colors`) para indicar que são clicáveis.
 
-**3. Cabeçalho clicável na coluna "Tokens" (linha ~230)**
+**Arquivo:** `src/components/onboarding/StepCelebration.tsx` — adicionar `useNavigate`, rotas nos features, handler de clique que chama `onFinish()` e navega.
 
-Trocar o `<TableHead>Tokens</TableHead>` por um botao clicavel com icone de seta indicando a direção atual:
-- Clique alterna entre `none` -> `desc` -> `asc` -> `none`
-- Icone `ArrowUpDown` (neutro), `ArrowDown` (desc), `ArrowUp` (asc) do lucide-react
-
-### Detalhes Técnicos
-
-- Importar `ArrowUpDown`, `ArrowDown`, `ArrowUp` do lucide-react
-- A ordenação é aplicada no frontend sobre `filteredProfiles`, sem nova query ao banco
-- O ciclo de clique: sem ordenação -> maior primeiro -> menor primeiro -> sem ordenação
+No `OnboardingWizard.tsx`, o `handleFinish` já salva `has_completed_onboarding: true` e chama `onComplete`. O StepCelebration precisa receber uma versão que permita navegar para uma rota específica após finalizar. A forma mais simples: passar `onFinishAndNavigate(route)` como prop adicional, ou fazer o StepCelebration chamar `onFinish()` e depois `navigate(route)` internamente.
 

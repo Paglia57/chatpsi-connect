@@ -34,6 +34,7 @@ interface MarketingText {
 const MarketingInterface = () => {
   const { toast } = useToast();
   const { user, profile, refreshProfile } = useAuth();
+  const { tourActive } = (useOutletContext<{ tourActive?: boolean }>() || {});
   const [texts, setTexts] = useState<MarketingText[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);

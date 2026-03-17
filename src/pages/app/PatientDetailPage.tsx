@@ -124,7 +124,20 @@ export default function PatientDetailPage() {
   } : null;
 
   if (loading) {
-    return <div className="max-w-4xl mx-auto"><div className="h-64 bg-muted animate-pulse rounded-lg" /></div>;
+    return (
+      <div className="max-w-4xl mx-auto space-y-6">
+        <Skeleton className="h-5 w-48" />
+        <div className="flex items-center gap-3">
+          <Skeleton className="h-14 w-14 rounded-full" />
+          <div className="space-y-2 flex-1">
+            <Skeleton className="h-6 w-1/3" />
+            <Skeleton className="h-4 w-1/4" />
+          </div>
+        </div>
+        <Skeleton className="h-48 w-full rounded-lg" />
+        <Skeleton className="h-32 w-full rounded-lg" />
+      </div>
+    );
   }
 
   if (!patient) {

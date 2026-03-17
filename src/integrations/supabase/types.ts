@@ -56,6 +56,7 @@ export type Database = {
           input_content: string | null
           input_type: string
           output_content: string | null
+          patient_id: string | null
           patient_initials: string
           session_duration: string | null
           session_number: number | null
@@ -71,6 +72,7 @@ export type Database = {
           input_content?: string | null
           input_type: string
           output_content?: string | null
+          patient_id?: string | null
           patient_initials: string
           session_duration?: string | null
           session_number?: number | null
@@ -86,6 +88,7 @@ export type Database = {
           input_content?: string | null
           input_type?: string
           output_content?: string | null
+          patient_id?: string | null
           patient_initials?: string
           session_duration?: string | null
           session_number?: number | null
@@ -93,7 +96,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "evolutions_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       marketing_texts: {
         Row: {
@@ -187,6 +198,84 @@ export type Database = {
           message?: string
           seen?: boolean
           type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      patients: {
+        Row: {
+          approach: string | null
+          cid_10: string | null
+          created_at: string
+          date_of_birth: string | null
+          default_session_duration: string | null
+          default_session_type: string | null
+          dsm_5: string | null
+          full_name: string
+          gender: string | null
+          id: string
+          initials: string
+          last_session_at: string | null
+          main_complaint: string | null
+          medication: string | null
+          notes: string | null
+          openai_assistant_id: string | null
+          openai_thread_id: string | null
+          session_day_time: string | null
+          session_frequency: string | null
+          status: string
+          total_sessions: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          approach?: string | null
+          cid_10?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          default_session_duration?: string | null
+          default_session_type?: string | null
+          dsm_5?: string | null
+          full_name: string
+          gender?: string | null
+          id?: string
+          initials: string
+          last_session_at?: string | null
+          main_complaint?: string | null
+          medication?: string | null
+          notes?: string | null
+          openai_assistant_id?: string | null
+          openai_thread_id?: string | null
+          session_day_time?: string | null
+          session_frequency?: string | null
+          status?: string
+          total_sessions?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          approach?: string | null
+          cid_10?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          default_session_duration?: string | null
+          default_session_type?: string | null
+          dsm_5?: string | null
+          full_name?: string
+          gender?: string | null
+          id?: string
+          initials?: string
+          last_session_at?: string | null
+          main_complaint?: string | null
+          medication?: string | null
+          notes?: string | null
+          openai_assistant_id?: string | null
+          openai_thread_id?: string | null
+          session_day_time?: string | null
+          session_frequency?: string | null
+          status?: string
+          total_sessions?: number
+          updated_at?: string
           user_id?: string
         }
         Relationships: []

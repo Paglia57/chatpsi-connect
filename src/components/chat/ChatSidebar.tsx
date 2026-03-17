@@ -227,7 +227,7 @@ const ChatSidebar = () => {
         {/* MARKETING */}
         <SectionLabel>Marketing</SectionLabel>
 
-        <NavLink to="/marketing" onClick={onNavigate} className={navLinkClass(isActive('/marketing'))}>
+        <NavLink to="/marketing" onClick={onNavigate} className={navLinkClass(isActive('/marketing'))} data-tour="nav-marketing">
           <PenTool className="h-4 w-4 shrink-0" />
           <span>IA de Marketing</span>
         </NavLink>

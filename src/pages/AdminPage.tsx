@@ -261,7 +261,7 @@ const AdminPageContent = () => {
                   <TableCell className="font-medium whitespace-nowrap">{profile.email}</TableCell>
                   <TableCell>{profile.full_name || '-'}</TableCell>
                   <TableCell>{profile.nickname || '-'}</TableCell>
-                  <TableCell>
+                  <TableCell className="whitespace-nowrap">
                     {profile.whatsapp || '-'}
                   </TableCell>
                   <TableCell>

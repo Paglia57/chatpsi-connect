@@ -138,41 +138,64 @@ const BuscaPlanoInterface = () => {
       <div className="flex-1 relative min-h-0">
         <ScrollArea className="h-full">
           <div className="p-3 sm:p-4 space-y-3 sm:space-y-4 max-w-4xl mx-auto pb-4">
-            {messages.length === 0 ? <div className="text-center py-8 sm:py-12 px-4">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-4 sm:mb-5">
-                  <Sparkles className="h-8 w-8 sm:h-10 sm:w-10 text-amber-600" />
+            {messages.length === 0 ? (
+              !profile?.seen_guides?.busca_plano ? (
+                <FirstTimeGuide
+                  guideKey="busca_plano"
+                  icon={<Target className="h-8 w-8 text-primary" />}
+                  title="Planos de ação terapêuticos"
+                  description="Busque planos de ação prontos e materiais psicoeducativos para diferentes quadros clínicos. A IA encontra os recursos mais relevantes para seu caso."
+                  tips={[
+                    "Busque por diagnóstico ou tema (ex: depressão, TDAH, luto)",
+                    "Os planos incluem materiais que você pode usar diretamente com pacientes",
+                    "Você pode pedir planos específicos para faixas etárias ou contextos",
+                  ]}
+                  examples={[
+                    "Plano de ação para manejo de ansiedade em adultos",
+                    "Material psicoeducativo sobre TDAH para adolescentes",
+                    "Estratégias de ativação comportamental para depressão",
+                  ]}
+                  ctaText="Entendi, buscar um plano!"
+                  onDismiss={async () => {
+                    if (user) {
+                      const current = profile?.seen_guides || {};
+                      await supabase.from('profiles').update({ seen_guides: { ...current, busca_plano: true } }).eq('user_id', user.id);
+                      await refreshProfile();
+                    }
+                  }}
+                  onExampleClick={(text) => {
+                    setNewMessage(text);
+                    if (user) {
+                      const current = profile?.seen_guides || {};
+                      supabase.from('profiles').update({ seen_guides: { ...current, busca_plano: true } }).eq('user_id', user.id).then(() => refreshProfile());
+                    }
+                  }}
+                />
+              ) : (
+                <div className="text-center py-8 sm:py-12 px-4">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-4 sm:mb-5">
+                    <Sparkles className="h-8 w-8 sm:h-10 sm:w-10 text-amber-600" />
+                  </div>
+                  <h3 className="text-base sm:text-lg font-medium mb-2">Busca Plano de Ação</h3>
+                  <p className="text-sm sm:text-base text-muted-foreground mb-6 max-w-md mx-auto text-overflow-anywhere">
+                    Descreva o caso clínico ou situação e receba um plano de ação terapêutico personalizado.
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 max-w-lg mx-auto">
+                    {[
+                      "Plano de ação para depressão em adolescentes",
+                      "Intervenções para ansiedade generalizada",
+                      "Estratégias para TDAH em adultos",
+                      "Plano terapêutico para luto complicado",
+                    ].map((suggestion) => (
+                      <Button key={suggestion} variant="outline" className="h-auto py-2.5 px-3 text-left text-sm justify-start gap-2 bg-amber-500/5 border-amber-500/20 hover:bg-amber-500/10 hover:border-amber-500/30 text-foreground" onClick={() => { setNewMessage(suggestion); setTimeout(() => { const form = document.querySelector('form'); form?.requestSubmit(); }, 50); }}>
+                        <Lightbulb className="h-3.5 w-3.5 text-amber-600 flex-shrink-0" />
+                        <span>{suggestion}</span>
+                      </Button>
+                    ))}
+                  </div>
                 </div>
-                <h3 className="text-base sm:text-lg font-medium mb-2">Busca Plano de Ação</h3>
-                <p className="text-sm sm:text-base text-muted-foreground mb-6 max-w-md mx-auto text-overflow-anywhere">
-                  Descreva o caso clínico ou situação e receba um plano de ação terapêutico personalizado. Experimente uma sugestão abaixo:
-                </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 max-w-lg mx-auto">
-                  {[
-                    "Plano de ação para depressão em adolescentes",
-                    "Intervenções para ansiedade generalizada",
-                    "Estratégias para TDAH em adultos",
-                    "Plano terapêutico para luto complicado",
-                    "Manejo de crise em ideação suicida",
-                    "Intervenções para transtorno alimentar",
-                  ].map((suggestion) => (
-                    <Button
-                      key={suggestion}
-                      variant="outline"
-                      className="h-auto py-2.5 px-3 text-left text-sm justify-start gap-2 bg-amber-500/5 border-amber-500/20 hover:bg-amber-500/10 hover:border-amber-500/30 text-foreground"
-                      onClick={() => {
-                        setNewMessage(suggestion);
-                        setTimeout(() => {
-                          const form = document.querySelector('form');
-                          form?.requestSubmit();
-                        }, 50);
-                      }}
-                    >
-                      <Lightbulb className="h-3.5 w-3.5 text-amber-600 flex-shrink-0" />
-                      <span>{suggestion}</span>
-                    </Button>
-                  ))}
-                </div>
-              </div> : messages.map(msg => <React.Fragment key={msg.id}>
+              )
+            ) : messages.map(msg => <React.Fragment key={msg.id}>
                   <div className="flex gap-2 sm:gap-3 justify-end">
                     <div className="bg-primary text-primary-foreground rounded-lg px-3 sm:px-4 py-2 sm:py-3 max-w-[80%] chat-message-content">
                       <p className="text-sm whitespace-pre-wrap break-words text-overflow-anywhere">{msg.input_text}</p>

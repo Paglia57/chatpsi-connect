@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { AutoTextarea } from '@/components/ui/auto-textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Send, Bot, User as UserIcon, RefreshCw, Sparkles, Lightbulb, Target } from 'lucide-react';
+import FirstTimeGuide from '@/components/ui/FirstTimeGuide';
 import { useAuth } from '@/components/auth/AuthProvider';
 
 import { supabase } from '@/integrations/supabase/client';

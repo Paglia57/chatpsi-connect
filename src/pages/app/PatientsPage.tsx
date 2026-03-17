@@ -1,0 +1,157 @@
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/components/auth/AuthProvider";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Search, UserPlus, Users } from "lucide-react";
+import PatientFormDialog from "@/components/patients/PatientFormDialog";
+
+interface Patient {
+  id: string;
+  full_name: string;
+  initials: string;
+  approach: string | null;
+  status: string;
+  total_sessions: number;
+  last_session_at: string | null;
+}
+
+export default function PatientsPage() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [patients, setPatients] = useState<Patient[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [filterApproach, setFilterApproach] = useState("all");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [sortBy, setSortBy] = useState("name");
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  const fetchPatients = async () => {
+    if (!user) return;
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("patients")
+      .select("id, full_name, initials, approach, status, total_sessions, last_session_at")
+      .eq("user_id", user.id)
+      .order("full_name");
+    if (!error && data) setPatients(data);
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchPatients(); }, [user]);
+
+  const approaches = [...new Set(patients.map(p => p.approach).filter(Boolean))];
+
+  const filtered = patients
+    .filter(p => {
+      if (search && !p.full_name.toLowerCase().includes(search.toLowerCase())) return false;
+      if (filterApproach !== "all" && p.approach !== filterApproach) return false;
+      if (filterStatus !== "all" && p.status !== filterStatus) return false;
+      return true;
+    })
+    .sort((a, b) => {
+      if (sortBy === "name") return a.full_name.localeCompare(b.full_name);
+      if (sortBy === "last_session") return (b.last_session_at || "").localeCompare(a.last_session_at || "");
+      if (sortBy === "sessions") return b.total_sessions - a.total_sessions;
+      return 0;
+    });
+
+  return (
+    <div className="max-w-5xl mx-auto space-y-6">
+      <Card className="border-border bg-card shadow-sm">
+        <CardHeader className="flex flex-row items-center justify-between gap-4 flex-wrap">
+          <CardTitle className="font-display text-xl text-foreground">Meus Pacientes</CardTitle>
+          <Button variant="cta" onClick={() => setDialogOpen(true)}>
+            <UserPlus className="h-4 w-4" />
+            Novo Paciente
+          </Button>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Filters */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar por nome..." className="pl-9" />
+            </div>
+            <Select value={filterApproach} onValueChange={setFilterApproach}>
+              <SelectTrigger className="w-full sm:w-[200px]"><SelectValue placeholder="Abordagem" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas abordagens</SelectItem>
+                {approaches.map(a => <SelectItem key={a!} value={a!}>{a}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger className="w-full sm:w-[150px]"><SelectValue placeholder="Status" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="active">Ativos</SelectItem>
+                <SelectItem value="inactive">Inativos</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="w-full sm:w-[180px]"><SelectValue placeholder="Ordenar" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="name">Por nome</SelectItem>
+                <SelectItem value="last_session">Última sessão</SelectItem>
+                <SelectItem value="sessions">Total sessões</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* List */}
+          {loading ? (
+            <div className="space-y-3">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="h-16 rounded-lg bg-muted animate-pulse" />
+              ))}
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="text-center py-12">
+              <Users className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+              <p className="text-muted-foreground">{patients.length === 0 ? "Nenhum paciente cadastrado" : "Nenhum paciente encontrado"}</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {filtered.map(p => (
+                <div
+                  key={p.id}
+                  onClick={() => navigate(`/app/pacientes/${p.id}`)}
+                  className="flex items-center gap-4 p-3 rounded-lg border border-border bg-card hover:shadow-md transition-shadow cursor-pointer"
+                >
+                  <Avatar className="h-10 w-10 shrink-0">
+                    <AvatarFallback className="bg-accent text-accent-foreground text-sm font-semibold">
+                      {p.initials.slice(0, 2)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-foreground truncate">{p.full_name}</p>
+                    <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                      {p.approach && <Badge variant="secondary" className="text-xs">{p.approach}</Badge>}
+                      <span className="text-xs text-muted-foreground">{p.total_sessions} sessão(ões)</span>
+                      {p.last_session_at && (
+                        <span className="text-xs text-muted-foreground">
+                          • Última: {new Date(p.last_session_at).toLocaleDateString("pt-BR")}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <Badge variant={p.status === "active" ? "default" : "outline"} className="shrink-0">
+                    {p.status === "active" ? "Ativo" : "Inativo"}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <PatientFormDialog open={dialogOpen} onOpenChange={setDialogOpen} onSaved={fetchPatients} />
+    </div>
+  );
+}

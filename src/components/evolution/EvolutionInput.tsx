@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Sparkles, Mic, Upload, X, Loader2 } from "lucide-react";
+import { Sparkles, Mic, Upload, X, Loader2, Lock } from "lucide-react";
 import PatientSelector, { type SelectedPatient } from "@/components/patients/PatientSelector";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/auth/AuthProvider";

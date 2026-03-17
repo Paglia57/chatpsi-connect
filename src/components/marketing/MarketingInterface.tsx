@@ -319,24 +319,33 @@ const MarketingInterface = () => {
             </div>
 
             <div className="flex flex-col md:flex-row gap-3">
-              <Button
-                onClick={handleGenerate}
-                disabled={isGenerating || !prompt.trim()}
-                variant="cta"
-                className="flex-1"
-              >
-                {isGenerating ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Gerando...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="mr-2 h-4 w-4" />
-                    Gerar com IA
-                  </>
-                )}
-              </Button>
+              {trial.hasReachedLimit ? (
+                <Button variant="cta" className="flex-1" asChild>
+                  <a href="https://wa.me/5511942457454?text=Olá!%20Quero%20assinar%20o%20ChatPsi" target="_blank" rel="noopener noreferrer">
+                    <Lock className="mr-2 h-4 w-4" />
+                    Assinar para continuar gerando
+                  </a>
+                </Button>
+              ) : (
+                <Button
+                  onClick={handleGenerate}
+                  disabled={isGenerating || !prompt.trim()}
+                  variant="cta"
+                  className="flex-1"
+                >
+                  {isGenerating ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Gerando...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="mr-2 h-4 w-4" />
+                      Gerar com IA
+                    </>
+                  )}
+                </Button>
+              )}
 
               <Button
                 onClick={handleSave}

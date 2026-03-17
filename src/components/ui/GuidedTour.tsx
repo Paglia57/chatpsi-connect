@@ -289,10 +289,12 @@ const GuidedTour: React.FC<GuidedTourProps> = ({ run, onFinish }) => {
         setInternalRun(false);
         navigate(targetRoute);
         setTimeout(() => {
-          setStepIndex(nextIndex);
-          setInternalRun(true);
-          setIsNavigating(false);
-        }, 600);
+          waitForTarget(nextIndex, () => {
+            setStepIndex(nextIndex);
+            setInternalRun(true);
+            setIsNavigating(false);
+          });
+        }, 300);
       } else {
         setStepIndex(nextIndex);
       }

@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { AutoTextarea } from '@/components/ui/auto-textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Send, Bot, User as UserIcon, RefreshCw, Sparkles } from 'lucide-react';
+import { Send, Bot, User as UserIcon, RefreshCw, Sparkles, Lightbulb } from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -128,11 +128,39 @@ const BuscaPlanoInterface = () => {
         <ScrollArea className="h-full">
           <div className="p-3 sm:p-4 space-y-3 sm:space-y-4 max-w-4xl mx-auto pb-4">
             {messages.length === 0 ? <div className="text-center py-8 sm:py-12 px-4">
-                <Sparkles className="h-10 w-10 sm:h-12 sm:w-12 text-primary mx-auto mb-3 sm:mb-4" />
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-4 sm:mb-5">
+                  <Sparkles className="h-8 w-8 sm:h-10 sm:w-10 text-amber-600" />
+                </div>
                 <h3 className="text-base sm:text-lg font-medium mb-2">Busca Plano de Ação</h3>
-                <p className="text-sm sm:text-base text-muted-foreground mb-4 text-overflow-anywhere">
-                  Envie uma pergunta para iniciar seu plano de ação personalizado.
+                <p className="text-sm sm:text-base text-muted-foreground mb-6 max-w-md mx-auto text-overflow-anywhere">
+                  Descreva o caso clínico ou situação e receba um plano de ação terapêutico personalizado. Experimente uma sugestão abaixo:
                 </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 max-w-lg mx-auto">
+                  {[
+                    "Plano de ação para depressão em adolescentes",
+                    "Intervenções para ansiedade generalizada",
+                    "Estratégias para TDAH em adultos",
+                    "Plano terapêutico para luto complicado",
+                    "Manejo de crise em ideação suicida",
+                    "Intervenções para transtorno alimentar",
+                  ].map((suggestion) => (
+                    <Button
+                      key={suggestion}
+                      variant="outline"
+                      className="h-auto py-2.5 px-3 text-left text-sm justify-start gap-2 bg-amber-500/5 border-amber-500/20 hover:bg-amber-500/10 hover:border-amber-500/30 text-foreground"
+                      onClick={() => {
+                        setNewMessage(suggestion);
+                        setTimeout(() => {
+                          const form = document.querySelector('form');
+                          form?.requestSubmit();
+                        }, 50);
+                      }}
+                    >
+                      <Lightbulb className="h-3.5 w-3.5 text-amber-600 flex-shrink-0" />
+                      <span>{suggestion}</span>
+                    </Button>
+                  ))}
+                </div>
               </div> : messages.map(msg => <React.Fragment key={msg.id}>
                   <div className="flex gap-2 sm:gap-3 justify-end">
                     <div className="bg-primary text-primary-foreground rounded-lg px-3 sm:px-4 py-2 sm:py-3 max-w-[80%] chat-message-content">

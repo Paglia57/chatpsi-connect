@@ -2,13 +2,36 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import ChatSidebar from "@/components/chat/ChatSidebar";
 import ReferralNotificationPoller from "@/components/referral/ReferralNotificationPoller";
 import RouteProgressBar from "@/components/ui/RouteProgressBar";
+import GuidedTour from "@/components/ui/GuidedTour";
 import { Outlet, Navigate } from "react-router-dom";
 import { useResponsive } from "@/hooks/useResponsive";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { supabase } from "@/integrations/supabase/client";
+import { useState, useEffect } from "react";
 
 export default function AppLayout() {
   const { isMobile } = useResponsive();
-  const { user, loading } = useAuth();
+  const { user, profile, loading, refreshProfile } = useAuth();
+  const [runTour, setRunTour] = useState(false);
+
+  useEffect(() => {
+    if (!loading && profile && !(profile.seen_guides as any)?.tour) {
+      // Small delay to ensure sidebar is rendered
+      const timer = setTimeout(() => setRunTour(true), 800);
+      return () => clearTimeout(timer);
+    }
+  }, [loading, profile]);
+
+  const handleTourFinish = async () => {
+    setRunTour(false);
+    if (user) {
+      const current = (profile?.seen_guides as any) || {};
+      await supabase.from('profiles').update({
+        seen_guides: { ...current, tour: true },
+      }).eq('user_id', user.id);
+      await refreshProfile();
+    }
+  };
 
   if (loading) {
     return (
@@ -28,6 +51,7 @@ export default function AppLayout() {
   return (
     <SidebarProvider>
       <RouteProgressBar />
+      <GuidedTour run={runTour} onFinish={handleTourFinish} />
       <div className={`app-shell min-h-screen-mobile flex w-full bg-background no-horizontal-scroll ${isMobile ? 'flex-col' : ''}`}>
         <ChatSidebar />
         <div className="flex-1 flex flex-col min-w-0">

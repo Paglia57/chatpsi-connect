@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { formatMessageContent } from '@/lib/utils';
 import { useResponsive } from '@/hooks/useResponsive';
+import { useOutletContext } from 'react-router-dom';
 interface ArtigoMessage {
   id: string;
   input_text: string;
@@ -23,6 +24,7 @@ const BuscaArtigosInterface = () => {
     profile,
     refreshProfile
   } = useAuth();
+  const { tourActive } = (useOutletContext<{ tourActive?: boolean }>() || {});
   const {
     toast
   } = useToast();
@@ -139,7 +141,7 @@ const BuscaArtigosInterface = () => {
           <div className="p-3 sm:p-4 space-y-3 sm:space-y-4 max-w-4xl mx-auto pb-4">
             
             {messages.length === 0 ? (
-                !(profile?.seen_guides as any)?.artigos ? (
+                (!(profile?.seen_guides as any)?.artigos || tourActive) ? (
                   <FirstTimeGuide
                     guideKey="artigos"
                     icon={<BookOpen className="h-8 w-8 text-blue-600" />}
@@ -157,7 +159,7 @@ const BuscaArtigosInterface = () => {
                     ]}
                     ctaText="Entendi, buscar artigos!"
                     onDismiss={async () => {
-                      if (user) {
+                      if (user && !tourActive) {
                         const current = (profile?.seen_guides as any) || {};
                         await supabase.from('profiles').update({ seen_guides: { ...current, artigos: true } }).eq('user_id', user.id);
                         await refreshProfile();
@@ -165,7 +167,7 @@ const BuscaArtigosInterface = () => {
                     }}
                     onExampleClick={(text) => {
                       setNewMessage(text);
-                      if (user) {
+                      if (user && !tourActive) {
                         const current = (profile?.seen_guides as any) || {};
                         supabase.from('profiles').update({ seen_guides: { ...current, artigos: true } }).eq('user_id', user.id).then(() => refreshProfile());
                         setTimeout(() => {

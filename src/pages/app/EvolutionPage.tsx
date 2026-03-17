@@ -5,11 +5,13 @@ import AppBreadcrumb from "@/components/ui/AppBreadcrumb";
 import FirstTimeGuide from "@/components/ui/FirstTimeGuide";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { useOutletContext } from "react-router-dom";
 import { toast } from "sonner";
 import { FileText } from "lucide-react";
 
 export default function EvolutionPage() {
   const { user, profile, refreshProfile } = useAuth();
+  const { tourActive } = (useOutletContext<{ tourActive?: boolean }>() || {});
   const [guideDismissed, setGuideDismissed] = useState(false);
   const [evolutionContent, setEvolutionContent] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
@@ -177,7 +179,7 @@ export default function EvolutionPage() {
         { label: "Evolução", href: "/app/evolucao" },
         { label: "Nova Evolução" },
       ]} />
-      {!guideDismissed && !(profile?.seen_guides as any)?.evolution ? (
+      {!guideDismissed && (!(profile?.seen_guides as any)?.evolution || tourActive) ? (
         <FirstTimeGuide
           guideKey="evolution"
           icon={<FileText className="h-8 w-8 text-primary" />}
@@ -196,7 +198,7 @@ export default function EvolutionPage() {
           ctaText="Entendi, criar uma evolução!"
           onDismiss={async () => {
             setGuideDismissed(true);
-            if (user) {
+            if (user && !tourActive) {
               const current = (profile?.seen_guides as any) || {};
               await supabase.from('profiles').update({ seen_guides: { ...current, evolution: true } }).eq('user_id', user.id);
               await refreshProfile();
@@ -204,7 +206,7 @@ export default function EvolutionPage() {
           }}
           onExampleClick={(text) => {
             setGuideDismissed(true);
-            if (user) {
+            if (user && !tourActive) {
               const current = (profile?.seen_guides as any) || {};
               supabase.from('profiles').update({ seen_guides: { ...current, evolution: true } }).eq('user_id', user.id).then(() => refreshProfile());
             }

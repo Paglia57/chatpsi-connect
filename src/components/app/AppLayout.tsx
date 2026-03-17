@@ -56,7 +56,7 @@ export default function AppLayout() {
         <ChatSidebar />
         <div className="flex-1 flex flex-col min-w-0">
           <main className="flex-1 p-4 md:p-6 lg:p-8 bg-background overflow-auto">
-            <Outlet />
+            <Outlet context={{ tourActive: runTour }} />
           </main>
         </div>
         <ReferralNotificationPoller />

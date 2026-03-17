@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { formatMessageContent } from '@/lib/utils';
 import { useResponsive } from '@/hooks/useResponsive';
+import { useOutletContext } from 'react-router-dom';
 interface PlanoMessage {
   id: string;
   input_text: string;
@@ -23,6 +24,7 @@ const BuscaPlanoInterface = () => {
     profile,
     refreshProfile
   } = useAuth();
+  const { tourActive } = (useOutletContext<{ tourActive?: boolean }>() || {});
   const {
     toast
   } = useToast();
@@ -141,7 +143,7 @@ const BuscaPlanoInterface = () => {
           <div className="p-3 sm:p-4 space-y-3 sm:space-y-4 max-w-4xl mx-auto pb-4">
             
             {messages.length === 0 ? (
-                !(profile?.seen_guides as any)?.plano ? (
+                (!(profile?.seen_guides as any)?.plano || tourActive) ? (
                   <FirstTimeGuide
                     guideKey="plano"
                     icon={<Target className="h-8 w-8 text-amber-600" />}
@@ -159,7 +161,7 @@ const BuscaPlanoInterface = () => {
                     ]}
                     ctaText="Entendi, buscar um plano!"
                     onDismiss={async () => {
-                      if (user) {
+                      if (user && !tourActive) {
                         const current = (profile?.seen_guides as any) || {};
                         await supabase.from('profiles').update({ seen_guides: { ...current, plano: true } }).eq('user_id', user.id);
                         await refreshProfile();
@@ -168,7 +170,7 @@ const BuscaPlanoInterface = () => {
                     onExampleClick={(text) => {
                       setNewMessage(text);
                       setShowSuggestions(false);
-                      if (user) {
+                      if (user && !tourActive) {
                         const current = (profile?.seen_guides as any) || {};
                         supabase.from('profiles').update({ seen_guides: { ...current, plano: true } }).eq('user_id', user.id).then(() => refreshProfile());
                         setTimeout(() => {

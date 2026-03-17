@@ -9,6 +9,7 @@ import { AudioPlayer } from '@/components/ui/AudioPlayer';
 import { Send, Paperclip, Crown, AlertCircle, Bot, User as UserIcon, Lock, Upload, Mic, Image as ImageIcon, Video, File, Wifi, WifiOff, AlertTriangle, RefreshCw, MessageCircle, Sparkles } from 'lucide-react';
 import FirstTimeGuide from '@/components/ui/FirstTimeGuide';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { useOutletContext } from 'react-router-dom';
 
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -34,6 +35,7 @@ const ChatInterface = () => {
     user,
     refreshProfile
   } = useAuth();
+  const { tourActive } = (useOutletContext<{ tourActive?: boolean }>() || {});
   const {
     toast
   } = useToast();
@@ -491,7 +493,7 @@ const ChatInterface = () => {
           <div className="p-3 sm:p-4 space-y-3 sm:space-y-4 max-w-4xl mx-auto pb-4">
             
             {messages.length === 0 ? (
-                !(profile?.seen_guides as any)?.chat ? (
+                (!(profile?.seen_guides as any)?.chat || tourActive) ? (
                   <FirstTimeGuide
                     guideKey="chat"
                     icon={<MessageCircle className="h-8 w-8 text-primary" />}
@@ -509,7 +511,7 @@ const ChatInterface = () => {
                     ]}
                     ctaText="Entendi, começar a conversar!"
                     onDismiss={async () => {
-                      if (user) {
+                      if (user && !tourActive) {
                         const current = (profile?.seen_guides as any) || {};
                         await supabase.from('profiles').update({ seen_guides: { ...current, chat: true } }).eq('user_id', user.id);
                         await refreshProfile();
@@ -518,7 +520,7 @@ const ChatInterface = () => {
                     onExampleClick={(text) => {
                       setNewMessage(text);
                       setShowSuggestions(false);
-                      if (user) {
+                      if (user && !tourActive) {
                         const current = (profile?.seen_guides as any) || {};
                         supabase.from('profiles').update({ seen_guides: { ...current, chat: true } }).eq('user_id', user.id).then(() => refreshProfile());
                       }

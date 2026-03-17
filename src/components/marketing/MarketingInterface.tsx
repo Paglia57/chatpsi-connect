@@ -10,6 +10,7 @@ import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2, Save, Sparkles, Plus, Trash2, Megaphone } from 'lucide-react';
 import FirstTimeGuide from '@/components/ui/FirstTimeGuide';
+import { useOutletContext } from 'react-router-dom';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,6 +34,7 @@ interface MarketingText {
 const MarketingInterface = () => {
   const { toast } = useToast();
   const { user, profile, refreshProfile } = useAuth();
+  const { tourActive } = (useOutletContext<{ tourActive?: boolean }>() || {});
   const [texts, setTexts] = useState<MarketingText[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -247,7 +249,7 @@ const MarketingInterface = () => {
 
         <TabsContent value="novo" className="flex-1 overflow-auto mt-0">
           <div className="p-4 md:p-6 max-w-4xl mx-auto w-full space-y-4 md:space-y-6">
-            {activeTab === 'novo' && prompt === '' && !profile?.seen_guides?.marketing && (
+            {activeTab === 'novo' && prompt === '' && (!profile?.seen_guides?.marketing || tourActive) && (
               <FirstTimeGuide
                 guideKey="marketing"
                 icon={<Megaphone className="h-8 w-8 text-pink-500" />}
@@ -265,7 +267,7 @@ const MarketingInterface = () => {
                 ]}
                 ctaText="Entendi, criar um texto!"
                 onDismiss={async () => {
-                  if (user) {
+                  if (user && !tourActive) {
                     const current = profile?.seen_guides || {};
                     await supabase.from('profiles').update({ seen_guides: { ...current, marketing: true } }).eq('user_id', user.id);
                     await refreshProfile();
@@ -273,7 +275,7 @@ const MarketingInterface = () => {
                 }}
                 onExampleClick={(text) => {
                   setPrompt(text);
-                  if (user) {
+                  if (user && !tourActive) {
                     const current = profile?.seen_guides || {};
                     supabase.from('profiles').update({ seen_guides: { ...current, marketing: true } }).eq('user_id', user.id).then(() => refreshProfile());
                   }

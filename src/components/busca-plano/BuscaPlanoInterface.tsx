@@ -110,10 +110,17 @@ const BuscaPlanoInterface = () => {
     }
   };
   if (fetchingHistory) {
-    return <div className="flex-1 flex items-center justify-center">
-        <div className="text-center space-y-2">
-          <Sparkles className="h-8 w-8 text-primary mx-auto animate-pulse" />
-          <p className="text-muted-foreground">Carregando histórico...</p>
+    return <div className="flex-1 flex flex-col items-center justify-center gap-3 p-4">
+        <div className="w-full max-w-4xl space-y-4">
+          {[1, 2, 3].map(i => (
+            <div key={i} className={`flex gap-3 ${i % 2 === 0 ? 'justify-end' : 'justify-start'}`}>
+              <div className="h-8 w-8 rounded-full bg-muted animate-pulse shrink-0" />
+              <div className="space-y-2 max-w-[60%]">
+                <div className="h-16 rounded-lg bg-muted animate-pulse" />
+                <div className="h-3 w-16 bg-muted animate-pulse rounded" />
+              </div>
+            </div>
+          ))}
         </div>
       </div>;
   }

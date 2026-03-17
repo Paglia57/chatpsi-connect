@@ -12,6 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { InternationalPhoneInput } from "@/components/ui/international-phone-input";
 
 const APPROACHES = [
   "TCC (Terapia Cognitivo-Comportamental)",
@@ -42,7 +43,9 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [fullName, setFullName] = useState("");
+  const [nickname, setNickname] = useState("");
   const [crp, setCrp] = useState("");
+  const [whatsapp, setWhatsapp] = useState("");
   const [mainApproach, setMainApproach] = useState("");
   const [specialties, setSpecialties] = useState<string[]>([]);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -51,13 +54,15 @@ export default function ProfilePage() {
     if (!user) return;
     supabase
       .from("profiles")
-      .select("full_name, crp, main_approach, specialties, avatar_url")
+      .select("full_name, nickname, crp, whatsapp, main_approach, specialties, avatar_url")
       .eq("user_id", user.id)
       .single()
       .then(({ data }) => {
         if (data) {
           setFullName(data.full_name || "");
+          setNickname(data.nickname || "");
           setCrp(data.crp || "");
+          setWhatsapp(data.whatsapp || "");
           setMainApproach(data.main_approach || "");
           setSpecialties(data.specialties || []);
           setAvatarUrl(data.avatar_url);
@@ -78,7 +83,9 @@ export default function ProfilePage() {
         .from("profiles")
         .update({
           full_name: fullName || null,
+          nickname: nickname || null,
           crp: crp || null,
+          whatsapp: whatsapp || null,
           main_approach: mainApproach || null,
           specialties: specialties.length > 0 ? specialties : null,
         })
@@ -173,9 +180,18 @@ export default function ProfilePage() {
               <p className="text-xs text-muted-foreground">Usado no cabeçalho das evoluções clínicas</p>
             </div>
             <div className="space-y-2">
+              <Label>Apelido</Label>
+              <Input value={nickname} onChange={e => setNickname(e.target.value)} placeholder="Como quer ser chamado" />
+              <p className="text-xs text-muted-foreground">Como você quer ser chamado dentro do app</p>
+            </div>
+            <div className="space-y-2">
               <Label>CRP</Label>
               <Input value={crp} onChange={e => setCrp(e.target.value)} placeholder="Ex: 06/123456" />
               <p className="text-xs text-muted-foreground">Formato: UF/número (ex: 06/123456). Aparece nas evoluções geradas</p>
+            </div>
+            <div className="space-y-2">
+              <InternationalPhoneInput value={whatsapp} onChange={setWhatsapp} label="WhatsApp" />
+              <p className="text-xs text-muted-foreground">Usado para contato e suporte</p>
             </div>
           </div>
 

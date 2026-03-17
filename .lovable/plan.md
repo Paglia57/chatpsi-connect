@@ -1,18 +1,36 @@
 
 
-## Restaurar campos Apelido e WhatsApp na página de Perfil
+## Ordenar por Tokens no Admin
 
-Os campos `nickname` e `whatsapp` existem na tabela `profiles` mas foram removidos do `ProfilePage.tsx` em algum momento. Precisam ser restaurados.
+Adicionar um botão/toggle na coluna "Tokens" da tabela de administração que permite ordenar os usuários pelo consumo de tokens (maior para menor e vice-versa).
 
-### Mudanças em `src/pages/app/ProfilePage.tsx`
+### Mudanças em `src/pages/AdminPage.tsx`
 
-1. **Estado**: Adicionar `nickname` e `whatsapp` como estados (`useState("")`)
-2. **Fetch**: Incluir `nickname, whatsapp` no `.select()` e popular os estados
-3. **Save**: Incluir `nickname` e `whatsapp` no `.update()` do `handleSave`
-4. **UI**: Adicionar dois campos no grid após Nome/CRP:
-   - **Apelido** (`nickname`) — Input simples com helper text "Como você quer ser chamado dentro do app"
-   - **WhatsApp** — Usar o componente `InternationalPhoneInput` já existente em `src/components/ui/international-phone-input.tsx`, com `value={whatsapp}` e `onChange={setWhatsapp}`
+**1. Novo estado de ordenação**
 
-### Nenhuma mudança de banco necessária
-Os campos `nickname` e `whatsapp` já existem na tabela `profiles` e a RLS policy permite update desses campos.
+Adicionar estado para controlar a direção da ordenação:
+```typescript
+const [sortByTokens, setSortByTokens] = useState<'none' | 'asc' | 'desc'>('none');
+```
+
+**2. Aplicar ordenação no useEffect de filtro (linhas 80-89)**
+
+Após filtrar por nome, aplicar a ordenação por tokens:
+- `desc`: usuários com mais tokens primeiro
+- `asc`: usuários com menos tokens primeiro
+- `none`: ordem padrão (por data de criação)
+
+Valores `null` de `TokenCount` serao tratados como `0`.
+
+**3. Cabeçalho clicável na coluna "Tokens" (linha ~230)**
+
+Trocar o `<TableHead>Tokens</TableHead>` por um botao clicavel com icone de seta indicando a direção atual:
+- Clique alterna entre `none` -> `desc` -> `asc` -> `none`
+- Icone `ArrowUpDown` (neutro), `ArrowDown` (desc), `ArrowUp` (asc) do lucide-react
+
+### Detalhes Técnicos
+
+- Importar `ArrowUpDown`, `ArrowDown`, `ArrowUp` do lucide-react
+- A ordenação é aplicada no frontend sobre `filteredProfiles`, sem nova query ao banco
+- O ciclo de clique: sem ordenação -> maior primeiro -> menor primeiro -> sem ordenação
 

@@ -252,6 +252,15 @@ const MarketingInterface = () => {
 
         <TabsContent value="novo" className="flex-1 overflow-auto mt-0">
           <div className="p-4 md:p-6 max-w-4xl mx-auto w-full space-y-4 md:space-y-6">
+            {!trial.isSubscribed && (
+              <TrialLimitBanner
+                usageCount={trial.usageCount}
+                limit={trial.limit}
+                hasReachedLimit={trial.hasReachedLimit}
+                featureLabel="gerações"
+                isLoading={trial.isLoading}
+              />
+            )}
             {activeTab === 'novo' && prompt === '' && (!profile?.seen_guides?.marketing || tourActive) && (
               <FirstTimeGuide
                 guideKey="marketing"

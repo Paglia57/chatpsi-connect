@@ -1,7 +1,10 @@
 import { useState, useRef } from "react";
 import EvolutionInput from "@/components/evolution/EvolutionInput";
 import EvolutionOutput from "@/components/evolution/EvolutionOutput";
+import AppBreadcrumb from "@/components/ui/AppBreadcrumb";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/components/auth/AuthProvider";
+import { toast } from "sonner";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { toast } from "sonner";
 

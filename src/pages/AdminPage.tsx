@@ -151,6 +151,7 @@ const AdminPageContent = () => {
   };
 
   return (
+    <TooltipProvider>
     <div className="container mx-auto py-8 px-4">
       <div className="mb-8">
         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">

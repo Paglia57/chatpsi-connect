@@ -260,7 +260,7 @@ const BuscaPlanoInterface = () => {
       </div>
 
       {/* Suggestions above composer */}
-      {showSuggestions && profile?.subscription_active && (
+      {showSuggestions && !trial.hasReachedLimit && (
         <div className="px-4 sm:px-6 md:px-8 pb-2 flex-shrink-0 animate-fade-in">
           <div className="flex gap-2 overflow-x-auto max-w-4xl mx-auto scrollbar-none">
             {[

@@ -1,4 +1,5 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,6 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sparkles, Mic, Upload, X, Loader2 } from "lucide-react";
+import PatientSelector, { type SelectedPatient } from "@/components/patients/PatientSelector";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/components/auth/AuthProvider";
 
 const APPROACHES = [
   "TCC (Terapia Cognitivo-Comportamental)",
@@ -32,11 +36,17 @@ interface EvolutionInputProps {
     input_type: "audio" | "text";
     input_content: string;
     audio_file?: File;
+    patient_id?: string;
   }) => void;
   isLoading: boolean;
 }
 
 export default function EvolutionInput({ onGenerate, isLoading }: EvolutionInputProps) {
+  const { user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const [selectedPatient, setSelectedPatient] = useState<SelectedPatient | null>(null);
+  const [avulsoMode, setAvulsoMode] = useState(false);
+
   const [approach, setApproach] = useState("");
   const [patientInitials, setPatientInitials] = useState("");
   const [sessionNumber, setSessionNumber] = useState("");
@@ -50,8 +60,38 @@ export default function EvolutionInput({ onGenerate, isLoading }: EvolutionInput
 
   const ACCEPTED_AUDIO = ".mp3,.m4a,.wav,.ogg,.webm";
 
+  // Load patient from URL param
+  useEffect(() => {
+    const patientId = searchParams.get("patient");
+    if (patientId && user) {
+      supabase
+        .from("patients")
+        .select("id, full_name, initials, approach, default_session_duration, default_session_type, total_sessions, last_session_at, openai_thread_id")
+        .eq("id", patientId)
+        .eq("user_id", user.id)
+        .single()
+        .then(({ data }) => {
+          if (data) {
+            setSelectedPatient(data);
+            setAvulsoMode(false);
+          }
+        });
+    }
+  }, [searchParams, user]);
+
+  // Auto-fill from patient
+  useEffect(() => {
+    if (selectedPatient) {
+      if (selectedPatient.approach) setApproach(selectedPatient.approach);
+      if (selectedPatient.default_session_duration) setSessionDuration(selectedPatient.default_session_duration);
+      if (selectedPatient.default_session_type) setSessionType(selectedPatient.default_session_type);
+      setSessionNumber(String((selectedPatient.total_sessions || 0) + 1));
+      setPatientInitials(selectedPatient.initials);
+    }
+  }, [selectedPatient]);
+
   const canSubmit =
-    patientInitials.trim() &&
+    (selectedPatient || (avulsoMode && patientInitials.trim())) &&
     ((activeTab === "text" && textContent.trim().length > 10) ||
       (activeTab === "audio" && audioFile));
 
@@ -68,14 +108,24 @@ export default function EvolutionInput({ onGenerate, isLoading }: EvolutionInput
     if (!canSubmit) return;
     onGenerate({
       approach,
-      patient_initials: patientInitials,
+      patient_initials: selectedPatient ? selectedPatient.initials : patientInitials,
       session_number: sessionNumber ? parseInt(sessionNumber) : null,
       session_duration: sessionDuration,
       session_type: sessionType,
       input_type: activeTab as "audio" | "text",
       input_content: activeTab === "text" ? textContent : "",
       audio_file: audioFile || undefined,
+      patient_id: selectedPatient?.id,
     });
+  };
+
+  const handleClearPatient = () => {
+    setSelectedPatient(null);
+    setApproach("");
+    setPatientInitials("");
+    setSessionNumber("");
+    setSessionDuration("");
+    setSessionType("");
   };
 
   return (
@@ -84,6 +134,41 @@ export default function EvolutionInput({ onGenerate, isLoading }: EvolutionInput
         <CardTitle className="font-display text-xl text-foreground">Nova Evolução</CardTitle>
       </CardHeader>
       <CardContent className="space-y-5">
+        {/* Patient selector */}
+        {!avulsoMode ? (
+          <div className="space-y-2">
+            <Label className="text-sm font-medium text-foreground">Paciente *</Label>
+            <PatientSelector value={selectedPatient} onChange={(p) => {
+              setSelectedPatient(p);
+              if (!p) handleClearPatient();
+            }} />
+            <button
+              type="button"
+              onClick={() => { setAvulsoMode(true); handleClearPatient(); }}
+              className="text-xs text-muted-foreground hover:text-foreground underline transition-colors"
+            >
+              Gerar evolução sem paciente cadastrado
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <Label className="text-sm font-medium text-foreground">Nome ou iniciais do paciente *</Label>
+            <Input
+              value={patientInitials}
+              onChange={e => setPatientInitials(e.target.value)}
+              placeholder="Ex: J.S."
+            />
+            <p className="text-xs text-muted-foreground">Evoluções sem paciente cadastrado não acumulam contexto na IA</p>
+            <button
+              type="button"
+              onClick={() => setAvulsoMode(false)}
+              className="text-xs text-primary hover:underline transition-colors"
+            >
+              ← Selecionar paciente cadastrado
+            </button>
+          </div>
+        )}
+
         {/* Approach */}
         <div className="space-y-2">
           <Label className="text-sm font-medium text-foreground">Abordagem terapêutica</Label>
@@ -96,15 +181,7 @@ export default function EvolutionInput({ onGenerate, isLoading }: EvolutionInput
         </div>
 
         {/* Session info */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label className="text-sm font-medium text-foreground">Nome ou iniciais do paciente *</Label>
-            <Input
-              value={patientInitials}
-              onChange={e => setPatientInitials(e.target.value)}
-              placeholder="Ex: J.S."
-            />
-          </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="space-y-2">
             <Label className="text-sm font-medium text-foreground">Nº da sessão</Label>
             <Input

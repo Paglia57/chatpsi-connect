@@ -21,6 +21,7 @@ export default function EvolutionPage() {
     input_type: "audio" | "text";
     input_content: string;
     audio_file?: File;
+    patient_id?: string;
   }) => {
     if (!user) return;
     setIsGenerating(true);
@@ -67,6 +68,7 @@ export default function EvolutionPage() {
             session_type: data.session_type,
             audio_base64: audioBase64,
             audio_filename: audioFilename,
+            patient_id: data.patient_id || null,
           }),
         }
       );
@@ -157,6 +159,7 @@ export default function EvolutionPage() {
         input_type: params.input_type,
         input_content: params.input_content,
         output_content: content,
+        patient_id: params.patient_id || null,
       });
       if (error) throw error;
       toast.success("Evolução salva com sucesso!");

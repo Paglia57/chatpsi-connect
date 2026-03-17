@@ -38,6 +38,7 @@ const BuscaArtigosInterface = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [fetchingHistory, setFetchingHistory] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const trial = useTrialLimit('artigos_chat_history', 3);
   const fetchHistory = useCallback(async () => {
     if (!user) return;
     setFetchingHistory(true);

@@ -35,6 +35,7 @@ const ChatInterface = () => {
     user,
     refreshProfile
   } = useAuth();
+  const { tourActive } = (useOutletContext<{ tourActive?: boolean }>() || {});
   const {
     toast
   } = useToast();

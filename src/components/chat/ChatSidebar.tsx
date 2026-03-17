@@ -382,7 +382,7 @@ const ChatSidebar = () => {
           <div className="mt-auto space-y-1">
             <NavLink to="/app/perfil" title="Meu Perfil"
               className="p-2 rounded-lg text-muted-foreground hover:text-foreground transition-colors block">
-              <User className="h-4 w-4" />
+              <CircleUser className="h-4 w-4" />
             </NavLink>
             <Popover>
               <PopoverTrigger asChild>

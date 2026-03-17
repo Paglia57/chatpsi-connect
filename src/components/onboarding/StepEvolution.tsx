@@ -45,7 +45,7 @@ export default function StepEvolution({ selectedApproach, createdPatient, onNext
   useEffect(() => {
     if (!isGenerating) return;
     const interval = setInterval(() => {
-      setLoadingTextIdx(prev => (prev + 1) % LOADING_TEXTS.length);
+      setLoadingTextIdx(prev => (prev + 1) % LOADING_STEPS.length);
     }, 3000);
     return () => clearInterval(interval);
   }, [isGenerating]);

@@ -199,7 +199,7 @@ const ChatSidebar = () => {
           </CollapsibleContent>
         </Collapsible>
 
-        <NavLink to="/app/pacientes" onClick={onNavigate} className={navLinkClass(isActivePrefix('/app/pacientes'))}>
+        <NavLink to="/app/pacientes" onClick={onNavigate} className={navLinkClass(isActivePrefix('/app/pacientes'))} data-tour="nav-pacientes">
           <Users className="h-4 w-4 shrink-0" />
           <span>Pacientes</span>
         </NavLink>

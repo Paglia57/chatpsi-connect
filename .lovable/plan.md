@@ -1,36 +1,28 @@
 
 
-## Ordenar por Tokens no Admin
+## Informações sobre limites do Whisper
 
-Adicionar um botão/toggle na coluna "Tokens" da tabela de administração que permite ordenar os usuários pelo consumo de tokens (maior para menor e vice-versa).
+- O limite da API Whisper da OpenAI é **25MB por arquivo**, não 200MB.
+- O Supabase Edge Functions também tem limite de payload (~20MB para request body). Como o áudio é enviado em Base64 (que aumenta ~33% o tamanho), o limite prático é de aproximadamente **15MB de áudio original**.
+- Para áudios maiores, seria necessário implementar upload direto ao bucket e chunking, mas isso é uma mudança significativa.
 
-### Mudanças em `src/pages/AdminPage.tsx`
+## Plano: Trocar modelo de geração para GPT-4.1-mini
 
-**1. Novo estado de ordenação**
+Atualmente a geração de evolução usa o **Lovable AI Gateway** com `google/gemini-2.5-pro`. O modelo `gpt-4.1-mini` não está disponível no gateway, mas como já existe `OPENAI_API_KEY` configurada, podemos chamar a API da OpenAI diretamente.
 
-Adicionar estado para controlar a direção da ordenação:
-```typescript
-const [sortByTokens, setSortByTokens] = useState<'none' | 'asc' | 'desc'>('none');
-```
+### Mudança
 
-**2. Aplicar ordenação no useEffect de filtro (linhas 80-89)**
+| Arquivo | O que muda |
+|---------|------------|
+| `supabase/functions/generate-evolution/index.ts` | Trocar a chamada do Lovable AI Gateway (`ai.gateway.lovable.dev`) pela API OpenAI direta (`api.openai.com/v1/chat/completions`), usando `OPENAI_API_KEY` e modelo `gpt-4.1-mini`. Remover dependência do `LOVABLE_API_KEY` para esta função. |
 
-Após filtrar por nome, aplicar a ordenação por tokens:
-- `desc`: usuários com mais tokens primeiro
-- `asc`: usuários com menos tokens primeiro
-- `none`: ordem padrão (por data de criação)
+### Detalhe técnico
 
-Valores `null` de `TokenCount` serao tratados como `0`.
+A seção de geração (linhas 183-205) será alterada de:
+- Gateway: `ai.gateway.lovable.dev` com `LOVABLE_API_KEY` e modelo `google/gemini-2.5-pro`
 
-**3. Cabeçalho clicável na coluna "Tokens" (linha ~230)**
+Para:
+- OpenAI direto: `api.openai.com/v1/chat/completions` com `OPENAI_API_KEY` e modelo `gpt-4.1-mini`
 
-Trocar o `<TableHead>Tokens</TableHead>` por um botao clicavel com icone de seta indicando a direção atual:
-- Clique alterna entre `none` -> `desc` -> `asc` -> `none`
-- Icone `ArrowUpDown` (neutro), `ArrowDown` (desc), `ArrowUp` (asc) do lucide-react
-
-### Detalhes Técnicos
-
-- Importar `ArrowUpDown`, `ArrowDown`, `ArrowUp` do lucide-react
-- A ordenação é aplicada no frontend sobre `filteredProfiles`, sem nova query ao banco
-- O ciclo de clique: sem ordenação -> maior primeiro -> menor primeiro -> sem ordenação
+O formato de request/response é idêntico (OpenAI-compatible), então o streaming no frontend continua funcionando sem mudanças.
 

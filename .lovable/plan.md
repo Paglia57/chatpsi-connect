@@ -1,36 +1,75 @@
 
 
-## Ordenar por Tokens no Admin
+## Trial Limitado para Usuários Não-Assinantes
 
-Adicionar um botão/toggle na coluna "Tokens" da tabela de administração que permite ordenar os usuários pelo consumo de tokens (maior para menor e vice-versa).
+### Resumo
+Implementar um sistema de trial que permite usos gratuitos limitados por mês para usuários sem assinatura ativa. Após atingir o limite, o botão de ação vira paywall.
 
-### Mudanças em `src/pages/AdminPage.tsx`
+### Limites por feature
+| Feature | Limite mensal | Tabela de contagem |
+|---------|--------------|-------------------|
+| Evolução Clínica | 2 | `evolutions` |
+| IA de Marketing | 2 | `marketing_texts` |
+| Planos de Ação | 3 | `plano_chat_history` |
+| Artigos Científicos | 3 | `artigos_chat_history` |
 
-**1. Novo estado de ordenação**
+### Abordagem técnica
 
-Adicionar estado para controlar a direção da ordenação:
+**1. Hook compartilhado `useTrialLimit`**
+
+Criar `src/hooks/useTrialLimit.ts` — um hook reutilizável que:
+- Recebe o nome da tabela e o limite mensal
+- Consulta a contagem de registros do usuário no mês atual (`created_at >= início do mês`)
+- Retorna `{ usageCount, limit, hasReachedLimit, isLoading }`
+- Apenas aplica o limite quando `profile.subscription_active === false`
+
 ```typescript
-const [sortByTokens, setSortByTokens] = useState<'none' | 'asc' | 'desc'>('none');
+// Exemplo de uso
+const { hasReachedLimit, usageCount, limit } = useTrialLimit('evolutions', 2);
 ```
 
-**2. Aplicar ordenação no useEffect de filtro (linhas 80-89)**
+**2. Componente `TrialLimitBanner`**
 
-Após filtrar por nome, aplicar a ordenação por tokens:
-- `desc`: usuários com mais tokens primeiro
-- `asc`: usuários com menos tokens primeiro
-- `none`: ordem padrão (por data de criação)
+Criar `src/components/ui/TrialLimitBanner.tsx` — banner informativo que:
+- Mostra "Você usou X de Y gratuitos este mês" quando ainda tem usos
+- Mostra paywall "Assine para continuar" quando atingiu o limite
+- Inclui botão de CTA para assinatura
 
-Valores `null` de `TokenCount` serao tratados como `0`.
+**3. Alterações por feature**
 
-**3. Cabeçalho clicável na coluna "Tokens" (linha ~230)**
+**Evolução (`EvolutionInput.tsx` + `EvolutionPage.tsx`)**:
+- Adicionar `useTrialLimit('evolutions', 2)`
+- Mostrar `TrialLimitBanner` acima do formulário
+- Quando `hasReachedLimit`: desabilitar botão "Gerar Evolução" e trocar texto para "Assinar para continuar gerando"
 
-Trocar o `<TableHead>Tokens</TableHead>` por um botao clicavel com icone de seta indicando a direção atual:
-- Clique alterna entre `none` -> `desc` -> `asc` -> `none`
-- Icone `ArrowUpDown` (neutro), `ArrowDown` (desc), `ArrowUp` (asc) do lucide-react
+**Marketing (`MarketingInterface.tsx`)**:
+- Adicionar `useTrialLimit('marketing_texts', 2)`
+- Mostrar banner no tab "novo"
+- Quando `hasReachedLimit`: desabilitar botão "Gerar com IA" e trocar texto
 
-### Detalhes Técnicos
+**Planos de Ação (`BuscaPlanoInterface.tsx`)**:
+- Substituir check atual `if (!profile?.subscription_active)` por lógica de trial
+- Usar `useTrialLimit('plano_chat_history', 3)`
+- Quando `hasReachedLimit`: desabilitar input e botão de envio
 
-- Importar `ArrowUpDown`, `ArrowDown`, `ArrowUp` do lucide-react
-- A ordenação é aplicada no frontend sobre `filteredProfiles`, sem nova query ao banco
-- O ciclo de clique: sem ordenação -> maior primeiro -> menor primeiro -> sem ordenação
+**Artigos Científicos (`BuscaArtigosInterface.tsx`)**:
+- Mesma lógica do Planos de Ação
+- Usar `useTrialLimit('artigos_chat_history', 3)`
+
+### Notas
+- A contagem é feita client-side via query Supabase (as RLS policies já filtram por `user_id`)
+- Usuários com `subscription_active = true` nunca veem limites
+- O hook recarrega a contagem após cada geração bem-sucedida via callback `refetch`
+- Nenhuma migração de banco necessária — as tabelas já existem com `created_at`
+
+### Arquivos a criar
+- `src/hooks/useTrialLimit.ts`
+- `src/components/ui/TrialLimitBanner.tsx`
+
+### Arquivos a modificar
+- `src/pages/app/EvolutionPage.tsx`
+- `src/components/evolution/EvolutionInput.tsx`
+- `src/components/marketing/MarketingInterface.tsx`
+- `src/components/busca-plano/BuscaPlanoInterface.tsx`
+- `src/components/busca-artigos/BuscaArtigosInterface.tsx`
 

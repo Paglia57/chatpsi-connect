@@ -11,8 +11,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { ArrowLeft, CheckCircle, XCircle, Trophy, Medal, Award, Loader2 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { CheckCircle, XCircle, Trophy, Medal, Award, Loader2 } from 'lucide-react';
 
 interface Redemption {
   id: string;

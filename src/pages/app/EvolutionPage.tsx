@@ -183,6 +183,15 @@ export default function EvolutionPage() {
         { label: "Evolução", href: "/app/evolucao" },
         { label: "Nova Evolução" },
       ]} />
+      {!trial.isSubscribed && (
+        <TrialLimitBanner
+          usageCount={trial.usageCount}
+          limit={trial.limit}
+          hasReachedLimit={trial.hasReachedLimit}
+          featureLabel="evoluções"
+          isLoading={trial.isLoading}
+        />
+      )}
       {!guideDismissed && (!(profile?.seen_guides as any)?.evolution || tourActive) ? (
         <FirstTimeGuide
           guideKey="evolution"

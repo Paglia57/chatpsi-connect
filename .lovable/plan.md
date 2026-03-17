@@ -1,27 +1,36 @@
 
 
-## Fix: Botões "Finalizar" e "Anterior" não funcionam no tour
+## Ordenar por Tokens no Admin
 
-### Problema identificado
+Adicionar um botão/toggle na coluna "Tokens" da tabela de administração que permite ordenar os usuários pelo consumo de tokens (maior para menor e vice-versa).
 
-No `handleCallback`, quando o usuário clica "Finalizar" no último step, o Joyride dispara `STEP_AFTER` com `index = 8`. O código calcula `nextIndex = 9`, que é `>= tourSteps.length (9)`, e faz `return` sem fazer nada. O `STATUS.FINISHED` nunca é atingido porque o código aborta antes.
+### Mudanças em `src/pages/AdminPage.tsx`
 
-### Solução
+**1. Novo estado de ordenação**
 
-Em `src/components/ui/GuidedTour.tsx`, na linha 282, em vez de simplesmente `return` quando `nextIndex >= tourSteps.length`, finalizar o tour:
-
+Adicionar estado para controlar a direção da ordenação:
 ```typescript
-if (nextIndex >= tourSteps.length) {
-  setInternalRun(false);
-  navigate('/app');
-  onFinish();
-  return;
-}
-if (nextIndex < 0) return;
+const [sortByTokens, setSortByTokens] = useState<'none' | 'asc' | 'desc'>('none');
 ```
 
-Isso garante que clicar "Finalizar" no último step encerra o tour corretamente.
+**2. Aplicar ordenação no useEffect de filtro (linhas 80-89)**
 
-### Arquivo a alterar
-- `src/components/ui/GuidedTour.tsx` — linha 282
+Após filtrar por nome, aplicar a ordenação por tokens:
+- `desc`: usuários com mais tokens primeiro
+- `asc`: usuários com menos tokens primeiro
+- `none`: ordem padrão (por data de criação)
+
+Valores `null` de `TokenCount` serao tratados como `0`.
+
+**3. Cabeçalho clicável na coluna "Tokens" (linha ~230)**
+
+Trocar o `<TableHead>Tokens</TableHead>` por um botao clicavel com icone de seta indicando a direção atual:
+- Clique alterna entre `none` -> `desc` -> `asc` -> `none`
+- Icone `ArrowUpDown` (neutro), `ArrowDown` (desc), `ArrowUp` (asc) do lucide-react
+
+### Detalhes Técnicos
+
+- Importar `ArrowUpDown`, `ArrowDown`, `ArrowUp` do lucide-react
+- A ordenação é aplicada no frontend sobre `filteredProfiles`, sem nova query ao banco
+- O ciclo de clique: sem ordenação -> maior primeiro -> menor primeiro -> sem ordenação
 

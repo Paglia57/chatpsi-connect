@@ -15,7 +15,7 @@ import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
 import { useResponsive } from '@/hooks/useResponsive';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 const ChatSidebar = () => {
   const { open } = useSidebar();

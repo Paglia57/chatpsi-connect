@@ -1,36 +1,35 @@
 
 
-## Ordenar por Tokens no Admin
+## Plano: Tabela Admin Responsiva + Helper Text no Perfil
 
-Adicionar um botão/toggle na coluna "Tokens" da tabela de administração que permite ordenar os usuários pelo consumo de tokens (maior para menor e vice-versa).
+### 1. Tabela de Administração responsiva (`src/pages/AdminPage.tsx`)
 
-### Mudanças em `src/pages/AdminPage.tsx`
+**Problema:** 8 colunas cortadas sem scroll horizontal visível.
 
-**1. Novo estado de ordenação**
+**Solução:**
+- Envolver a `Table` num container com `overflow-x-auto` explícito (o wrapper do componente Table já tem `overflow-auto`, mas o `div.border.rounded-lg.overflow-hidden` na linha 232 está mascarando o scroll)
+- Trocar `overflow-hidden` por `overflow-x-auto` no container externo (linha 232)
+- Adicionar `min-w-[900px]` na `Table` para forçar scroll horizontal em telas menores ao invés de comprimir
+- Aplicar `whitespace-nowrap` nas células de Email e WhatsApp para evitar quebra
+- Reduzir texto "Limpar Histórico" para ícone `RotateCcw` + tooltip em telas pequenas (já importado)
 
-Adicionar estado para controlar a direção da ordenação:
-```typescript
-const [sortByTokens, setSortByTokens] = useState<'none' | 'asc' | 'desc'>('none');
-```
+### 2. Helper text no Perfil (`src/pages/app/ProfilePage.tsx`)
 
-**2. Aplicar ordenação no useEffect de filtro (linhas 80-89)**
+**Problema:** Campos sem contexto de como serão usados no app.
 
-Após filtrar por nome, aplicar a ordenação por tokens:
-- `desc`: usuários com mais tokens primeiro
-- `asc`: usuários com menos tokens primeiro
-- `none`: ordem padrão (por data de criação)
+**Solução — adicionar `<p className="text-xs text-muted-foreground">` abaixo de cada campo:**
 
-Valores `null` de `TokenCount` serao tratados como `0`.
+| Campo | Helper text |
+|-------|------------|
+| Nome completo | "Usado no cabeçalho das evoluções clínicas" |
+| CRP | "Formato: UF/número (ex: 06/123456). Aparece nas evoluções geradas" |
+| Abordagem principal | "Será pré-selecionada ao criar novas evoluções" |
+| Especialidades | "Ajudam a IA a personalizar sugestões e planos de ação" |
 
-**3. Cabeçalho clicável na coluna "Tokens" (linha ~230)**
+### Arquivos
 
-Trocar o `<TableHead>Tokens</TableHead>` por um botao clicavel com icone de seta indicando a direção atual:
-- Clique alterna entre `none` -> `desc` -> `asc` -> `none`
-- Icone `ArrowUpDown` (neutro), `ArrowDown` (desc), `ArrowUp` (asc) do lucide-react
-
-### Detalhes Técnicos
-
-- Importar `ArrowUpDown`, `ArrowDown`, `ArrowUp` do lucide-react
-- A ordenação é aplicada no frontend sobre `filteredProfiles`, sem nova query ao banco
-- O ciclo de clique: sem ordenação -> maior primeiro -> menor primeiro -> sem ordenação
+| Arquivo | Mudança |
+|---------|---------|
+| `src/pages/AdminPage.tsx` | Container com scroll horizontal + min-width na tabela + nowrap em colunas longas + ícone no botão Limpar |
+| `src/pages/app/ProfilePage.tsx` | Helper text descritivo abaixo de cada campo do formulário |
 

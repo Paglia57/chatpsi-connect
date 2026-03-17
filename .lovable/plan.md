@@ -1,38 +1,36 @@
 
 
-## Plano: Ajustar sidebar — ADMINISTRAÇÃO só para admin, "Indique e Ganhe" independente
+## Ordenar por Tokens no Admin
 
-### Mudanças em `src/components/chat/ChatSidebar.tsx`
+Adicionar um botão/toggle na coluna "Tokens" da tabela de administração que permite ordenar os usuários pelo consumo de tokens (maior para menor e vice-versa).
 
-**1. Grupo ADMINISTRAÇÃO (linhas 167-181)** — envolver TODO o bloco (label + separator + itens) em `{isAdmin && (...)}`, e adicionar "Validar Indicações" como segundo item:
+### Mudanças em `src/pages/AdminPage.tsx`
 
-```
-{isAdmin && (
-  <>
-    <Separator className="my-3" />
-    <SectionLabel>Administração</SectionLabel>
-    <NavLink to="/admin" ...>Administração</NavLink>
-    <NavLink to="/admin/referrals" ...>Validar Indicações</NavLink>
-  </>
-)}
+**1. Novo estado de ordenação**
+
+Adicionar estado para controlar a direção da ordenação:
+```typescript
+const [sortByTokens, setSortByTokens] = useState<'none' | 'asc' | 'desc'>('none');
 ```
 
-**2. "Indique e Ganhe"** — item independente, visível para TODOS, posicionado após o grupo Marketing (e após o bloco admin se existir). Sem label de seção, apenas um Separator e o link:
+**2. Aplicar ordenação no useEffect de filtro (linhas 80-89)**
 
-```
-<Separator className="my-3" />
-<NavLink to="/app/indicacoes" ...>
-  <Gift /> Indique e Ganhe
-</NavLink>
-```
+Após filtrar por nome, aplicar a ordenação por tokens:
+- `desc`: usuários com mais tokens primeiro
+- `asc`: usuários com menos tokens primeiro
+- `none`: ordem padrão (por data de criação)
 
-**3. View colapsada (icon-only, ~linhas 250-290)** — aplicar a mesma lógica:
-- Ícones admin só dentro de `{isAdmin && (...)}`
-- Ícone Gift (Indique e Ganhe) visível para todos, fora do bloco admin
+Valores `null` de `TokenCount` serao tratados como `0`.
 
-### Resumo
+**3. Cabeçalho clicável na coluna "Tokens" (linha ~230)**
 
-| Arquivo | Mudança |
-|---------|---------|
-| `src/components/chat/ChatSidebar.tsx` | Grupo ADMINISTRAÇÃO inteiro condicional a `isAdmin`, adicionar "Validar Indicações", mover "Indique e Ganhe" para fora como item independente para todos |
+Trocar o `<TableHead>Tokens</TableHead>` por um botao clicavel com icone de seta indicando a direção atual:
+- Clique alterna entre `none` -> `desc` -> `asc` -> `none`
+- Icone `ArrowUpDown` (neutro), `ArrowDown` (desc), `ArrowUp` (asc) do lucide-react
+
+### Detalhes Técnicos
+
+- Importar `ArrowUpDown`, `ArrowDown`, `ArrowUp` do lucide-react
+- A ordenação é aplicada no frontend sobre `filteredProfiles`, sem nova query ao banco
+- O ciclo de clique: sem ordenação -> maior primeiro -> menor primeiro -> sem ordenação
 

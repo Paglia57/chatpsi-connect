@@ -239,6 +239,18 @@ const GuidedTour: React.FC<GuidedTourProps> = ({ run, onFinish }) => {
   const [isNavigating, setIsNavigating] = useState(false);
   const [internalRun, setInternalRun] = useState(false);
 
+  const waitForTarget = useCallback((stepIdx: number, cb: () => void) => {
+    const target = tourSteps[stepIdx]?.target;
+    if (!target || typeof target !== 'string') { cb(); return; }
+    let attempts = 0;
+    const check = () => {
+      if (document.querySelector(target)) { cb(); return; }
+      attempts++;
+      if (attempts < 20) setTimeout(check, 100);
+    };
+    check();
+  }, []);
+
   useEffect(() => {
     if (run) {
       const firstRoute = tourSteps[0]?.data?.route;
@@ -246,7 +258,7 @@ const GuidedTour: React.FC<GuidedTourProps> = ({ run, onFinish }) => {
         navigate(firstRoute);
       }
       setStepIndex(0);
-      const timer = setTimeout(() => setInternalRun(true), 500);
+      const timer = setTimeout(() => waitForTarget(0, () => setInternalRun(true)), 300);
       return () => clearTimeout(timer);
     } else {
       setInternalRun(false);
@@ -277,10 +289,12 @@ const GuidedTour: React.FC<GuidedTourProps> = ({ run, onFinish }) => {
         setInternalRun(false);
         navigate(targetRoute);
         setTimeout(() => {
-          setStepIndex(nextIndex);
-          setInternalRun(true);
-          setIsNavigating(false);
-        }, 600);
+          waitForTarget(nextIndex, () => {
+            setStepIndex(nextIndex);
+            setInternalRun(true);
+            setIsNavigating(false);
+          });
+        }, 300);
       } else {
         setStepIndex(nextIndex);
       }

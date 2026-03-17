@@ -115,7 +115,7 @@ export default function OnboardingWizard({ initialStep = 0, onComplete }: Onboar
 
       {/* Step content */}
       <div className="flex-1 flex items-start justify-center py-6">
-        <div className="w-full animate-fade-in" key={currentStep}>
+        <div className="w-full animate-slide-in-right-fade" key={currentStep}>
           {renderStep()}
         </div>
       </div>

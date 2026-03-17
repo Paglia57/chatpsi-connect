@@ -210,12 +210,23 @@ export default function StepEvolution({ selectedApproach, createdPatient, onNext
       </Card>
 
       {isGenerating ? (
-        <div className="text-center space-y-3 py-4">
-          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
-          <p className="text-sm text-muted-foreground animate-fade-in" key={loadingTextIdx}>
-            {LOADING_TEXTS[loadingTextIdx]}
-          </p>
-        </div>
+        <Card className="rounded-2xl shadow-md border">
+          <CardContent className="p-6 flex flex-col items-center space-y-5">
+            {(() => {
+              const step = LOADING_STEPS[loadingTextIdx];
+              const Icon = step.icon;
+              return (
+                <div key={loadingTextIdx} className="flex flex-col items-center gap-3 animate-fade-in">
+                  <Icon className="h-8 w-8 text-primary" />
+                  <p className="text-sm font-medium text-foreground">{step.text}</p>
+                </div>
+              );
+            })()}
+            <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
+              <div className="h-full w-1/3 bg-primary rounded-full animate-[indeterminate_1.5s_ease-in-out_infinite]" />
+            </div>
+          </CardContent>
+        </Card>
       ) : (
         <Button variant="cta" className="w-full" size="lg" onClick={handleGenerate} disabled={textContent.trim().length < 10}>
           <Sparkles className="h-4 w-4" />

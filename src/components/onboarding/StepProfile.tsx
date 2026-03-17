@@ -97,12 +97,22 @@ export default function StepProfile({ onNext, onSkip }: StepProfileProps) {
           <div className="space-y-2">
             <Label>Quais suas especialidades? *</Label>
             <div className="grid grid-cols-2 gap-2">
-              {SPECIALTIES.map(s => (
-                <label key={s} className="flex items-center gap-2 cursor-pointer">
-                  <Checkbox checked={selectedSpecialties.includes(s)} onCheckedChange={() => toggleSpecialty(s)} />
-                  <span className="text-sm text-foreground">{s}</span>
-                </label>
-              ))}
+              {SPECIALTIES.map(s => {
+                const isSelected = selectedSpecialties.includes(s);
+                return (
+                  <label
+                    key={s}
+                    className={`flex items-center gap-2 cursor-pointer px-2.5 py-1.5 rounded-lg border transition-all duration-200 ${
+                      isSelected
+                        ? 'bg-teal-50 border-teal-200 scale-[1.02]'
+                        : 'border-transparent hover:bg-muted/50'
+                    }`}
+                  >
+                    <Checkbox checked={isSelected} onCheckedChange={() => toggleSpecialty(s)} />
+                    <span className="text-sm text-foreground">{s}</span>
+                  </label>
+                );
+              })}
             </div>
           </div>
 

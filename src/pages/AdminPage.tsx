@@ -49,7 +49,7 @@ const AdminPageContent = () => {
   const [editingProfile, setEditingProfile] = useState<Profile | null>(null);
   const [sortByTokens, setSortByTokens] = useState<'none' | 'asc' | 'desc'>('none');
   const { toast } = useToast();
-  const navigate = useNavigate();
+  
 
   const fetchProfiles = async () => {
     try {

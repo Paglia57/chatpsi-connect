@@ -1,32 +1,36 @@
 
 
-## Plano: Reestruturar Layout da IA de Marketing
+## Ordenar por Tokens no Admin
 
-### Problemas
-1. "Voltar para o Chat" é incorreto — sidebar principal já provê navegação
-2. Segundo painel lateral (histórico) compete com a sidebar principal do app
+Adicionar um botão/toggle na coluna "Tokens" da tabela de administração que permite ordenar os usuários pelo consumo de tokens (maior para menor e vice-versa).
 
-### Solução
+### Mudanças em `src/pages/AdminPage.tsx`
 
-Eliminar o painel lateral de histórico e reestruturar o conteúdo como **tabs** dentro do conteúdo principal:
+**1. Novo estado de ordenação**
 
-**Tab "Novo Texto"** (default): formulário atual (prompt + texto gerado + botões)
-**Tab "Histórico"**: lista de textos salvos em cards; ao clicar num card, muda para tab "Novo Texto" com os dados preenchidos
+Adicionar estado para controlar a direção da ordenação:
+```typescript
+const [sortByTokens, setSortByTokens] = useState<'none' | 'asc' | 'desc'>('none');
+```
 
-### Mudanças em `MarketingInterface.tsx`
+**2. Aplicar ordenação no useEffect de filtro (linhas 80-89)**
 
-- Remover o `SidebarContent` lateral (desktop) e o `Sheet` (mobile)
-- Remover botão "Voltar para o Chat" e import de `ArrowLeft`, `Menu`, `Sheet`
-- Remover `useNavigate`, `useIsMobile`, `sidebarOpen`
-- Usar `Tabs` do shadcn com duas tabs: "Novo Texto" e "Histórico"
-- Header simplificado: título "IA de Marketing" + descrição + botão "Novo" (quando em tab Histórico ou quando editando um texto existente)
-- Layout `div` simples sem `min-h-screen` (já está dentro do `AppLayout`)
-- Na tab Histórico: grid de cards (1 col mobile, 2 cols desktop) com título, data, preview e delete
-- Ao selecionar um card do histórico: mudar `activeTab` para "novo" e preencher prompt/generatedText
+Após filtrar por nome, aplicar a ordenação por tokens:
+- `desc`: usuários com mais tokens primeiro
+- `asc`: usuários com menos tokens primeiro
+- `none`: ordem padrão (por data de criação)
 
-### Arquivo
+Valores `null` de `TokenCount` serao tratados como `0`.
 
-| Arquivo | Mudança |
-|---------|---------|
-| `src/components/marketing/MarketingInterface.tsx` | Substituir layout dual-sidebar por tabs inline |
+**3. Cabeçalho clicável na coluna "Tokens" (linha ~230)**
+
+Trocar o `<TableHead>Tokens</TableHead>` por um botao clicavel com icone de seta indicando a direção atual:
+- Clique alterna entre `none` -> `desc` -> `asc` -> `none`
+- Icone `ArrowUpDown` (neutro), `ArrowDown` (desc), `ArrowUp` (asc) do lucide-react
+
+### Detalhes Técnicos
+
+- Importar `ArrowUpDown`, `ArrowDown`, `ArrowUp` do lucide-react
+- A ordenação é aplicada no frontend sobre `filteredProfiles`, sem nova query ao banco
+- O ciclo de clique: sem ordenação -> maior primeiro -> menor primeiro -> sem ordenação
 

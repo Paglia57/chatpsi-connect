@@ -168,6 +168,7 @@ export default function EvolutionPage() {
       });
       if (error) throw error;
       toast.success("Evolução salva com sucesso!");
+      trial.refetch();
     } catch (err: any) {
       toast.error("Erro ao salvar: " + (err.message || "Erro desconhecido"));
     } finally {

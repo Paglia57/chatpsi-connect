@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { Card, CardContent } from '@/components/ui/card';
@@ -28,17 +28,18 @@ const HomePage = () => {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [onboardingInitialStep, setOnboardingInitialStep] = useState(0);
   const [showBanner, setShowBanner] = useState(false);
+  const [showSidebarTooltip, setShowSidebarTooltip] = useState(false);
 
   // Onboarding logic
   useEffect(() => {
     if (!profile) return;
     if (profile.has_completed_onboarding) {
-      // Check banner dismiss count
-      const step = profile.onboarding_step ?? 0;
-      if (step > 0 && step < 4) {
-        // Edge case: completed but step < 4 — ignore
-      }
       setShowOnboarding(false);
+      // Show sidebar tooltip once after completing onboarding
+      const hasSeen = localStorage.getItem('has_seen_sidebar_tooltip');
+      if (!hasSeen) {
+        setShowSidebarTooltip(true);
+      }
       return;
     }
     // Not completed
@@ -47,15 +48,38 @@ const HomePage = () => {
       setShowOnboarding(true);
       setOnboardingInitialStep(0);
     } else {
-      // Partial progress — show banner
-      const viewsKey = 'onboarding_banner_views';
-      const views = parseInt(localStorage.getItem(viewsKey) || '0', 10);
-      if (views < 3) {
-        localStorage.setItem(viewsKey, String(views + 1));
+      // Partial progress — show banner if not dismissed 3 times
+      const dismissKey = 'onboarding_banner_dismiss_count';
+      const dismissCount = parseInt(localStorage.getItem(dismissKey) || '0', 10);
+      if (dismissCount < 3) {
         setShowBanner(true);
       }
     }
   }, [profile]);
+
+  // Sidebar tooltip auto-dismiss after 8s + click anywhere
+  useEffect(() => {
+    if (!showSidebarTooltip) return;
+    const timer = setTimeout(() => dismissTooltip(), 8000);
+    const handleClick = () => dismissTooltip();
+    document.addEventListener('click', handleClick, { once: true });
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('click', handleClick);
+    };
+  }, [showSidebarTooltip]);
+
+  const dismissTooltip = useCallback(() => {
+    setShowSidebarTooltip(false);
+    localStorage.setItem('has_seen_sidebar_tooltip', 'true');
+  }, []);
+
+  const handleDismissBanner = () => {
+    const dismissKey = 'onboarding_banner_dismiss_count';
+    const dismissCount = parseInt(localStorage.getItem(dismissKey) || '0', 10);
+    localStorage.setItem(dismissKey, String(dismissCount + 1));
+    setShowBanner(false);
+  };
 
   const handleResume = () => {
     setOnboardingInitialStep(profile?.onboarding_step ?? 0);
@@ -126,16 +150,35 @@ const HomePage = () => {
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
-      {/* Resume banner */}
+      {/* Resume onboarding banner */}
       {showBanner && (
-        <div className="bg-primary/10 border border-primary/20 rounded-xl p-4 flex items-center justify-between">
-          <p className="text-sm text-foreground">
-            Você ainda não completou a configuração inicial.{' '}
-            <button onClick={handleResume} className="text-primary font-semibold hover:underline">Retomar →</button>
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center justify-between gap-3">
+          <p className="text-sm text-foreground flex-1">
+            ⚡ Você ainda não completou a configuração inicial. Complete agora para personalizar a IA.
           </p>
-          <button onClick={() => setShowBanner(false)} className="text-muted-foreground hover:text-foreground">
-            <X className="h-4 w-4" />
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            <Button variant="outline" size="sm" onClick={handleResume}>
+              Retomar →
+            </Button>
+            <button onClick={handleDismissBanner} className="text-muted-foreground hover:text-foreground p-1">
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Sidebar tooltip (shown once after completing onboarding) */}
+      {showSidebarTooltip && (
+        <div className="fixed left-[270px] top-1/3 z-50 animate-in fade-in slide-in-from-left-2 duration-300">
+          <div className="relative bg-primary text-primary-foreground rounded-xl p-4 shadow-xl max-w-xs">
+            {/* Arrow pointing left */}
+            <div className="absolute left-0 top-1/2 -translate-x-full -translate-y-1/2">
+              <div className="w-0 h-0 border-t-8 border-b-8 border-r-8 border-t-transparent border-b-transparent border-r-primary" />
+            </div>
+            <p className="text-sm leading-relaxed">
+              Seu app está organizado aqui: <strong>Clínica</strong> para atendimentos, <strong>Ferramentas IA</strong> para consultas, e <strong>Marketing</strong> para divulgação.
+            </p>
+          </div>
         </div>
       )}
 

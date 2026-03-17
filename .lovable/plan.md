@@ -1,33 +1,36 @@
 
 
-## Dois elementos complementares ao onboarding
+## Ordenar por Tokens no Admin
 
-### 1. Banner de retomar onboarding (HomePage)
+Adicionar um botão/toggle na coluna "Tokens" da tabela de administração que permite ordenar os usuários pelo consumo de tokens (maior para menor e vice-versa).
 
-**Arquivo:** `src/pages/app/HomePage.tsx`
+### Mudanças em `src/pages/AdminPage.tsx`
 
-O banner já existe parcialmente (linhas 130-140), mas precisa ser atualizado:
-- Trocar estilo de `bg-primary/10 border-primary/20` para `bg-amber-50 border-amber-200`
-- Trocar texto para "⚡ Você ainda não completou a configuração inicial. Complete agora para personalizar a IA."
-- Trocar lógica de contagem: atualmente incrementa `onboarding_banner_views` ao **mostrar** o banner — deve incrementar apenas ao **fechar** (clicar no X)
-- Adicionar botão "Retomar →" estilizado como `Button variant="outline" size="sm"` à direita, junto ao X
+**1. Novo estado de ordenação**
 
-### 2. Tooltip de boas-vindas na sidebar (pós-onboarding)
+Adicionar estado para controlar a direção da ordenação:
+```typescript
+const [sortByTokens, setSortByTokens] = useState<'none' | 'asc' | 'desc'>('none');
+```
 
-**Arquivo:** `src/pages/app/HomePage.tsx`
+**2. Aplicar ordenação no useEffect de filtro (linhas 80-89)**
 
-Adicionar um popover/tooltip flutuante que aparece quando `has_completed_onboarding` acabou de ser marcado como `true` (primeira visita pós-onboarding):
-- State `showSidebarTooltip` controlado por `localStorage` key `has_seen_sidebar_tooltip`
-- Renderizar um `div` com posição `fixed` no lado esquerdo da tela (ao lado da sidebar), estilo `bg-primary text-primary-foreground rounded-xl p-4 shadow-xl` com seta CSS apontando para a esquerda
-- Texto explicativo sobre a organização da sidebar
-- Auto-dismiss após 8s via `setTimeout` + dismiss ao clicar em qualquer lugar via event listener
-- Após dismiss, setar `localStorage` flag para nunca mais mostrar
+Após filtrar por nome, aplicar a ordenação por tokens:
+- `desc`: usuários com mais tokens primeiro
+- `asc`: usuários com menos tokens primeiro
+- `none`: ordem padrão (por data de criação)
 
-### Mudanças por arquivo
+Valores `null` de `TokenCount` serao tratados como `0`.
 
-| Arquivo | Mudança |
-|---------|---------|
-| `src/pages/app/HomePage.tsx` | Atualizar banner (estilo amber, lógica de dismiss por clique no X, texto novo). Adicionar tooltip pós-onboarding com auto-dismiss de 8s e flag localStorage. |
+**3. Cabeçalho clicável na coluna "Tokens" (linha ~230)**
 
-Nenhum arquivo novo necessário. Nenhuma mudança de banco.
+Trocar o `<TableHead>Tokens</TableHead>` por um botao clicavel com icone de seta indicando a direção atual:
+- Clique alterna entre `none` -> `desc` -> `asc` -> `none`
+- Icone `ArrowUpDown` (neutro), `ArrowDown` (desc), `ArrowUp` (asc) do lucide-react
+
+### Detalhes Técnicos
+
+- Importar `ArrowUpDown`, `ArrowDown`, `ArrowUp` do lucide-react
+- A ordenação é aplicada no frontend sobre `filteredProfiles`, sem nova query ao banco
+- O ciclo de clique: sem ordenação -> maior primeiro -> menor primeiro -> sem ordenação
 

@@ -329,6 +329,7 @@ export type Database = {
           onboarding_step: number
           openai_thread_id: string | null
           plan: string | null
+          seen_guides: Json
           specialties: string[] | null
           subscribed_at: string | null
           subscription_active: boolean
@@ -358,6 +359,7 @@ export type Database = {
           onboarding_step?: number
           openai_thread_id?: string | null
           plan?: string | null
+          seen_guides?: Json
           specialties?: string[] | null
           subscribed_at?: string | null
           subscription_active?: boolean
@@ -387,6 +389,7 @@ export type Database = {
           onboarding_step?: number
           openai_thread_id?: string | null
           plan?: string | null
+          seen_guides?: Json
           specialties?: string[] | null
           subscribed_at?: string | null
           subscription_active?: boolean

@@ -8,6 +8,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { AudioPlayer } from '@/components/ui/AudioPlayer';
 import { Send, Paperclip, Crown, AlertCircle, Bot, User as UserIcon, Lock, Upload, Mic, Image as ImageIcon, Video, File, Wifi, WifiOff, AlertTriangle, RefreshCw, MessageCircle, Sparkles } from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthProvider';
+import FirstTimeGuide from '@/components/ui/FirstTimeGuide';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useFileUpload, UploadedFile } from '@/hooks/useFileUpload';
@@ -29,7 +30,8 @@ type ConnectionStatus = 'connected' | 'disconnected' | 'reconnecting';
 const ChatInterface = () => {
   const {
     profile,
-    user
+    user,
+    refreshProfile
   } = useAuth();
   const {
     toast
@@ -486,40 +488,58 @@ const ChatInterface = () => {
       <div className="flex-1 relative min-h-0">
         <ScrollArea className="h-full" ref={messagesContainerRef} onScrollCapture={handleScroll}>
           <div className="p-3 sm:p-4 space-y-3 sm:space-y-4 max-w-4xl mx-auto pb-4">
-            {messages.length === 0 ? <div className="text-center py-8 sm:py-12 px-4">
-                <Bot className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground mx-auto mb-3 sm:mb-4" />
-                <h3 className="text-base sm:text-lg font-medium mb-2">Bem-vindo ao ChatPsi!</h3>
-                <p className="text-sm sm:text-base text-muted-foreground mb-4 text-overflow-anywhere">
-                  {canSendMessage ? "Envie mensagens, áudios, imagens ou documentos para começar a conversar com a IA." : "Você precisa de uma assinatura ativa para começar a conversar."}
-                </p>
-                {!canSendMessage && <Button variant="cta" className="touch-target">
-                    Ativar Assinatura
-                  </Button>}
-                {canSendMessage && <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-w-lg mx-auto mt-6">
-                    {[
-                      "Como estruturar uma evolução de sessão?",
-                      "Sugira técnicas de TCC para ansiedade",
-                      "Me ajude a montar um plano terapêutico",
-                      "Quais registros devo manter do paciente?"
-                    ].map((prompt) => (
-                      <Button
-                        key={prompt}
-                        variant="outline"
-                        className="text-left text-sm h-auto py-3 px-4 justify-start gap-2 hover:bg-muted whitespace-normal"
-                        onClick={() => {
-                          setNewMessage(prompt);
-                          setTimeout(() => {
-                            const form = document.querySelector('form');
-                            if (form) form.requestSubmit();
-                          }, 50);
-                        }}
-                      >
-                        <MessageCircle className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
-                        <span>{prompt}</span>
-                      </Button>
-                    ))}
-                  </div>}
-              </div> : messages.map(message => <div key={message.id} className={`flex gap-2 sm:gap-3 animate-fade-in ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+            {messages.length === 0 ? (
+              !profile?.seen_guides?.chat && canSendMessage ? (
+                <FirstTimeGuide
+                  guideKey="chat"
+                  icon={<MessageCircle className="h-8 w-8 text-primary" />}
+                  title="Seu assistente clínico com IA"
+                  description="Converse sobre casos, peça sugestões de intervenções, discuta diagnósticos diferenciais e tire dúvidas sobre abordagens terapêuticas."
+                  tips={[
+                    "Descreva o caso do seu paciente e peça orientações de manejo clínico",
+                    "Pergunte sobre técnicas específicas para diferentes quadros clínicos",
+                    "Peça ajuda para planejar sessões ou elaborar devolutivas",
+                  ]}
+                  examples={[
+                    "Meu paciente tem ansiedade social, que técnicas de TCC posso usar?",
+                    "Como abordar resistência ao tratamento em adolescentes?",
+                    "Me ajude a planejar uma sessão de psicoeducação sobre depressão",
+                  ]}
+                  ctaText="Entendi, vamos conversar!"
+                  onDismiss={async () => {
+                    if (user) {
+                      const current = profile?.seen_guides || {};
+                      await supabase.from('profiles').update({ seen_guides: { ...current, chat: true } }).eq('user_id', user.id);
+                      await refreshProfile();
+                    }
+                  }}
+                  onExampleClick={(text) => {
+                    setNewMessage(text);
+                    if (user) {
+                      const current = profile?.seen_guides || {};
+                      supabase.from('profiles').update({ seen_guides: { ...current, chat: true } }).eq('user_id', user.id).then(() => refreshProfile());
+                    }
+                  }}
+                />
+              ) : (
+                <div className="text-center py-8 sm:py-12 px-4">
+                  <Bot className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground mx-auto mb-3 sm:mb-4" />
+                  <h3 className="text-base sm:text-lg font-medium mb-2">Bem-vindo ao ChatPsi!</h3>
+                  <p className="text-sm sm:text-base text-muted-foreground mb-4 text-overflow-anywhere">
+                    {canSendMessage ? "Envie mensagens, áudios, imagens ou documentos para começar a conversar com a IA." : "Você precisa de uma assinatura ativa para começar a conversar."}
+                  </p>
+                  {!canSendMessage && <Button variant="cta" className="touch-target">Ativar Assinatura</Button>}
+                  {canSendMessage && <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-w-lg mx-auto mt-6">
+                      {["Como estruturar uma evolução de sessão?", "Sugira técnicas de TCC para ansiedade", "Me ajude a montar um plano terapêutico", "Quais registros devo manter do paciente?"].map((prompt) => (
+                        <Button key={prompt} variant="outline" className="text-left text-sm h-auto py-3 px-4 justify-start gap-2 hover:bg-muted whitespace-normal" onClick={() => { setNewMessage(prompt); setTimeout(() => { const form = document.querySelector('form'); if (form) form.requestSubmit(); }, 50); }}>
+                          <MessageCircle className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+                          <span>{prompt}</span>
+                        </Button>
+                      ))}
+                    </div>}
+                </div>
+              )
+            ) : messages.map(message => <div key={message.id} className={`flex gap-2 sm:gap-3 animate-fade-in ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
                   {message.sender === 'ai' && <div className="flex-shrink-0">
                       <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary/10 flex items-center justify-center">
                         <Bot className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />

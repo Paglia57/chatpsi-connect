@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, UserPlus, Users } from "lucide-react";
+import { Search, UserPlus, Users, ClipboardList, Brain, TrendingUp } from "lucide-react";
 import PatientFormDialog from "@/components/patients/PatientFormDialog";
 
 interface Patient {

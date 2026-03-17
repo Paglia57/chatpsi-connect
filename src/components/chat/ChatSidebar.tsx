@@ -15,7 +15,7 @@ import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
 import { useResponsive } from '@/hooks/useResponsive';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 const ChatSidebar = () => {
   const { open } = useSidebar();
@@ -122,6 +122,7 @@ const ChatSidebar = () => {
       <div className="p-4 border-b border-sidebar-border">
         <div className="flex items-center gap-3">
           <Avatar className="h-10 w-10 ring-2 ring-sidebar-border">
+            <AvatarImage src={profile?.avatar_url || undefined} />
             <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
               {getAvatarText()}
             </AvatarFallback>
@@ -300,6 +301,7 @@ const ChatSidebar = () => {
         /* Collapsed icon-only view */
         <div className="flex flex-col h-full items-center py-4 gap-2">
           <Avatar className="h-8 w-8 mb-2">
+            <AvatarImage src={profile?.avatar_url || undefined} />
             <AvatarFallback className="bg-primary text-primary-foreground text-xs font-semibold">
               {getAvatarText()}
             </AvatarFallback>

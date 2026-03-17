@@ -1,36 +1,16 @@
 
 
-## Ordenar por Tokens no Admin
+## Problema
 
-Adicionar um botão/toggle na coluna "Tokens" da tabela de administração que permite ordenar os usuários pelo consumo de tokens (maior para menor e vice-versa).
+O item "Pacientes" não está no `menuItems` do `ChatSidebar.tsx`. O `AppSidebar.tsx` tem o item, mas o layout usa `ChatSidebar` (via `AppLayout.tsx`), então o item nunca aparece.
 
-### Mudanças em `src/pages/AdminPage.tsx`
+## Solução
 
-**1. Novo estado de ordenação**
+Adicionar o item "Pacientes" no array `menuItems` do `ChatSidebar.tsx`, entre "Evolução Clínica" e "Histórico". Importar o ícone `Users` do lucide-react.
 
-Adicionar estado para controlar a direção da ordenação:
-```typescript
-const [sortByTokens, setSortByTokens] = useState<'none' | 'asc' | 'desc'>('none');
-```
+| Arquivo | Mudança |
+|---------|---------|
+| `src/components/chat/ChatSidebar.tsx` | Adicionar `Users` ao import do lucide-react. Inserir `{ title: "Pacientes", url: "/app/pacientes", icon: Users, description: "Gestão de pacientes", gradient: "from-primary to-cta" }` no array `menuItems`, após "Evolução Clínica" e antes de "Histórico". |
 
-**2. Aplicar ordenação no useEffect de filtro (linhas 80-89)**
-
-Após filtrar por nome, aplicar a ordenação por tokens:
-- `desc`: usuários com mais tokens primeiro
-- `asc`: usuários com menos tokens primeiro
-- `none`: ordem padrão (por data de criação)
-
-Valores `null` de `TokenCount` serao tratados como `0`.
-
-**3. Cabeçalho clicável na coluna "Tokens" (linha ~230)**
-
-Trocar o `<TableHead>Tokens</TableHead>` por um botao clicavel com icone de seta indicando a direção atual:
-- Clique alterna entre `none` -> `desc` -> `asc` -> `none`
-- Icone `ArrowUpDown` (neutro), `ArrowDown` (desc), `ArrowUp` (asc) do lucide-react
-
-### Detalhes Técnicos
-
-- Importar `ArrowUpDown`, `ArrowDown`, `ArrowUp` do lucide-react
-- A ordenação é aplicada no frontend sobre `filteredProfiles`, sem nova query ao banco
-- O ciclo de clique: sem ordenação -> maior primeiro -> menor primeiro -> sem ordenação
+Uma única mudança em um arquivo.
 

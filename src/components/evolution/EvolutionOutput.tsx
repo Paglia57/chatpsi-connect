@@ -5,7 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
-import { ClipboardCopy, Pencil, Save, RefreshCw, Download, Check } from "lucide-react";
+import { ClipboardCopy, Pencil, Save, RefreshCw, Download, Check, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { parseEvolutionContent, exportEvolutionPdf } from "@/lib/evolutionParser";
 
@@ -109,8 +109,8 @@ export default function EvolutionOutput({ content, isLoading, onRegenerate, onSa
               Editar
             </Button>
           )}
-          <Button variant="outline" size="sm" onClick={handleSave} disabled={isSaving}>
-            <Save className="h-4 w-4" />
+          <Button variant="cta" size="sm" onClick={handleSave} disabled={isSaving}>
+            {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
             {isSaving ? "Salvando..." : "Salvar"}
           </Button>
           <Button variant="outline" size="sm" onClick={onRegenerate} disabled={isLoading}>

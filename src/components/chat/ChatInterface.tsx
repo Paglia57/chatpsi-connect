@@ -458,10 +458,17 @@ const ChatInterface = () => {
     }
   };
   if (fetchingMessages) {
-    return <div className="flex-1 flex items-center justify-center">
-        <div className="text-center space-y-2">
-          <Bot className="h-8 w-8 text-muted-foreground mx-auto animate-pulse" />
-          <p className="text-muted-foreground">Carregando suas conversas...</p>
+    return <div className="flex-1 flex flex-col items-center justify-center gap-3 p-4">
+        <div className="w-full max-w-4xl space-y-4">
+          {[1, 2, 3].map(i => (
+            <div key={i} className={`flex gap-3 ${i % 2 === 0 ? 'justify-end' : 'justify-start'}`}>
+              <div className="h-8 w-8 rounded-full bg-muted animate-pulse shrink-0" />
+              <div className="space-y-2 max-w-[60%]">
+                <div className="h-16 rounded-lg bg-muted animate-pulse" />
+                <div className="h-3 w-16 bg-muted animate-pulse rounded" />
+              </div>
+            </div>
+          ))}
         </div>
       </div>;
   }
@@ -483,7 +490,7 @@ const ChatInterface = () => {
                 <p className="text-sm sm:text-base text-muted-foreground mb-4 text-overflow-anywhere">
                   {canSendMessage ? "Envie mensagens, áudios, imagens ou documentos para começar a conversar com a IA." : "Você precisa de uma assinatura ativa para começar a conversar."}
                 </p>
-                {!canSendMessage && <Button variant="default" className="touch-target">
+                {!canSendMessage && <Button variant="cta" className="touch-target">
                     Ativar Assinatura
                   </Button>}
               </div> : messages.map(message => <div key={message.id} className={`flex gap-2 sm:gap-3 animate-fade-in ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -642,7 +649,7 @@ const ChatInterface = () => {
               <Lock className="h-4 w-4" />
               <span className="text-sm">Assinatura necessária para enviar mensagens</span>
             </div>
-            <Button variant="default" size="sm" className="touch-target">
+            <Button variant="cta" size="sm" className="touch-target">
               Ativar Assinatura
             </Button>
           </div>}

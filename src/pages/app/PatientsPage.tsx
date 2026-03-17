@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import AppBreadcrumb from "@/components/ui/AppBreadcrumb";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -64,6 +66,10 @@ export default function PatientsPage() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
+      <AppBreadcrumb items={[
+        { label: "Clínica", href: "/app/pacientes" },
+        { label: "Pacientes" },
+      ]} />
       <Card className="border-border bg-card shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between gap-4 flex-wrap">
           <CardTitle className="font-display text-xl text-foreground">Meus Pacientes</CardTitle>
@@ -136,7 +142,14 @@ export default function PatientsPage() {
               {loading ? (
                 <div className="space-y-3">
                   {[1, 2, 3].map(i => (
-                    <div key={i} className="h-16 rounded-lg bg-muted animate-pulse" />
+                    <div key={i} className="flex items-center gap-4 p-3 rounded-lg border border-border">
+                      <Skeleton className="h-10 w-10 rounded-full" />
+                      <div className="flex-1 space-y-2">
+                        <Skeleton className="h-4 w-1/3" />
+                        <Skeleton className="h-3 w-1/2" />
+                      </div>
+                      <Skeleton className="h-6 w-16 rounded-full" />
+                    </div>
                   ))}
                 </div>
               ) : filtered.length === 0 ? (

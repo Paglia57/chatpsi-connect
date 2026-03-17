@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import AppBreadcrumb from "@/components/ui/AppBreadcrumb";
+import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,7 +13,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Search, Trash2, ClipboardList, ClipboardCopy, Pencil, X, Download, ChevronDown } from "lucide-react";
+import { Search, Trash2, ClipboardList, ClipboardCopy, Pencil, X, Download, ChevronDown, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
 import { parseEvolutionContent, getContentPreview, exportEvolutionPdf } from "@/lib/evolutionParser";
@@ -167,11 +169,23 @@ export default function HistoryPage() {
   if (loading) {
     return (
       <div className="max-w-4xl mx-auto space-y-4">
+        <AppBreadcrumb items={[
+          { label: "Clínica", href: "/app/evolucao" },
+          { label: "Evolução", href: "/app/evolucao" },
+          { label: "Histórico" },
+        ]} />
         <h1 className="font-display text-2xl font-semibold text-foreground">Histórico de Evoluções</h1>
         <div className="space-y-3">
           {[1, 2, 3].map(i => (
-            <Card key={i} className="border-border bg-card animate-pulse">
-              <CardContent className="p-4 h-20" />
+            <Card key={i} className="border-border bg-card">
+              <CardContent className="p-4 flex items-start gap-4">
+                <Skeleton className="h-10 w-10 rounded-full" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-4 w-1/3" />
+                  <Skeleton className="h-3 w-2/3" />
+                  <Skeleton className="h-3 w-1/2" />
+                </div>
+              </CardContent>
             </Card>
           ))}
         </div>
@@ -180,7 +194,12 @@ export default function HistoryPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-4xl mx-auto space-y-6 animate-fade-in">
+      <AppBreadcrumb items={[
+        { label: "Clínica", href: "/app/evolucao" },
+        { label: "Evolução", href: "/app/evolucao" },
+        { label: "Histórico" },
+      ]} />
       <h1 className="font-display text-2xl font-semibold text-foreground">Histórico de Evoluções</h1>
 
       {/* Filters */}
@@ -336,7 +355,7 @@ export default function HistoryPage() {
                 {isEditing ? (
                   <>
                     <Button
-                      variant="default"
+                      variant="cta"
                       size="sm"
                       disabled={saving}
                       onClick={async () => {
@@ -356,7 +375,12 @@ export default function HistoryPage() {
                         }
                       }}
                     >
-                      {saving ? "Salvando..." : "Salvar"}
+                      {saving ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Salvando...
+                        </>
+                      ) : "Salvar"}
                     </Button>
                     <Button variant="ghost" size="sm" onClick={() => setIsEditing(false)}>
                       <X className="h-4 w-4" />

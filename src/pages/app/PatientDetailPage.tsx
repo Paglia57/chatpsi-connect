@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import AppBreadcrumb from "@/components/ui/AppBreadcrumb";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -122,7 +124,20 @@ export default function PatientDetailPage() {
   } : null;
 
   if (loading) {
-    return <div className="max-w-4xl mx-auto"><div className="h-64 bg-muted animate-pulse rounded-lg" /></div>;
+    return (
+      <div className="max-w-4xl mx-auto space-y-6">
+        <Skeleton className="h-5 w-48" />
+        <div className="flex items-center gap-3">
+          <Skeleton className="h-14 w-14 rounded-full" />
+          <div className="space-y-2 flex-1">
+            <Skeleton className="h-6 w-1/3" />
+            <Skeleton className="h-4 w-1/4" />
+          </div>
+        </div>
+        <Skeleton className="h-48 w-full rounded-lg" />
+        <Skeleton className="h-32 w-full rounded-lg" />
+      </div>
+    );
   }
 
   if (!patient) {
@@ -143,8 +158,12 @@ export default function PatientDetailPage() {
     ) : null;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      {/* Header */}
+    <div className="max-w-4xl mx-auto space-y-6 animate-fade-in">
+      <AppBreadcrumb items={[
+        { label: "Clínica", href: "/app/pacientes" },
+        { label: "Pacientes", href: "/app/pacientes" },
+        { label: patient.full_name },
+      ]} />
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" onClick={() => navigate("/app/pacientes")}>
           <ArrowLeft className="h-5 w-5" />

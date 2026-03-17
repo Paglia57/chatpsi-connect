@@ -1,6 +1,7 @@
 import { SidebarProvider } from "@/components/ui/sidebar";
 import ChatSidebar from "@/components/chat/ChatSidebar";
 import ReferralNotificationPoller from "@/components/referral/ReferralNotificationPoller";
+import RouteProgressBar from "@/components/ui/RouteProgressBar";
 import { Outlet, Navigate } from "react-router-dom";
 import { useResponsive } from "@/hooks/useResponsive";
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -26,6 +27,7 @@ export default function AppLayout() {
 
   return (
     <SidebarProvider>
+      <RouteProgressBar />
       <div className={`app-shell min-h-screen-mobile flex w-full bg-background no-horizontal-scroll ${isMobile ? 'flex-col' : ''}`}>
         <ChatSidebar />
         <div className="flex-1 flex flex-col min-w-0">

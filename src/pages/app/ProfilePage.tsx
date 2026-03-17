@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import AppBreadcrumb from "@/components/ui/AppBreadcrumb";
+import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -114,14 +116,34 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="max-w-2xl mx-auto flex items-center justify-center py-12">
-        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      <div className="max-w-2xl mx-auto space-y-6">
+        <Skeleton className="h-5 w-32" />
+        <div className="border rounded-lg p-6 space-y-6">
+          <Skeleton className="h-6 w-40" />
+          <div className="flex items-center gap-4">
+            <Skeleton className="h-16 w-16 rounded-full" />
+            <Skeleton className="h-9 w-24" />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-16" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+          </div>
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-12 w-40" />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-2xl mx-auto animate-fade-in">
+      <AppBreadcrumb items={[{ label: "Meu Perfil" }]} />
       <Card className="border-border bg-card text-card-foreground shadow-sm">
         <CardHeader>
           <CardTitle className="font-display text-xl text-foreground">Perfil Profissional</CardTitle>

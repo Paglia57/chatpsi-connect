@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { AdminGuard } from '@/components/admin/AdminGuard';
+import AppBreadcrumb from "@/components/ui/AppBreadcrumb";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -153,6 +155,7 @@ const AdminPageContent = () => {
   return (
     <TooltipProvider>
     <div className="container mx-auto py-8 px-4">
+      <AppBreadcrumb items={[{ label: "Administração" }]} />
       <div className="mb-8">
         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
           <div>
@@ -229,7 +232,16 @@ const AdminPageContent = () => {
       </div>
 
       {loading ? (
-        <div className="text-center py-8">Carregando...</div>
+        <div className="space-y-3">
+          {[1, 2, 3, 4].map(i => (
+            <div key={i} className="flex items-center gap-4 p-3 border rounded-lg">
+              <Skeleton className="h-4 w-40" />
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-6 w-16 rounded-full" />
+            </div>
+          ))}
+        </div>
       ) : (
         <div className="border rounded-lg overflow-x-auto">
           <Table className="min-w-[900px]">
@@ -368,7 +380,7 @@ const AdminPageContent = () => {
                 <Button variant="outline" onClick={() => setEditingProfile(null)}>
                   Cancelar
                 </Button>
-                <Button onClick={handleSaveEdit}>Salvar</Button>
+                <Button variant="cta" onClick={handleSaveEdit}>Salvar</Button>
               </div>
             </div>
           )}

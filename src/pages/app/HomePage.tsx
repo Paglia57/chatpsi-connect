@@ -189,6 +189,9 @@ const HomePage = () => {
         <p className="text-muted-foreground mt-1">O que vamos fazer hoje?</p>
       </div>
 
+      {/* Redeem referral banner for new/recent users */}
+      <RedeemBanner />
+
       {/* Stats */}
       <div className="grid grid-cols-2 gap-4">
         <Card>

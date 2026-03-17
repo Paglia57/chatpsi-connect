@@ -5,6 +5,7 @@ import AppBreadcrumb from "@/components/ui/AppBreadcrumb";
 import FirstTimeGuide from "@/components/ui/FirstTimeGuide";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { useOutletContext } from "react-router-dom";
 import { toast } from "sonner";
 import { FileText } from "lucide-react";
 

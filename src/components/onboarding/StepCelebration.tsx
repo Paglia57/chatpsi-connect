@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -13,10 +14,10 @@ interface StepCelebrationProps {
 }
 
 const features = [
-  { icon: MessageCircle, title: 'Chat Clínico', desc: 'Discuta casos e consulte protocolos', emoji: '💬' },
-  { icon: BookOpen, title: 'Artigos Científicos', desc: 'Busque evidências para suas intervenções', emoji: '📚' },
-  { icon: Target, title: 'Planos de Ação', desc: 'Monte planos terapêuticos com IA', emoji: '🎯' },
-  { icon: Megaphone, title: 'IA de Marketing', desc: 'Crie conteúdo para redes sociais', emoji: '✍️' },
+  { icon: MessageCircle, title: 'Chat Clínico', desc: 'Discuta casos e consulte protocolos', emoji: '💬', route: '/chat' },
+  { icon: BookOpen, title: 'Artigos Científicos', desc: 'Busque evidências para suas intervenções', emoji: '📚', route: '/busca-artigos' },
+  { icon: Target, title: 'Planos de Ação', desc: 'Monte planos terapêuticos com IA', emoji: '🎯', route: '/busca-plano' },
+  { icon: Megaphone, title: 'IA de Marketing', desc: 'Crie conteúdo para redes sociais', emoji: '✍️', route: '/marketing' },
 ];
 
 export default function StepCelebration({ evolutionContent, onFinish }: StepCelebrationProps) {

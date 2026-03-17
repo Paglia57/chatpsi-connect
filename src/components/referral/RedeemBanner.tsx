@@ -8,7 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Gift, CheckCircle, Loader2 } from 'lucide-react';
 
 const RedeemBanner = () => {
-  const { user, profile } = useAuth();
+  const { user, profile, isAdmin } = useAuth();
   const { toast } = useToast();
   const [eligible, setEligible] = useState<boolean | null>(null);
   const [code, setCode] = useState('');

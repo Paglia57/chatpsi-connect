@@ -170,7 +170,7 @@ const ChatSidebar = () => {
       {/* Scrollable nav area */}
       <div className="flex-1 overflow-y-auto p-2">
         {/* INÍCIO */}
-        <NavLink to="/app" end onClick={onNavigate} className={navLinkClass(isActive('/app'))}>
+        <NavLink to="/app" end onClick={onNavigate} className={navLinkClass(isActive('/app'))} data-tour="nav-inicio">
           <Home className="h-4 w-4 shrink-0" />
           <span>Início</span>
         </NavLink>

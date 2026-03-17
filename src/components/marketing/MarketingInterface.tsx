@@ -272,6 +272,7 @@ const MarketingInterface = () => {
               <Button
                 onClick={handleGenerate}
                 disabled={isGenerating || !prompt.trim()}
+                variant="cta"
                 className="flex-1"
               >
                 {isGenerating ? (

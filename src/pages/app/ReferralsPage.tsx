@@ -71,8 +71,13 @@ const ReferralsPage = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-16">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="max-w-2xl mx-auto space-y-6">
+        <Skeleton className="h-5 w-40" />
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-64" />
+          <Skeleton className="h-4 w-full" />
+        </div>
+        <Skeleton className="h-48 w-full rounded-lg" />
       </div>
     );
   }

@@ -1,36 +1,29 @@
 
 
-## Ordenar por Tokens no Admin
+## Adicionar suporte a áudio no StepEvolution do onboarding
 
-Adicionar um botão/toggle na coluna "Tokens" da tabela de administração que permite ordenar os usuários pelo consumo de tokens (maior para menor e vice-versa).
+### Problema
+Atualmente o step de evolução no onboarding só aceita texto. O módulo principal (`EvolutionInput`) já suporta upload de áudio e gravação, mas o onboarding não oferece essa opção.
 
-### Mudanças em `src/pages/AdminPage.tsx`
+### Solução
 
-**1. Novo estado de ordenação**
+Adicionar tabs "Texto" / "Áudio" no `StepEvolution.tsx`, replicando a lógica de upload de áudio do `EvolutionInput`:
 
-Adicionar estado para controlar a direção da ordenação:
-```typescript
-const [sortByTokens, setSortByTokens] = useState<'none' | 'asc' | 'desc'>('none');
-```
+**Arquivo: `src/components/onboarding/StepEvolution.tsx`**
 
-**2. Aplicar ordenação no useEffect de filtro (linhas 80-89)**
+1. Adicionar estados para `activeTab`, `audioFile`, `isDragging`, e ref para file input
+2. Adicionar `Tabs` (Texto / Áudio) envolvendo o campo de anotações atual e uma nova área de upload de áudio (drag-and-drop + seleção de arquivo + preview com player)
+3. Atualizar `handleGenerate`:
+   - Se áudio: converter arquivo para base64, enviar com `input_type: 'audio'`, `audio_base64`, `audio_filename`
+   - Se texto: manter lógica atual
+4. Atualizar validação `canSubmit`: aceitar texto com 10+ chars OU arquivo de áudio selecionado
+5. Salvar `input_type` corretamente no insert da evolução
 
-Após filtrar por nome, aplicar a ordenação por tokens:
-- `desc`: usuários com mais tokens primeiro
-- `asc`: usuários com menos tokens primeiro
-- `none`: ordem padrão (por data de criação)
+### Componentes reutilizados
+- `Tabs`, `TabsList`, `TabsTrigger`, `TabsContent` (já existentes no projeto)
+- Mesmos ícones: `Mic`, `Upload`, `X`
+- Mesmo estilo de drag-and-drop e preview de áudio do `EvolutionInput`
 
-Valores `null` de `TokenCount` serao tratados como `0`.
-
-**3. Cabeçalho clicável na coluna "Tokens" (linha ~230)**
-
-Trocar o `<TableHead>Tokens</TableHead>` por um botao clicavel com icone de seta indicando a direção atual:
-- Clique alterna entre `none` -> `desc` -> `asc` -> `none`
-- Icone `ArrowUpDown` (neutro), `ArrowDown` (desc), `ArrowUp` (asc) do lucide-react
-
-### Detalhes Técnicos
-
-- Importar `ArrowUpDown`, `ArrowDown`, `ArrowUp` do lucide-react
-- A ordenação é aplicada no frontend sobre `filteredProfiles`, sem nova query ao banco
-- O ciclo de clique: sem ordenação -> maior primeiro -> menor primeiro -> sem ordenação
+### Escopo
+- Apenas `src/components/onboarding/StepEvolution.tsx` será alterado
 

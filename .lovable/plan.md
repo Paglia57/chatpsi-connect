@@ -1,36 +1,16 @@
 
 
-## Ordenar por Tokens no Admin
+## Correção: EvolutionInput não está sendo renderizado
 
-Adicionar um botão/toggle na coluna "Tokens" da tabela de administração que permite ordenar os usuários pelo consumo de tokens (maior para menor e vice-versa).
+### Problema
+O componente `EvolutionInput` é importado na linha 2 do `EvolutionPage.tsx`, mas nunca é incluído no JSX de retorno. A página só renderiza o breadcrumb e o output condicional — por isso aparece em branco.
 
-### Mudanças em `src/pages/AdminPage.tsx`
+### Correção
+Adicionar `<EvolutionInput onGenerate={handleGenerate} />` no JSX, entre o breadcrumb e o output condicional.
 
-**1. Novo estado de ordenação**
+### Arquivo alterado
 
-Adicionar estado para controlar a direção da ordenação:
-```typescript
-const [sortByTokens, setSortByTokens] = useState<'none' | 'asc' | 'desc'>('none');
-```
-
-**2. Aplicar ordenação no useEffect de filtro (linhas 80-89)**
-
-Após filtrar por nome, aplicar a ordenação por tokens:
-- `desc`: usuários com mais tokens primeiro
-- `asc`: usuários com menos tokens primeiro
-- `none`: ordem padrão (por data de criação)
-
-Valores `null` de `TokenCount` serao tratados como `0`.
-
-**3. Cabeçalho clicável na coluna "Tokens" (linha ~230)**
-
-Trocar o `<TableHead>Tokens</TableHead>` por um botao clicavel com icone de seta indicando a direção atual:
-- Clique alterna entre `none` -> `desc` -> `asc` -> `none`
-- Icone `ArrowUpDown` (neutro), `ArrowDown` (desc), `ArrowUp` (asc) do lucide-react
-
-### Detalhes Técnicos
-
-- Importar `ArrowUpDown`, `ArrowDown`, `ArrowUp` do lucide-react
-- A ordenação é aplicada no frontend sobre `filteredProfiles`, sem nova query ao banco
-- O ciclo de clique: sem ordenação -> maior primeiro -> menor primeiro -> sem ordenação
+| Arquivo | Mudança |
+|---------|---------|
+| `src/pages/app/EvolutionPage.tsx` | Adicionar `<EvolutionInput onGenerate={handleGenerate} />` no return, logo após o `AppBreadcrumb` |
 

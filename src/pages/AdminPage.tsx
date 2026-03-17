@@ -232,7 +232,16 @@ const AdminPageContent = () => {
       </div>
 
       {loading ? (
-        <div className="text-center py-8">Carregando...</div>
+        <div className="space-y-3">
+          {[1, 2, 3, 4].map(i => (
+            <div key={i} className="flex items-center gap-4 p-3 border rounded-lg">
+              <Skeleton className="h-4 w-40" />
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-6 w-16 rounded-full" />
+            </div>
+          ))}
+        </div>
       ) : (
         <div className="border rounded-lg overflow-x-auto">
           <Table className="min-w-[900px]">

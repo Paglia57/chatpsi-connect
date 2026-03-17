@@ -174,8 +174,15 @@ const AdminReferralsContent = () => {
       <p className="text-muted-foreground mb-6">Gerencie os resgates de códigos de indicação</p>
 
       {loading ? (
-        <div className="flex items-center justify-center py-16">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <div className="space-y-3">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="flex items-center gap-4 p-3 border rounded-lg">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-6 w-16 rounded-full" />
+            </div>
+          ))}
         </div>
       ) : (
         <Tabs defaultValue="queue">

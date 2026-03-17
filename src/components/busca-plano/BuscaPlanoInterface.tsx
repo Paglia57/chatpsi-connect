@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { formatMessageContent } from '@/lib/utils';
 import { useResponsive } from '@/hooks/useResponsive';
+import { useOutletContext } from 'react-router-dom';
 interface PlanoMessage {
   id: string;
   input_text: string;

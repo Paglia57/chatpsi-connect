@@ -11,8 +11,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { ArrowLeft, CheckCircle, XCircle, Trophy, Medal, Award, Loader2 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { CheckCircle, XCircle, Trophy, Medal, Award, Loader2 } from 'lucide-react';
 
 interface Redemption {
   id: string;
@@ -36,7 +35,7 @@ const profileCache: Record<string, { name: string; email: string }> = {};
 
 const AdminReferralsContent = () => {
   const { toast } = useToast();
-  const navigate = useNavigate();
+  
   const [pendingRedemptions, setPendingRedemptions] = useState<Redemption[]>([]);
   const [allRedemptions, setAllRedemptions] = useState<Redemption[]>([]);
   const [ranking, setRanking] = useState<RankingEntry[]>([]);
@@ -164,10 +163,6 @@ const AdminReferralsContent = () => {
 
   return (
     <div className="container mx-auto py-8 px-4">
-      <Button variant="ghost" onClick={() => navigate('/admin')} className="mb-4">
-        <ArrowLeft className="w-4 h-4 mr-2" />
-        Voltar para Administração
-      </Button>
 
       <h1 className="text-3xl font-bold mb-2">Programa de Indicações</h1>
       <p className="text-muted-foreground mb-6">Gerencie os resgates de códigos de indicação</p>

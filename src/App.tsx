@@ -21,6 +21,7 @@ import HistoryPage from "./pages/app/HistoryPage";
 import ProfilePage from "./pages/app/ProfilePage";
 import PatientsPage from "./pages/app/PatientsPage";
 import PatientDetailPage from "./pages/app/PatientDetailPage";
+import ReferralsPage from "./pages/app/ReferralsPage";
 
 const queryClient = new QueryClient();
 
@@ -35,21 +36,24 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<AuthPage />} />
             <Route path="/auth/callback" element={<AuthCallbackPage />} />
-            <Route path="/chat" element={<ChatPage />} />
-            <Route path="/busca-plano" element={<BuscaPlanoPage />} />
-            <Route path="/busca-artigos" element={<BuscaArtigosPage />} />
-            <Route path="/marketing" element={<MarketingPage />} />
-            <Route path="/admin" element={<AdminPage />} />
-            <Route path="/admin/referrals" element={<AdminReferralsPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
-            {/* App module routes */}
-            <Route path="/app" element={<AppLayout />}>
-              <Route index element={<Navigate to="/app/evolucao" replace />} />
-              <Route path="evolucao" element={<EvolutionPage />} />
-              <Route path="pacientes" element={<PatientsPage />} />
-              <Route path="pacientes/:id" element={<PatientDetailPage />} />
-              <Route path="historico" element={<HistoryPage />} />
-              <Route path="perfil" element={<ProfilePage />} />
+            {/* All authenticated routes under AppLayout with persistent sidebar */}
+            <Route element={<AppLayout />}>
+              <Route path="/app">
+                <Route index element={<Navigate to="/app/evolucao" replace />} />
+                <Route path="evolucao" element={<EvolutionPage />} />
+                <Route path="pacientes" element={<PatientsPage />} />
+                <Route path="pacientes/:id" element={<PatientDetailPage />} />
+                <Route path="historico" element={<HistoryPage />} />
+                <Route path="perfil" element={<ProfilePage />} />
+                <Route path="indicacoes" element={<ReferralsPage />} />
+              </Route>
+              <Route path="/chat" element={<ChatPage />} />
+              <Route path="/busca-plano" element={<BuscaPlanoPage />} />
+              <Route path="/busca-artigos" element={<BuscaArtigosPage />} />
+              <Route path="/marketing" element={<MarketingPage />} />
+              <Route path="/admin" element={<AdminPage />} />
+              <Route path="/admin/referrals" element={<AdminReferralsPage />} />
             </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import AppBreadcrumb from "@/components/ui/AppBreadcrumb";
+import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { Card, CardContent } from "@/components/ui/card";

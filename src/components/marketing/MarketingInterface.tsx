@@ -324,9 +324,14 @@ const MarketingInterface = () => {
         <TabsContent value="historico" className="flex-1 overflow-auto mt-0">
           <div className="p-4 md:p-6">
             {isLoadingHistory ? (
-              <div className="py-12 text-center text-muted-foreground">
-                <Loader2 className="h-5 w-5 animate-spin mx-auto mb-2" />
-                Carregando...
+              <div className="py-12 space-y-4">
+                {[1, 2, 3, 4].map(i => (
+                  <div key={i} className="p-4 border rounded-lg space-y-2">
+                    <div className="h-4 w-1/3 bg-muted animate-pulse rounded" />
+                    <div className="h-3 w-1/4 bg-muted animate-pulse rounded" />
+                    <div className="h-3 w-2/3 bg-muted animate-pulse rounded" />
+                  </div>
+                ))}
               </div>
             ) : texts.length === 0 ? (
               <div className="py-12 text-center text-muted-foreground">

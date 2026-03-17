@@ -380,7 +380,7 @@ const AdminPageContent = () => {
                 <Button variant="outline" onClick={() => setEditingProfile(null)}>
                   Cancelar
                 </Button>
-                <Button onClick={handleSaveEdit}>Salvar</Button>
+                <Button variant="cta" onClick={handleSaveEdit}>Salvar</Button>
               </div>
             </div>
           )}

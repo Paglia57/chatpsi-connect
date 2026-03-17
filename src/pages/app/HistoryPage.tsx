@@ -355,7 +355,7 @@ export default function HistoryPage() {
                 {isEditing ? (
                   <>
                     <Button
-                      variant="default"
+                      variant="cta"
                       size="sm"
                       disabled={saving}
                       onClick={async () => {

@@ -221,7 +221,7 @@ const BuscaPlanoInterface = () => {
               }
             }} />
             </div>
-            <Button type="submit" disabled={!newMessage.trim() || isLoading || !profile?.subscription_active} size="icon" className="touch-target flex-shrink-0 h-11 w-11" aria-label="Enviar mensagem">
+            <Button type="submit" disabled={!newMessage.trim() || isLoading || !profile?.subscription_active} size="icon" variant="cta" className="touch-target flex-shrink-0 h-11 w-11" aria-label="Enviar mensagem">
               {isLoading ? <RefreshCw className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
             </Button>
           </form>

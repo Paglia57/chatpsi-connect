@@ -649,7 +649,7 @@ const ChatInterface = () => {
               <Lock className="h-4 w-4" />
               <span className="text-sm">Assinatura necessária para enviar mensagens</span>
             </div>
-            <Button variant="default" size="sm" className="touch-target">
+            <Button variant="cta" size="sm" className="touch-target">
               Ativar Assinatura
             </Button>
           </div>}

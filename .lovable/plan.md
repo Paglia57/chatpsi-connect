@@ -1,36 +1,64 @@
 
 
-## Ordenar por Tokens no Admin
+## Plano: Processamento real de arquivos no Chat Clínico
 
-Adicionar um botão/toggle na coluna "Tokens" da tabela de administração que permite ordenar os usuários pelo consumo de tokens (maior para menor e vice-versa).
+### Problema
+Hoje, arquivos enviados no chat chegam ao Assistant como texto `[Áudio enviado: URL]`. O Assistant não acessa URLs — ele ignora completamente o conteúdo real.
 
-### Mudanças em `src/pages/AdminPage.tsx`
+### Solução: Pré-processar na Edge Function
 
-**1. Novo estado de ordenação**
+Alterar `supabase/functions/dispatch-message/index.ts` para processar cada tipo de arquivo antes de enviar ao Assistant:
 
-Adicionar estado para controlar a direção da ordenação:
-```typescript
-const [sortByTokens, setSortByTokens] = useState<'none' | 'asc' | 'desc'>('none');
+**A. Áudio → Whisper (transcrição)**
+- Baixar o arquivo da signed URL do Supabase
+- Enviar para `POST /v1/audio/transcriptions` (modelo `whisper-1`)
+- Usar `FormData` com o arquivo binário
+- Enviar a transcrição como texto na mensagem: `"[Transcrição do áudio do paciente]: {texto}"`
+- O assistant recebe texto puro e pode interpretar o conteúdo
+
+**B. Imagens → Vision via content blocks**
+- Baixar a imagem da signed URL
+- Converter para base64
+- Enviar na mensagem como content block `image_url` com `data:image/{ext};base64,...`
+- O Assistant com GPT-4o já suporta visão nativamente nos Assistants v2
+
+**C. Documentos (PDF, DOCX) → OpenAI Files API**
+- Baixar o arquivo da signed URL
+- Upload para `POST /v1/files` com `purpose: "assistants"`
+- Na mensagem, enviar como attachment com `file_id` para que o assistant possa ler via file_search
+- Requer que o assistant tenha a tool `file_search` habilitada (se não tiver, fallback: extrair texto e enviar como texto)
+
+### Fluxo atualizado
+
+```text
+Frontend envia: { message, fileUrl, messageType }
+                         │
+              ┌──────────┼──────────┐
+              │          │          │
+           audio      image     document
+              │          │          │
+         Whisper     base64    Files API
+         transc.     encode     upload
+              │          │          │
+              └──────────┼──────────┘
+                         │
+                 Mensagem enriquecida
+                 enviada ao Thread
+                         │
+                    Run + Poll
+                         │
+                    Resposta
 ```
 
-**2. Aplicar ordenação no useEffect de filtro (linhas 80-89)**
+### Arquivo alterado
 
-Após filtrar por nome, aplicar a ordenação por tokens:
-- `desc`: usuários com mais tokens primeiro
-- `asc`: usuários com menos tokens primeiro
-- `none`: ordem padrão (por data de criação)
+| Arquivo | Mudança |
+|---------|---------|
+| `supabase/functions/dispatch-message/index.ts` | Adicionar funções `transcribeAudio()`, `processImage()`, `processDocument()` e chamar antes de montar o conteúdo da mensagem |
 
-Valores `null` de `TokenCount` serao tratados como `0`.
-
-**3. Cabeçalho clicável na coluna "Tokens" (linha ~230)**
-
-Trocar o `<TableHead>Tokens</TableHead>` por um botao clicavel com icone de seta indicando a direção atual:
-- Clique alterna entre `none` -> `desc` -> `asc` -> `none`
-- Icone `ArrowUpDown` (neutro), `ArrowDown` (desc), `ArrowUp` (asc) do lucide-react
-
-### Detalhes Técnicos
-
-- Importar `ArrowUpDown`, `ArrowDown`, `ArrowUp` do lucide-react
-- A ordenação é aplicada no frontend sobre `filteredProfiles`, sem nova query ao banco
-- O ciclo de clique: sem ordenação -> maior primeiro -> menor primeiro -> sem ordenação
+### Detalhes técnicos
+- Whisper aceita até 25MB mas o limite prático é ~15MB por causa do overhead da Edge Function
+- Para imagens base64, o content block usa formato `[{ type: "image_url", image_url: { url: "data:image/png;base64,..." } }]`
+- Para documentos, o attachment usa `[{ file_id: "file-xxx", tools: [{ type: "file_search" }] }]`
+- Fallback: se qualquer processamento falhar, envia como texto descritivo com a URL original (comportamento atual)
 

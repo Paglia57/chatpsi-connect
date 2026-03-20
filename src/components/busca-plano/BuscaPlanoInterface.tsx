@@ -271,7 +271,7 @@ const BuscaPlanoInterface = () => {
                     </div>
                     <div className="bg-muted rounded-lg px-3 sm:px-4 py-2 sm:py-3 max-w-[80%] chat-message-content">
                       {msg.error_message ? <p className="text-sm text-destructive">{msg.error_message}</p> : msg.response_json ? <div className="text-sm whitespace-pre-wrap break-words text-overflow-anywhere">
-                          {formatMessageContent(typeof msg.response_json === 'string' ? msg.response_json : msg.response_json?.response || JSON.stringify(msg.response_json, null, 2))}
+                          {formatMessageContent(typeof msg.response_json === 'string' ? msg.response_json : msg.response_json?.output || msg.response_json?.response || JSON.stringify(msg.response_json, null, 2))}
                         </div> : <p className="text-sm text-muted-foreground">Sem resposta</p>}
                       <span className="text-xs text-muted-foreground mt-1 block">
                         {new Date(msg.created_at).toLocaleTimeString('pt-BR', {

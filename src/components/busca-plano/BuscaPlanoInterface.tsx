@@ -91,13 +91,16 @@ const BuscaPlanoInterface = () => {
     setShowSuggestions(false);
     setIsLoading(true);
     try {
+      const body: any = { input_text: messageText };
+      if (pendingReset) {
+        body.reset_thread = true;
+        setPendingReset(false);
+      }
       const {
         data,
         error
       } = await supabase.functions.invoke('busca_plano_dispatch', {
-        body: {
-          input_text: messageText
-        }
+        body,
       });
       if (error) throw error;
       if (!data.success) {

@@ -139,11 +139,35 @@ const BuscaPlanoInterface = () => {
         </div>
       </div>;
   }
+  const handleResetThread = () => {
+    setMessages([]);
+    setPendingReset(true);
+    setShowSuggestions(true);
+    toast({
+      title: "Nova conversa",
+      description: "O contexto será renovado na próxima mensagem.",
+    });
+  };
+
   return <div className="flex-1 flex flex-col h-full min-h-0 no-horizontal-scroll" data-tour="page-plano">
       <header className="app-header">
         <div className="header-center">
           <img src="/logo.png" alt="ChatPsi" className="brand-logo" />
         </div>
+        {messages.length > 0 && (
+          <div className="absolute right-3 top-1/2 -translate-y-1/2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleResetThread}
+              disabled={isLoading}
+              className="gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+            >
+              <RotateCcw className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Nova conversa</span>
+            </Button>
+          </div>
+        )}
       </header>
 
       <div className="flex-1 relative min-h-0">

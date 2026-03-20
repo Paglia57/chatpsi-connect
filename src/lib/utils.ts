@@ -117,7 +117,8 @@ export function formatMessageContent(content: string): React.ReactNode {
       const linkUrl = markdownLinkMatch[2];
       const cardInfo = detectLinkCard(linkUrl);
       if (cardInfo) {
-        return createLinkCard(linkUrl, cardInfo, index);
+        const customLabel = linkText !== 'Acessar Link' ? linkText : undefined;
+        return createLinkCard(linkUrl, cardInfo, index, customLabel);
       }
       return React.createElement('a', {
         key: index,

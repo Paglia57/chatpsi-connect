@@ -49,8 +49,13 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
-    // Send to n8n webhook
+    // Send to n8n webhook with extended timeout
     const webhookUrl = 'https://webhook.seconsult.com.br/webhook/buscaplano';
+    console.log('Sending request to n8n webhook...');
+    
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 120000); // 120s timeout
+
     const webhookResponse = await fetch(webhookUrl, {
       method: 'POST',
       headers: {
@@ -58,14 +63,19 @@ serve(async (req) => {
         'X-App-Source': 'lovable',
       },
       body: JSON.stringify({ input: input_text, user_id: userId }),
+      signal: controller.signal,
     });
+    clearTimeout(timeoutId);
 
     const statusCode = webhookResponse.status;
+    console.log('Webhook response status:', statusCode);
+    
     let responseData: any = null;
     let errorMessage: string | null = null;
 
     try {
       const responseText = await webhookResponse.text();
+      console.log('Response text raw:', responseText.substring(0, 500));
       responseData = responseText ? JSON.parse(responseText) : null;
     } catch (e) {
       errorMessage = `Failed to parse webhook response: ${e.message}`;
@@ -87,6 +97,8 @@ serve(async (req) => {
       outputText = responseData.output || '';
       threadId = responseData.threadId || null;
     }
+
+    console.log('Extracted output length:', outputText.length, 'threadId:', threadId);
 
     // Save to history
     await supabaseAdmin.from('plano_chat_history').insert({

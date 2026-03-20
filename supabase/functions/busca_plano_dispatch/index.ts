@@ -98,6 +98,8 @@ serve(async (req) => {
       threadId = responseData.threadId || null;
     }
 
+    console.log('Extracted output length:', outputText.length, 'threadId:', threadId);
+
     // Save to history
     await supabaseAdmin.from('plano_chat_history').insert({
       user_id: userId,

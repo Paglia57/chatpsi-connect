@@ -42,10 +42,31 @@ async function cancelActiveRuns(threadId: string, apiKey: string) {
       } catch (e) {
         console.warn(`Failed to cancel run ${run.id}:`, e);
       }
-      // Wait briefly for cancellation to propagate
       await sleep(1000);
     }
   }
+}
+
+async function handleToolCalls(threadId: string, runId: string, run: any, apiKey: string) {
+  const toolCalls = run.required_action?.submit_tool_outputs?.tool_calls || [];
+  if (toolCalls.length === 0) return;
+
+  console.log(`Handling ${toolCalls.length} tool call(s) for run ${runId}`);
+
+  const toolOutputs = toolCalls.map((tc: any) => {
+    console.log(`Tool call: ${tc.function.name}, args: ${tc.function.arguments}`);
+    return {
+      tool_call_id: tc.id,
+      output: JSON.stringify({ status: "ok", message: "Tool execution acknowledged by backend." }),
+    };
+  });
+
+  await openaiRequest(`/threads/${threadId}/runs/${runId}/submit_tool_outputs`, apiKey, {
+    method: 'POST',
+    body: JSON.stringify({ tool_outputs: toolOutputs }),
+  });
+
+  console.log('Tool outputs submitted successfully');
 }
 
 serve(async (req) => {
@@ -106,7 +127,6 @@ serve(async (req) => {
       threadId = threadData.id;
       await supabaseAdmin.from('profiles').update({ threads_plano: threadId }).eq('user_id', userId);
     } else {
-      // Cancel any active runs before adding a new message
       await cancelActiveRuns(threadId, openaiApiKey);
     }
 
@@ -116,28 +136,24 @@ serve(async (req) => {
       body: JSON.stringify({ role: 'user', content: input_text }),
     });
 
-    // Create run with instruction to not use tools
+    // Create run — let the assistant use its tools naturally
     const run = await openaiRequest(`/threads/${threadId}/runs`, openaiApiKey, {
       method: 'POST',
-      body: JSON.stringify({
-        assistant_id: ASSISTANT_ID,
-        additional_instructions: 'IMPORTANTE: Responda diretamente em texto. Não use function calling ou tools. Forneça a resposta completa como texto.',
-      }),
+      body: JSON.stringify({ assistant_id: ASSISTANT_ID }),
     });
     console.log('Run created:', run.id, 'status:', run.status);
 
-    // Poll until complete — handle requires_action
-    const TIMEOUT_MS = 90_000;
+    // Poll until complete — handle requires_action by submitting tool outputs
+    const TIMEOUT_MS = 120_000;
     const POLL_INTERVAL = 1500;
-    const MAX_TOOL_RETRIES = 2;
+    const MAX_TOOL_ROUNDS = 5;
     const startTime = Date.now();
     let runStatus = run.status;
     let currentRunId = run.id;
-    let toolRetries = 0;
+    let toolRounds = 0;
 
     while (!['completed', 'failed', 'cancelled', 'expired', 'incomplete'].includes(runStatus)) {
       if (Date.now() - startTime > TIMEOUT_MS) {
-        // Cancel the run before throwing
         try { await openaiRequest(`/threads/${threadId}/runs/${currentRunId}/cancel`, openaiApiKey, { method: 'POST' }); } catch (_) {}
         throw new Error('Tempo limite excedido aguardando resposta da IA');
       }
@@ -147,28 +163,15 @@ serve(async (req) => {
       runStatus = updated.status;
       console.log('Run poll:', runStatus);
 
-      // Handle requires_action: cancel run and retry without tools
       if (runStatus === 'requires_action') {
-        console.log('Run requires_action — cancelling and retrying without tools');
-        try { await openaiRequest(`/threads/${threadId}/runs/${currentRunId}/cancel`, openaiApiKey, { method: 'POST' }); } catch (_) {}
-        await sleep(1500);
-
-        toolRetries++;
-        if (toolRetries > MAX_TOOL_RETRIES) {
-          throw new Error('O assistente continua solicitando ferramentas. Verifique a configuração do assistant.');
+        toolRounds++;
+        if (toolRounds > MAX_TOOL_ROUNDS) {
+          try { await openaiRequest(`/threads/${threadId}/runs/${currentRunId}/cancel`, openaiApiKey, { method: 'POST' }); } catch (_) {}
+          throw new Error('Número máximo de rodadas de ferramentas excedido');
         }
 
-        // Create a new run with stronger instruction
-        const retryRun = await openaiRequest(`/threads/${threadId}/runs`, openaiApiKey, {
-          method: 'POST',
-          body: JSON.stringify({
-            assistant_id: ASSISTANT_ID,
-            additional_instructions: 'REGRA ABSOLUTA: Você NÃO deve chamar nenhuma ferramenta ou function. Responda APENAS em texto puro, diretamente. Forneça o plano de ação completo como texto.',
-          }),
-        });
-        currentRunId = retryRun.id;
-        runStatus = retryRun.status;
-        console.log('Retry run created:', currentRunId, 'status:', runStatus);
+        await handleToolCalls(threadId, currentRunId, updated, openaiApiKey);
+        // Continue polling — the run will resume after tool outputs are submitted
       }
     }
 

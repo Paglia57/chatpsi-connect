@@ -71,10 +71,10 @@ export function formatMessageContent(content: string): React.ReactNode {
   // Remove OpenAI assistant file citations like 【8:0†arquivo.pdf】
   normalizedContent = normalizedContent.replace(/【[^】]*】/g, '');
 
-  // Pre-process: collapse "**Plano de ação: TÍTULO**\n...descrição...\nLink: url" into a single markdown link with title
+  // Convert "Link: URL" into markdown link using the most recent bold plan title, preserving description
   normalizedContent = normalizedContent.replace(
-    /\*\*(Plano de ação:[^*]+)\*\*[\s\S]*?(?:Link:\s*)?(https?:\/\/[^\s)<\n]+)/g,
-    '[$1]($2)'
+    /\*\*(Plano de ação:[^*]+)\*\*([\s\S]*?)Link:\s*(https?:\/\/[^\s\n]+)/g,
+    '**$1**$2[$1]($3)'
   );
 
   // Remove leftover "[Acessar Link](url)" after title extraction

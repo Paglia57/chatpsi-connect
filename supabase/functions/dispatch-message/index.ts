@@ -164,25 +164,34 @@ serve(async (req) => {
       );
     }
 
+    // Authenticate user from JWT — use verified identity, never trust body-supplied userId
+    const authHeader = req.headers.get('authorization') || '';
+    const jwt = authHeader.replace('Bearer ', '');
+
+    const supabaseAuth = createClient(supabaseUrl, Deno.env.get('SUPABASE_ANON_KEY')!, {
+      global: { headers: { Authorization: authHeader } }
+    });
+
+    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser(jwt);
+    if (authError || !user) {
+      console.error('Authentication failed');
+      return new Response(
+        JSON.stringify({ error: 'Não autorizado' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const userId = user.id;
+
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const { 
       message, 
-      userId, 
       messageType = 'text', 
       fileUrl = null,
       nickname = null,
       openai_thread_id = null
     } = await req.json();
-
-    // Validate userId as UUID
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    if (!uuidRegex.test(userId)) {
-      return new Response(
-        JSON.stringify({ error: 'userId deve ser um UUID válido' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
 
     const validTypes = ['text', 'audio', 'image', 'video', 'document'];
     const validatedMessageType = validTypes.includes(messageType) ? messageType : 'text';

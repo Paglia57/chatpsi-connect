@@ -68,7 +68,7 @@ const tourSteps: TourStep[] = [
       <StepContent
         desc="Gerencie seus pacientes e fichas clínicas completas."
         tips={[
-          'Cadastre pacientes com diagnóstico CID-10 e DSM-5',
+          'Cadastre pacientes com diagnóstico CID-11 e DSM-5-TR',
           'Adicione queixa principal, medicação e abordagem',
           'A IA usa o contexto do paciente nas evoluções',
         ]}

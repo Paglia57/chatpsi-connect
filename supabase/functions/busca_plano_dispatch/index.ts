@@ -86,19 +86,35 @@ serve(async (req) => {
       errorMessage = `Webhook returned status ${statusCode}`;
     }
 
-    // Extract output from n8n response (can be array or object)
+    // Extract output from n8n response with fallback for multiple key names
     let outputText = '';
     let threadId: string | null = null;
+    let sourceField = 'none';
 
-    if (Array.isArray(responseData) && responseData.length > 0) {
-      outputText = responseData[0].output || '';
-      threadId = responseData[0].threadId || null;
-    } else if (responseData && typeof responseData === 'object') {
-      outputText = responseData.output || '';
-      threadId = responseData.threadId || null;
+    function extractFromItem(item: any): { text: string; thread: string | null; field: string } {
+      for (const key of ['output', 'response']) {
+        if (item[key] && typeof item[key] === 'string') return { text: item[key], thread: item.threadId || item.thread_id || null, field: key };
+        if (item.body?.[key] && typeof item.body[key] === 'string') return { text: item.body[key], thread: item.body?.threadId || item.body?.thread_id || null, field: `body.${key}` };
+        if (item.data?.[key] && typeof item.data[key] === 'string') return { text: item.data[key], thread: item.data?.threadId || item.data?.thread_id || null, field: `data.${key}` };
+      }
+      return { text: '', thread: null, field: 'none' };
     }
 
-    console.log('Extracted output length:', outputText.length, 'threadId:', threadId);
+    if (Array.isArray(responseData) && responseData.length > 0) {
+      const r = extractFromItem(responseData[0]);
+      outputText = r.text; threadId = r.thread; sourceField = r.field;
+      console.log('Format: array, field:', sourceField);
+    } else if (responseData && typeof responseData === 'object') {
+      const r = extractFromItem(responseData);
+      outputText = r.text; threadId = r.thread; sourceField = r.field;
+      console.log('Format: object, field:', sourceField);
+    } else if (typeof responseData === 'string' && responseData.trim().length > 0) {
+      outputText = responseData;
+      sourceField = 'raw_string';
+      console.log('Format: raw string');
+    }
+
+    console.log('Extracted output length:', outputText.length, 'field:', sourceField, 'threadId:', threadId);
 
     // Save to history
     await supabaseAdmin.from('plano_chat_history').insert({

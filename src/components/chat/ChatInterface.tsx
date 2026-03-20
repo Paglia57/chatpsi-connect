@@ -507,7 +507,7 @@ const ChatInterface = () => {
                     examples={[
                       "Quais técnicas de TCC para ansiedade?",
                       "Sugira atividades para um paciente com depressão",
-                      "Critérios diagnósticos do TDAH no DSM-5-TR",
+                      "Critérios diagnósticos do TDAH no DSM-5",
                     ]}
                     ctaText="Entendi, começar a conversar!"
                     onDismiss={async () => {

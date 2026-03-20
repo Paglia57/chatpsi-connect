@@ -38,6 +38,7 @@ const BuscaPlanoInterface = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(true);
   const [fetchingHistory, setFetchingHistory] = useState(true);
+  const [pendingReset, setPendingReset] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const trial = useTrialLimit('plano_chat_history', 3);
   const fetchHistory = useCallback(async () => {

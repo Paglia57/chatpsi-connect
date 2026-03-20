@@ -1,32 +1,44 @@
 
 
-## Corrigir exibição de links nos Planos de Ação
+## Correção: descrição dos planos sendo removida
 
 ### Problema
-Cada plano mostra **dois cards de link** (um do markdown `[Acessar Link](url)` e outro da URL crua que sobra no texto). Além disso, o card mostra o label genérico "Arquivo Google Drive" em vez do título do plano.
+A regex na linha 75-78 de `src/lib/utils.ts` usa `[\s\S]*?` entre o título em negrito e a URL, o que engole toda a descrição do plano. O resultado é que o texto descritivo desaparece e só sobra o card de link com o título.
+
+Além disso, a URL crua (`Link: https://...`) continua no texto após o markdown link ser criado pelo regex, gerando um segundo card genérico "Arquivo Google Drive".
 
 ### Solução
 
 **Arquivo: `src/lib/utils.ts`**
 
-1. **Deduplicar links**: Melhorar o regex de limpeza (linha 75-77) para remover completamente a URL crua após convertê-la em markdown link. Adicionar um passo que remove URLs que já foram convertidas em `[Acessar Link](url)`.
+1. **Remover o regex de pré-processamento das linhas 74-78** — ele é destrutivo e remove as descrições.
 
-2. **Extrair título do plano para o card**: Antes do split, fazer um pré-processamento que substitui padrões como:
-   ```
-   **Plano de ação: TÍTULO**\n...texto...\n[Acessar Link](url)
-   ```
-   por um markdown link com o título do plano como texto:
-   ```
-   [Plano de ação: TÍTULO](url)
-   ```
-   Isso faz o card exibir o nome do plano em vez de "Arquivo Google Drive".
+2. **Substituir por um regex mais cirúrgico** que apenas converte a linha `Link: URL` em um markdown link `[Plano de ação: TÍTULO](URL)`, preservando o título bold e a descrição como texto normal. A lógica:
+   - Encontrar cada bloco: `**Plano de ação: TÍTULO**\n   Descrição...\n   Link: URL`
+   - Manter o `**título**` e a descrição intactos
+   - Substituir apenas `Link: URL` por `[Plano de ação: TÍTULO](URL)` (card com título)
+   - Isso preserva a descrição e gera apenas UM card por plano
 
-3. **Modificar `createLinkCard`**: Aceitar um parâmetro opcional `customLabel` que, se presente, substitui o `cardInfo.label` genérico. Quando o link text não é "Acessar Link" (ou seja, é um título de plano), usar esse texto como label do card.
+3. **Manter a remoção de citações** (linha 72) e de `[Acessar Link]` (linha 81).
 
-4. **Remover referências de arquivo do assistant**: Limpar sufixos como `【8:0†arquivo.pdf】` que o OpenAI Assistant adiciona no final das respostas.
+### Regex proposto
+
+```typescript
+// Converte "Link: URL" em markdown link usando o título bold mais recente
+// Captura: **Plano de ação: TÍTULO**  seguido eventualmente de  Link: URL
+normalizedContent = normalizedContent.replace(
+  /\*\*(Plano de ação:[^*]+)\*\*([\s\S]*?)Link:\s*(https?:\/\/[^\s\n]+)/g,
+  '**$1**$2[$1]($3)'
+);
+```
+
+Isso mantém `**título**`, preserva `$2` (descrição), e converte `Link: url` em `[título](url)` que renderiza como card com o nome do plano.
+
+4. **Remover URLs cruas duplicadas**: após a conversão, URLs que já viraram markdown links não serão duplicadas porque o `Link: URL` foi substituído.
 
 ### Resultado esperado
-- Cada plano mostra **um único card** com o título do plano (ex: "Plano de ação: O que é TDAH?") e o domínio `drive.google.com/...`
-- Sem duplicação de links
-- Sem referências de arquivo no texto
+- Título em negrito visível
+- Descrição completa visível
+- UM único card por plano com o título do plano como label
+- Sem cards genéricos "Arquivo Google Drive"
 

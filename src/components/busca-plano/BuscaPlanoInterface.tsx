@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { AutoTextarea } from '@/components/ui/auto-textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Send, Bot, User as UserIcon, RefreshCw, Sparkles, Lightbulb, Target, Lock } from 'lucide-react';
+import { Send, Bot, User as UserIcon, RefreshCw, Sparkles, Lightbulb, Target, Lock, RotateCcw } from 'lucide-react';
 import FirstTimeGuide from '@/components/ui/FirstTimeGuide';
 import TrialLimitBanner from '@/components/ui/TrialLimitBanner';
 import { useAuth } from '@/components/auth/AuthProvider';
@@ -38,6 +38,7 @@ const BuscaPlanoInterface = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(true);
   const [fetchingHistory, setFetchingHistory] = useState(true);
+  const [pendingReset, setPendingReset] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const trial = useTrialLimit('plano_chat_history', 3);
   const fetchHistory = useCallback(async () => {
@@ -90,13 +91,16 @@ const BuscaPlanoInterface = () => {
     setShowSuggestions(false);
     setIsLoading(true);
     try {
+      const body: any = { input_text: messageText };
+      if (pendingReset) {
+        body.reset_thread = true;
+        setPendingReset(false);
+      }
       const {
         data,
         error
       } = await supabase.functions.invoke('busca_plano_dispatch', {
-        body: {
-          input_text: messageText
-        }
+        body,
       });
       if (error) throw error;
       if (!data.success) {
@@ -135,11 +139,35 @@ const BuscaPlanoInterface = () => {
         </div>
       </div>;
   }
+  const handleResetThread = () => {
+    setMessages([]);
+    setPendingReset(true);
+    setShowSuggestions(true);
+    toast({
+      title: "Nova conversa",
+      description: "O contexto será renovado na próxima mensagem.",
+    });
+  };
+
   return <div className="flex-1 flex flex-col h-full min-h-0 no-horizontal-scroll" data-tour="page-plano">
       <header className="app-header">
         <div className="header-center">
           <img src="/logo.png" alt="ChatPsi" className="brand-logo" />
         </div>
+        {messages.length > 0 && (
+          <div className="absolute right-3 top-1/2 -translate-y-1/2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleResetThread}
+              disabled={isLoading}
+              className="gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+            >
+              <RotateCcw className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Nova conversa</span>
+            </Button>
+          </div>
+        )}
       </header>
 
       <div className="flex-1 relative min-h-0">
@@ -243,7 +271,7 @@ const BuscaPlanoInterface = () => {
                     </div>
                     <div className="bg-muted rounded-lg px-3 sm:px-4 py-2 sm:py-3 max-w-[80%] chat-message-content">
                       {msg.error_message ? <p className="text-sm text-destructive">{msg.error_message}</p> : msg.response_json ? <div className="text-sm whitespace-pre-wrap break-words text-overflow-anywhere">
-                          {formatMessageContent(typeof msg.response_json === 'string' ? msg.response_json : msg.response_json?.response || JSON.stringify(msg.response_json, null, 2))}
+                          {formatMessageContent(typeof msg.response_json === 'string' ? msg.response_json : msg.response_json?.output || msg.response_json?.response || JSON.stringify(msg.response_json, null, 2))}
                         </div> : <p className="text-sm text-muted-foreground">Sem resposta</p>}
                       <span className="text-xs text-muted-foreground mt-1 block">
                         {new Date(msg.created_at).toLocaleTimeString('pt-BR', {

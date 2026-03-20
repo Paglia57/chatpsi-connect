@@ -80,7 +80,7 @@ serve(async (req) => {
 
     const authHeader = req.headers.get('authorization') || '';
     const jwt = authHeader.replace('Bearer ', '');
-    const { input_text } = await req.json();
+    const { input_text, reset_thread } = await req.json();
 
     if (!input_text || typeof input_text !== 'string') {
       return new Response(JSON.stringify({ error: 'Campo obrigatório: input_text (string)' }),
@@ -115,12 +115,21 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
-    // Get or create thread
-    const { data: profile, error: profileError } = await supabaseAdmin
-      .from('profiles').select('threads_plano').eq('user_id', userId).single();
-    if (profileError) throw new Error('Erro ao buscar perfil do usuário');
+    // If reset requested, clear the thread
+    if (reset_thread) {
+      console.log('Resetting thread for user:', userId);
+      await supabaseAdmin.from('profiles').update({ threads_plano: null }).eq('user_id', userId);
+    }
 
-    let threadId = profile?.threads_plano || null;
+    // Get or create thread
+    let threadId: string | null = null;
+
+    if (!reset_thread) {
+      const { data: profile, error: profileError } = await supabaseAdmin
+        .from('profiles').select('threads_plano').eq('user_id', userId).single();
+      if (profileError) throw new Error('Erro ao buscar perfil do usuário');
+      threadId = profile?.threads_plano || null;
+    }
 
     if (!threadId) {
       const threadData = await openaiRequest('/threads', openaiApiKey, { method: 'POST', body: '{}' });

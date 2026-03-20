@@ -36,7 +36,7 @@ function detectLinkCard(url: string): LinkCardInfo | null {
   }
 }
 
-function createLinkCard(url: string, cardInfo: LinkCardInfo, key: number | string): React.ReactNode {
+function createLinkCard(url: string, cardInfo: LinkCardInfo, key: number | string, customLabel?: string): React.ReactNode {
   const iconMap: Record<string, string> = {
     docs: '📄',
     sheets: '📊',
@@ -54,7 +54,7 @@ function createLinkCard(url: string, cardInfo: LinkCardInfo, key: number | strin
   },
     React.createElement('span', { className: 'text-xl flex-shrink-0' }, iconMap[cardInfo.icon] || iconMap.external),
     React.createElement('span', { className: 'min-w-0 flex flex-col' },
-      React.createElement('span', { className: 'text-sm font-medium text-foreground truncate' }, cardInfo.label),
+      React.createElement('span', { className: 'text-sm font-medium text-foreground truncate' }, customLabel || cardInfo.label),
       React.createElement('span', { className: 'text-xs text-muted-foreground truncate' }, cardInfo.truncatedUrl)
     )
   );
@@ -68,16 +68,23 @@ export function formatMessageContent(content: string): React.ReactNode {
     .replace(/\\n/g, '\n')
     .replace(/\r\n?/g, '\n');
 
-  // Step 1: Normalize line breaks and spacing
+  // Remove OpenAI assistant file citations like 【8:0†arquivo.pdf】
+  normalizedContent = normalizedContent.replace(/【[^】]*】/g, '');
+
+  // Pre-process: collapse "**Plano de ação: TÍTULO**\n...descrição...\nLink: url" into a single markdown link with title
+  normalizedContent = normalizedContent.replace(
+    /\*\*(Plano de ação:[^*]+)\*\*[\s\S]*?(?:Link:\s*)?(https?:\/\/[^\s)<\n]+)/g,
+    '[$1]($2)'
+  );
+
+  // Remove leftover "[Acessar Link](url)" after title extraction
+  normalizedContent = normalizedContent.replace(/\[Acessar Link\]\([^)]+\)\s*/g, '');
+
+  // Step 1: Clean up spacing
   let cleanedContent = normalizedContent
-    .replace(/(\d+\.\s*Plano de ação:)/g, '\n\n$1')
-    .replace(/(Link:)/g, '\n$1')
-    .replace(/Link:\s*(https?:\/\/[^\s)<]+)/g, '[Acessar Link]($1)')
-    .replace(/(\[Acessar Link\]\([^)]+\))\s*Acessar Link/g, '$1')
-    .replace(/(\[([^\]]+)\]\(([^)]+)\))\s*\3\s*\|?\s*/g, '$1 ')
-    .replace(/\s*\|\s*$/gm, '')
     .replace(/[ \t]{2,}/g, ' ')
-    .replace(/\n{3,}/g, '\n\n');
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
 
   // Split content into parts while preserving the delimiters
   const parts = cleanedContent.split(/(\*\*[^*]+\*\*|\[([^\]]+)\]\(([^)]+)\)|https?:\/\/[^\s)<]+|\n+)/g);
@@ -110,7 +117,8 @@ export function formatMessageContent(content: string): React.ReactNode {
       const linkUrl = markdownLinkMatch[2];
       const cardInfo = detectLinkCard(linkUrl);
       if (cardInfo) {
-        return createLinkCard(linkUrl, cardInfo, index);
+        const customLabel = linkText !== 'Acessar Link' ? linkText : undefined;
+        return createLinkCard(linkUrl, cardInfo, index, customLabel);
       }
       return React.createElement('a', {
         key: index,

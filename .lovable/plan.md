@@ -1,30 +1,41 @@
 
 
-## Corrigir links falsos no módulo Planos de Ação
+## Corrigir exibição e adicionar reset no Planos de Ação
 
-### Problema
-O assistant `asst_esHKfSJcaMNF99QVrILGu6pW` possui ferramentas (tools) configuradas que permitem buscar links reais. Porém, a edge function `busca_plano_dispatch` envia instruções explícitas para **não usar ferramentas** e cancela runs que tentam usá-las (`requires_action`). Isso força o assistant a inventar links fictícios como `https://example.com/plano-tdah-adultos`.
+### Problemas identificados
+
+**1. Resposta exibida como JSON bruto**
+O frontend tenta acessar `response_json.response` mas a edge function salva como `response_json.output`. Como `.response` é `undefined`, cai no fallback `JSON.stringify` — exibindo `{ "output": "..." }` ao invés do texto limpo.
+
+**2. Assistant recusa repetir temas**
+A thread persistente acumula todo o histórico. Quando o usuário pede algo similar, o assistant responde "já enviei anteriormente". O usuário quer manter memória mas ter opção de resetar.
 
 ### Solução
 
+**Arquivo: `src/components/busca-plano/BuscaPlanoInterface.tsx`**
+
+1. Corrigir a extração do texto da resposta: trocar `response_json?.response` por `response_json?.output` (linha 246)
+2. Adicionar botão "Nova conversa" no header que:
+   - Limpa `threads_plano` no perfil via Supabase update (usando service role ou admin function)
+   - Limpa o histórico local de mensagens
+   - Permite que a próxima mensagem crie uma thread nova
+
 **Arquivo: `supabase/functions/busca_plano_dispatch/index.ts`**
 
-1. **Remover as `additional_instructions`** que bloqueiam o uso de tools — deixar o assistant usar suas ferramentas naturalmente
-2. **Tratar `requires_action` corretamente**: em vez de cancelar o run, extrair os tool calls e submeter os resultados de volta via `submit_tool_outputs`, permitindo que o assistant complete a resposta com dados reais
-3. Para function calls cujo comportamento não conhecemos no backend, submeter um output genérico de reconhecimento para que o run prossiga sem travar
+3. Adicionar suporte a um parâmetro opcional `reset_thread: true` no body:
+   - Se presente, limpar `threads_plano` do perfil antes de processar
+   - Criar nova thread e prosseguir normalmente
+   - Isso evita a necessidade de uma edge function separada ou de expor o campo `threads_plano` ao client
 
-### Fluxo corrigido
+### Fluxo do reset
 ```text
-User msg → Create run (sem additional_instructions bloqueando tools)
-  → Poll status
-  → Se requires_action:
-      → Ler tool_calls do run
-      → Submeter tool_outputs (resultados ou acknowledgement)
-      → Continuar polling
-  → Se completed: extrair resposta normalmente
+User clica "Nova conversa"
+  → Frontend envia próxima msg com { reset_thread: true }
+  → Edge function limpa threads_plano, cria thread nova
+  → Frontend limpa histórico visual (messages state)
 ```
 
-### Impacto
-- Apenas a edge function é alterada
-- O frontend (`BuscaPlanoInterface.tsx`) não precisa de mudanças — já renderiza o texto da resposta com `formatMessageContent`
+### Arquivos a modificar
+- `src/components/busca-plano/BuscaPlanoInterface.tsx` — fix display + botão reset
+- `supabase/functions/busca_plano_dispatch/index.ts` — suporte a reset_thread
 

@@ -1,54 +1,82 @@
 
+## Correção proposta: mapeamento robusto da resposta do webhook n8n
 
-## Problema: Edge function expira antes do n8n terminar
+### Diagnóstico confirmado
+Pelos logs da edge function, o problema é de mapeamento interno:
 
-### Diagnóstico
+- `Response text raw: {"response":"Aqui estão os planos..."}`
+- `Extracted output length: 0`
 
-- A edge function recebeu o request (log confirma)
-- Mas nunca logou "Plano gerado com sucesso" — indica que o fetch ao n8n expirou ou retornou vazio
-- O frontend mostra `{ "output": "" }` — o webhook respondeu com output vazio
-- O n8n processou corretamente (o usuário confirmou que a execution teve resposta)
+Hoje o código extrai apenas:
+- `responseData[0].output` (quando array)
+- `responseData.output` (quando objeto)
 
-**Causa provável**: Supabase edge functions têm timeout padrão de ~60s. O n8n precisa de mais tempo para rodar o OpenAI Assistant (criar thread, executar run, aguardar resposta). A edge function expira antes do n8n terminar, ou o n8n está respondendo imediatamente (modo "Respond Immediately") antes de processar.
+Quando o n8n responde com `response` (não `output`), a função considera vazio e devolve erro ao frontend, mesmo com conteúdo válido.
 
-### Solução em 2 partes
+### O que implementar
 
-**1. Edge function — aumentar resiliência e logging**
-
+#### 1) Normalizar resposta do n8n em um único extrator
 Arquivo: `supabase/functions/busca_plano_dispatch/index.ts`
 
-- Adicionar `AbortController` com timeout de 120s no fetch ao n8n
-- Adicionar logs detalhados: antes do fetch, status da resposta, tamanho do output, e caso de output vazio
-- Logar o responseText bruto para diagnóstico
+Criar lógica única de extração com fallback em múltiplos formatos, nesta ordem:
 
-**2. Verificação do lado do n8n (recomendação ao usuário)**
+1. Array:
+   - `item.output`
+   - `item.response`
+   - `item.body?.output`
+   - `item.body?.response`
 
-O webhook do n8n pode estar configurado em modo **"Respond Immediately"** — ele retorna `{}` ou `""` de imediato e processa em background. O correto é usar **"Respond to Webhook"** no nó final do workflow, para que o n8n só responda depois de ter o output do assistant.
+2. Objeto:
+   - `responseData.output`
+   - `responseData.response`
+   - `responseData.body?.output`
+   - `responseData.body?.response`
+   - `responseData.data?.output`
+   - `responseData.data?.response`
 
-### Mudanças no código
+3. Se `responseData` for string não vazia, usar como texto final.
 
+4. Se JSON falhar, usar `responseText` bruto como output (fallback defensivo).
+
+Também mapear `threadId` com fallback:
+- `threadId`, `thread_id`, `body.threadId`, `data.threadId`.
+
+#### 2) Ajustar critério de sucesso
+Considerar sucesso quando:
+- `webhookResponse.ok === true`
+- `outputText.trim().length > 0`
+
+Se vier 200 sem campo reconhecível, retornar erro explícito:
+- `"Resposta do webhook sem campo de texto (output/response)"`
+
+#### 3) Melhorar logging de diagnóstico
+Adicionar logs objetivos:
+- formato detectado (array/objeto/string)
+- chave usada para extrair texto (`output`, `response`, etc.)
+- tamanho final do texto
+- status HTTP
+
+Isso evita “falso timeout” quando na verdade é incompatibilidade de payload.
+
+#### 4) Persistência no histórico
+Salvar em `plano_chat_history.response_json` o texto normalizado em `output` (como já esperado pelo frontend), opcionalmente com metadado de origem (`source_field`) para troubleshooting futuro.
+
+### Frontend
+Sem alterações obrigatórias em `src/components/busca-plano/BuscaPlanoInterface.tsx` (ele já renderiza `response_json.output` e também fallback para `response`).
+
+### Fluxo após correção
 ```text
-// Adicionar ao fetch:
-const controller = new AbortController();
-const timeoutId = setTimeout(() => controller.abort(), 120000); // 120s
-
-const webhookResponse = await fetch(webhookUrl, {
-  method: 'POST',
-  headers: { ... },
-  body: JSON.stringify({ input: input_text, user_id: userId }),
-  signal: controller.signal,
-});
-clearTimeout(timeoutId);
-
-// Adicionar logs:
-console.log('Webhook response status:', statusCode);
-console.log('Response text raw:', responseText.substring(0, 500));
-console.log('Extracted output length:', outputText.length);
+Edge Function recebe resposta do n8n
+  → Normaliza payload (output/response/variações)
+  → Se houver texto: salva no histórico + retorna success true
+  → Frontend recarrega histórico e exibe conteúdo normalmente
 ```
 
-### Arquivos a modificar
-- `supabase/functions/busca_plano_dispatch/index.ts` — timeout + logging + redeploy
-
-### Nota importante para o usuário
-Verificar no n8n se o workflow usa **"Respond to Webhook"** no final (não "Respond Immediately" no webhook trigger). Se estiver em modo imediato, o n8n responde vazio antes de processar.
-
+### Validação (obrigatória)
+1. Teste E2E no `/busca-plano` com uma pergunta real.
+2. Confirmar que não aparece mais “Erro ao processar requisição”.
+3. Confirmar exibição do texto completo no chat.
+4. Conferir logs: chave detectada deve aparecer (ex.: `response`).
+5. Testar 2 formatos de payload:
+   - objeto com `response`
+   - array com `output`

@@ -1,40 +1,54 @@
 
 
-## Simplificar busca_plano_dispatch: usar webhook n8n
+## Problema: Edge function expira antes do n8n terminar
 
-### Estratégia
+### Diagnóstico
 
-Substituir toda a lógica de OpenAI Assistant (threads, polling, tool calls, vector store search) por uma chamada simples ao webhook n8n `https://webhook.seconsult.com.br/webhook/buscaplano`. O n8n já resolve tudo internamente e retorna a resposta pronta com links reais.
+- A edge function recebeu o request (log confirma)
+- Mas nunca logou "Plano gerado com sucesso" — indica que o fetch ao n8n expirou ou retornou vazio
+- O frontend mostra `{ "output": "" }` — o webhook respondeu com output vazio
+- O n8n processou corretamente (o usuário confirmou que a execution teve resposta)
 
-### Arquivo: `supabase/functions/busca_plano_dispatch/index.ts`
+**Causa provável**: Supabase edge functions têm timeout padrão de ~60s. O n8n precisa de mais tempo para rodar o OpenAI Assistant (criar thread, executar run, aguardar resposta). A edge function expira antes do n8n terminar, ou o n8n está respondendo imediatamente (modo "Respond Immediately") antes de processar.
 
-Reescrever para:
-1. Autenticar o usuário (manter lógica existente)
-2. Validar `input_text`
-3. Enviar POST para `https://webhook.seconsult.com.br/webhook/buscaplano` com `{ input: input_text, user_id: userId }`
-4. Receber resposta do n8n (array com `output` e `threadId`)
-5. Salvar no `plano_chat_history` e retornar ao frontend
+### Solução em 2 partes
 
-Remover: toda lógica de OpenAI (threads, runs, polling, tool calls, vector store search, `cancelActiveRuns`, `handleToolCalls`, `searchVectorStore`, `getAssistantVectorStoreId`, `openaiRequest`).
+**1. Edge function — aumentar resiliência e logging**
 
-### Arquivo: `src/components/busca-plano/BuscaPlanoInterface.tsx`
+Arquivo: `supabase/functions/busca_plano_dispatch/index.ts`
 
-Sem mudanças — o frontend já lê `response_json.output` corretamente.
+- Adicionar `AbortController` com timeout de 120s no fetch ao n8n
+- Adicionar logs detalhados: antes do fetch, status da resposta, tamanho do output, e caso de output vazio
+- Logar o responseText bruto para diagnóstico
 
-### Fluxo
+**2. Verificação do lado do n8n (recomendação ao usuário)**
+
+O webhook do n8n pode estar configurado em modo **"Respond Immediately"** — ele retorna `{}` ou `""` de imediato e processa em background. O correto é usar **"Respond to Webhook"** no nó final do workflow, para que o n8n só responda depois de ter o output do assistant.
+
+### Mudanças no código
 
 ```text
-Frontend envia input_text
-  → Edge function autentica usuário
-  → POST webhook n8n com { input, user_id }
-  → n8n processa (OpenAI Assistant + vector store internamente)
-  → Retorna [{ output: "...", threadId: "..." }]
-  → Edge function salva no plano_chat_history
-  → Retorna { success: true, response: { output } } ao frontend
+// Adicionar ao fetch:
+const controller = new AbortController();
+const timeoutId = setTimeout(() => controller.abort(), 120000); // 120s
+
+const webhookResponse = await fetch(webhookUrl, {
+  method: 'POST',
+  headers: { ... },
+  body: JSON.stringify({ input: input_text, user_id: userId }),
+  signal: controller.signal,
+});
+clearTimeout(timeoutId);
+
+// Adicionar logs:
+console.log('Webhook response status:', statusCode);
+console.log('Response text raw:', responseText.substring(0, 500));
+console.log('Extracted output length:', outputText.length);
 ```
 
-### Observações
-- O `reset_thread` não será mais gerenciado pela edge function (o n8n cria threads próprias)
-- O botão "Nova conversa" no frontend limpará apenas o histórico visual local
-- A URL do webhook pode ser armazenada como secret (`N8N_BUSCA_PLANO_URL`) ou hardcoded
+### Arquivos a modificar
+- `supabase/functions/busca_plano_dispatch/index.ts` — timeout + logging + redeploy
+
+### Nota importante para o usuário
+Verificar no n8n se o workflow usa **"Respond to Webhook"** no final (não "Respond Immediately" no webhook trigger). Se estiver em modo imediato, o n8n responde vazio antes de processar.
 

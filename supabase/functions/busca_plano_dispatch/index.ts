@@ -47,19 +47,91 @@ async function cancelActiveRuns(threadId: string, apiKey: string) {
   }
 }
 
+// Cache the vector store ID to avoid fetching it on every tool call
+let cachedVectorStoreId: string | null = null;
+
+async function getAssistantVectorStoreId(apiKey: string): Promise<string | null> {
+  if (cachedVectorStoreId) return cachedVectorStoreId;
+
+  const assistant = await openaiRequest(`/assistants/${ASSISTANT_ID}`, apiKey);
+  const vsIds = assistant?.tool_resources?.file_search?.vector_store_ids;
+  if (vsIds && vsIds.length > 0) {
+    cachedVectorStoreId = vsIds[0];
+    console.log('Vector store ID:', cachedVectorStoreId);
+    return cachedVectorStoreId;
+  }
+  console.warn('No vector store found on assistant');
+  return null;
+}
+
+async function searchVectorStore(vectorStoreId: string, query: string, apiKey: string): Promise<any> {
+  console.log(`Searching vector store ${vectorStoreId} for: "${query}"`);
+  const res = await fetch(`${OPENAI_BASE}/vector_stores/${vectorStoreId}/search`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+      'OpenAI-Beta': 'assistants=v2',
+    },
+    body: JSON.stringify({
+      query,
+      max_num_results: 5,
+    }),
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    console.error(`Vector store search error ${res.status}:`, errText);
+    return { results: [], error: `Search failed: ${res.status}` };
+  }
+
+  const data = await res.json();
+  const results = (data.data || []).map((item: any) => ({
+    filename: item.filename,
+    score: item.score,
+    content: (item.content || [])
+      .filter((c: any) => c.type === 'text')
+      .map((c: any) => c.text)
+      .join('\n'),
+  }));
+
+  console.log(`Vector store returned ${results.length} results`);
+  return { results };
+}
+
 async function handleToolCalls(threadId: string, runId: string, run: any, apiKey: string) {
   const toolCalls = run.required_action?.submit_tool_outputs?.tool_calls || [];
   if (toolCalls.length === 0) return;
 
   console.log(`Handling ${toolCalls.length} tool call(s) for run ${runId}`);
 
-  const toolOutputs = toolCalls.map((tc: any) => {
+  const toolOutputs = [];
+  for (const tc of toolCalls) {
     console.log(`Tool call: ${tc.function.name}, args: ${tc.function.arguments}`);
-    return {
-      tool_call_id: tc.id,
-      output: JSON.stringify({ status: "ok", message: "Tool execution acknowledged by backend." }),
-    };
-  });
+
+    let output: string;
+
+    if (tc.function.name === 'plano_de_acao') {
+      // Real vector store search
+      const args = JSON.parse(tc.function.arguments || '{}');
+      const userQuery = args.user_query || args.query || '';
+      const vectorStoreId = await getAssistantVectorStoreId(apiKey);
+
+      if (vectorStoreId && userQuery) {
+        const searchResults = await searchVectorStore(vectorStoreId, userQuery, apiKey);
+        output = JSON.stringify(searchResults);
+      } else {
+        output = JSON.stringify({
+          results: [],
+          message: 'Vector store não configurada ou query vazia. Gere um plano de ação personalizado com base no seu conhecimento.',
+        });
+      }
+    } else {
+      output = JSON.stringify({ status: "ok", message: "Tool execution acknowledged by backend." });
+    }
+
+    toolOutputs.push({ tool_call_id: tc.id, output });
+  }
 
   await openaiRequest(`/threads/${threadId}/runs/${runId}/submit_tool_outputs`, apiKey, {
     method: 'POST',
@@ -115,13 +187,11 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
-    // If reset requested, clear the thread
     if (reset_thread) {
       console.log('Resetting thread for user:', userId);
       await supabaseAdmin.from('profiles').update({ threads_plano: null }).eq('user_id', userId);
     }
 
-    // Get or create thread
     let threadId: string | null = null;
 
     if (!reset_thread) {
@@ -139,20 +209,17 @@ serve(async (req) => {
       await cancelActiveRuns(threadId, openaiApiKey);
     }
 
-    // Add message to thread
     await openaiRequest(`/threads/${threadId}/messages`, openaiApiKey, {
       method: 'POST',
       body: JSON.stringify({ role: 'user', content: input_text }),
     });
 
-    // Create run — let the assistant use its tools naturally
     const run = await openaiRequest(`/threads/${threadId}/runs`, openaiApiKey, {
       method: 'POST',
       body: JSON.stringify({ assistant_id: ASSISTANT_ID }),
     });
     console.log('Run created:', run.id, 'status:', run.status);
 
-    // Poll until complete — handle requires_action by submitting tool outputs
     const TIMEOUT_MS = 120_000;
     const POLL_INTERVAL = 1500;
     const MAX_TOOL_ROUNDS = 5;
@@ -180,7 +247,6 @@ serve(async (req) => {
         }
 
         await handleToolCalls(threadId, currentRunId, updated, openaiApiKey);
-        // Continue polling — the run will resume after tool outputs are submitted
       }
     }
 
@@ -188,7 +254,6 @@ serve(async (req) => {
       throw new Error(`A IA não conseguiu processar (status: ${runStatus})`);
     }
 
-    // Get assistant response
     const messagesData = await openaiRequest(`/threads/${threadId}/messages?limit=1&order=desc`, openaiApiKey);
     const assistantMsg = messagesData.data?.[0];
     if (!assistantMsg || assistantMsg.role !== 'assistant') throw new Error('Resposta da IA não encontrada');
@@ -200,7 +265,6 @@ serve(async (req) => {
 
     console.log('Plano gerado com sucesso, length:', outputText.length);
 
-    // Save to history
     await supabaseAdmin.from('plano_chat_history').insert({
       user_id: userId, thread_sent: threadId, input_text,
       http_status: 200, response_json: { output: outputText }, error_message: null,

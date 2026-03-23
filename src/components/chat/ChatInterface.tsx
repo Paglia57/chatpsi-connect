@@ -498,7 +498,7 @@ const ChatInterface = () => {
                     guideKey="chat"
                     icon={<MessageCircle className="h-8 w-8 text-primary" />}
                     title="Chat Clínico"
-                    description="Tire dúvidas clínicas, peça sugestões de intervenção e consulte protocolos em tempo real."
+                    description="O Chat Clínico é seu assistente especializado. Tire dúvidas sobre abordagens, CID, manejo clínico e mais."
                     tips={[
                       "Envie texto, áudio, imagens ou documentos para a IA analisar",
                       "Pergunte sobre técnicas, protocolos e critérios diagnósticos",

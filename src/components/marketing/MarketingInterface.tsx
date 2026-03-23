@@ -210,8 +210,7 @@ const MarketingInterface = () => {
       console.error('Erro ao excluir:', error);
       toast({
         variant: 'destructive',
-        title: 'Erro',
-        description: 'Não foi possível excluir o texto',
+        description: 'Não foi possível excluir o conteúdo. Tente novamente.',
       });
     } finally {
       setDeleteDialogOpen(false);

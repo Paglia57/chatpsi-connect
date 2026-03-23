@@ -277,7 +277,7 @@ const MarketingInterface = () => {
                   "Escreva um texto educativo sobre como funciona a TCC para o meu site",
                   "Gere 5 ideias de conteúdo sobre saúde mental para redes sociais",
                 ]}
-                ctaText="Entendi, criar um texto!"
+                ctaText="Criar primeiro conteúdo"
                 onDismiss={async () => {
                   if (user && !tourActive) {
                     const current = profile?.seen_guides || {};

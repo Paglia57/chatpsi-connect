@@ -188,7 +188,7 @@ export default function PatientDetailPage() {
             <Pencil className="h-4 w-4" /> Editar
           </Button>
           <Button variant="cta" size="sm" onClick={() => navigate(`/app/evolucao?patient=${patient.id}`)}>
-            <Sparkles className="h-4 w-4" /> Nova Evolução
+            <Sparkles className="h-4 w-4" /> Gerar evolução
           </Button>
         </div>
       </div>

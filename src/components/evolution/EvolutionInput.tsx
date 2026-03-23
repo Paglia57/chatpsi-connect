@@ -202,7 +202,7 @@ export default function EvolutionInput({ onGenerate, isLoading, trialReached }: 
             </Select>
           </div>
           <div className="space-y-2 min-w-0">
-            <Label className="text-sm font-medium text-foreground">Tipo</Label>
+            <Label className="text-sm font-medium text-foreground">Modalidade do atendimento</Label>
             <Select value={sessionType} onValueChange={setSessionType}>
               <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
               <SelectContent>

@@ -200,7 +200,7 @@ const BuscaPlanoInterface = () => {
                       "Intervenções para ansiedade generalizada",
                       "Estratégias para TDAH em adultos",
                     ]}
-                    ctaText="Entendi, buscar um plano!"
+                    ctaText="Buscar plano terapêutico"
                     onDismiss={async () => {
                       if (user && !tourActive) {
                         const current = (profile?.seen_guides as any) || {};

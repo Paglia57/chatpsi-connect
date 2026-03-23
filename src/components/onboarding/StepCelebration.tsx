@@ -79,7 +79,7 @@ export default function StepCelebration({ evolutionContent, onFinish }: StepCele
               onClick={() => { onFinish(); navigate(f.route); }}
             >
               <CardContent className="p-3 text-center space-y-1">
-                <span className="text-xl">{f.emoji}</span>
+                <f.icon className="h-5 w-5 text-primary mx-auto" />
                 <p className="text-xs font-semibold text-foreground">{f.title}</p>
                 <p className="text-xs text-muted-foreground leading-tight">{f.desc}</p>
               </CardContent>

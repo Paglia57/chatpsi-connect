@@ -180,7 +180,7 @@ export default function ProfilePage() {
               <p className="text-xs text-muted-foreground">Usado no cabeçalho das evoluções clínicas</p>
             </div>
             <div className="space-y-2">
-              <Label>Apelido</Label>
+              <Label>Como prefere ser chamado</Label>
               <Input value={nickname} onChange={e => setNickname(e.target.value)} placeholder="Como quer ser chamado" />
               <p className="text-xs text-muted-foreground">Como você quer ser chamado dentro do app</p>
             </div>

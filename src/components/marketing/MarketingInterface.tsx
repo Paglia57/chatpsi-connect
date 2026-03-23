@@ -236,7 +236,7 @@ const MarketingInterface = () => {
           {(selectedId || activeTab === 'historico') && (
             <Button size="sm" variant="outline" onClick={handleNewText}>
               <Plus className="h-4 w-4 mr-1" />
-              Novo
+              Novo conteúdo
             </Button>
           )}
         </div>

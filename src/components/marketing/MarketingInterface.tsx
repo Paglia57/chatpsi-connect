@@ -113,8 +113,7 @@ const MarketingInterface = () => {
     if (!generatedText.trim()) {
       toast({
         variant: 'destructive',
-        title: 'Erro',
-        description: 'Não há texto para salvar',
+        description: 'Nenhum conteúdo para salvar. Gere um conteúdo primeiro.',
       });
       return;
     }

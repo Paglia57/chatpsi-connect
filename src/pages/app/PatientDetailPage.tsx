@@ -260,7 +260,7 @@ export default function PatientDetailPage() {
           {!patient.openai_thread_id && (
             <Button variant="outline" size="sm" onClick={handleActivateThread} disabled={activatingThread}>
               {activatingThread && <Loader2 className="h-4 w-4 animate-spin" />}
-              Ativar contexto de IA
+              Ativar contexto clínico
             </Button>
           )}
         </CardContent>

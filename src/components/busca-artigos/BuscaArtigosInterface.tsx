@@ -170,7 +170,7 @@ const BuscaArtigosInterface = () => {
                       "Evidências sobre mindfulness na ansiedade",
                       "Estudos recentes sobre EMDR",
                     ]}
-                    ctaText="Entendi, buscar artigos!"
+                    ctaText="Buscar artigo científico"
                     onDismiss={async () => {
                       if (user && !tourActive) {
                         const current = (profile?.seen_guides as any) || {};

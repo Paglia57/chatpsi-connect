@@ -225,7 +225,7 @@ export default function ProfilePage() {
 
           <Button variant="cta" onClick={handleSave} disabled={saving}>
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-            Salvar alterações
+            Salvar perfil
           </Button>
         </CardContent>
       </Card>

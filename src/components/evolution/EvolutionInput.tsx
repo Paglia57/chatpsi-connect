@@ -131,7 +131,7 @@ export default function EvolutionInput({ onGenerate, isLoading, trialReached }: 
   return (
     <Card className="border-border bg-card text-card-foreground shadow-sm">
       <CardHeader>
-        <CardTitle className="font-display text-xl text-foreground">Nova Evolução</CardTitle>
+        <CardTitle className="font-display text-xl text-foreground">Nova Evolução Clínica</CardTitle>
       </CardHeader>
       <CardContent className="space-y-5">
         {/* Patient selector with Switch toggle */}

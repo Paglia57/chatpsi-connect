@@ -116,7 +116,7 @@ export default function StepPatient({ selectedApproach, onNext, onSkip }: StepPa
 
       <Button variant="cta" className="w-full" size="lg" onClick={handleCreate} disabled={saving || !fullName.trim()}>
         {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-        Cadastrar e continuar →
+        Cadastrar paciente e continuar
       </Button>
 
       <button onClick={handleSkipPatient} className="block mx-auto text-sm text-muted-foreground hover:text-foreground transition-colors">

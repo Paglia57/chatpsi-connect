@@ -107,7 +107,7 @@ export default function ProfilePage() {
       .from("avatars")
       .upload(filePath, file, { upsert: true });
     if (uploadError) {
-      toast.error("Erro ao enviar foto");
+      toast.error("Não foi possível enviar a foto. Tente com um arquivo menor.");
       return;
     }
     const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(filePath);

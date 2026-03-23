@@ -188,7 +188,7 @@ export default function PatientFormDialog({ open, onOpenChange, editData, onSave
                 .eq("id", inserted.id);
             } else {
               console.error("Thread creation failed:", resp.status);
-              toast.warning("Paciente salvo, mas o contexto de IA será criado na próxima evolução");
+               toast.warning("Paciente adicionado. O contexto de IA será ativado na primeira evolução.");
             }
           }
         } catch (threadErr) {

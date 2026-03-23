@@ -438,8 +438,8 @@ const ChatInterface = () => {
         clearTimeout(responseTimeoutRef.current);
       }
       toast({
-        title: "Erro ao enviar mensagem",
-        description: GENERIC_ERROR_MESSAGES.NETWORK_ERROR,
+        title: "Não foi possível enviar a mensagem",
+        description: "Verifique sua conexão e tente novamente.",
         variant: "destructive"
       });
     }

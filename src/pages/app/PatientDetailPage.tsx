@@ -177,8 +177,8 @@ export default function PatientDetailPage() {
             <span className="text-sm text-muted-foreground">({patient.initials})</span>
           </div>
           <div className="flex items-center gap-2 mt-1 flex-wrap">
-            <Badge variant={patient.status === "active" ? "default" : "outline"}>
-              {patient.status === "active" ? "Ativo" : "Inativo"}
+             <Badge variant={patient.status === "active" ? "default" : "outline"}>
+              {patient.status === "active" ? "Em acompanhamento" : "Pausado"}
             </Badge>
             {patient.approach && <Badge variant="secondary">{patient.approach}</Badge>}
           </div>

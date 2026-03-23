@@ -155,7 +155,7 @@ export default function PatientsPage() {
               ) : filtered.length === 0 ? (
                 <div className="text-center py-12">
                   <Users className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-                  <p className="text-muted-foreground">Nenhum paciente encontrado</p>
+                  <p className="text-muted-foreground">Nenhum paciente corresponde aos filtros aplicados</p>
                 </div>
               ) : (
                 <div className="space-y-2">

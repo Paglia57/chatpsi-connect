@@ -89,7 +89,7 @@ export default function StepCelebration({ evolutionContent, onFinish }: StepCele
       </div>
 
       <Button variant="cta" className="w-full" size="lg" onClick={onFinish}>
-        Explorar o ChatPsi →
+        Ir para o painel
       </Button>
     </div>
   );

@@ -128,7 +128,7 @@ export default function StepProfile({ onNext, onSkip }: StepProfileProps) {
 
       <Button variant="cta" className="w-full" size="lg" onClick={handleContinue} disabled={saving}>
         {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-        Continuar →
+        Salvar e continuar
       </Button>
     </div>
   );

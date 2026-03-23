@@ -342,7 +342,7 @@ export default function StepEvolution({ selectedApproach, createdPatient, onNext
       ) : (
         <Button variant="cta" className="w-full" size="lg" onClick={handleGenerate} disabled={!canSubmit}>
           <Sparkles className="h-4 w-4" />
-          ✨ Gerar minha primeira evolução
+          Gerar evolução clínica
         </Button>
       )}
     </div>

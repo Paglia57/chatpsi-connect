@@ -119,8 +119,8 @@ export default function StepPatient({ selectedApproach, onNext, onSkip }: StepPa
         Cadastrar paciente e continuar
       </Button>
 
-      <button onClick={handleSkipPatient} className="block mx-auto text-sm text-muted-foreground hover:text-foreground transition-colors">
-        Pular, cadastro depois
+      <button onClick={handleSkipPatient} className="block mx-auto text-sm text-muted-foreground/60 hover:text-foreground transition-colors">
+        Cadastrar depois
       </button>
     </div>
   );

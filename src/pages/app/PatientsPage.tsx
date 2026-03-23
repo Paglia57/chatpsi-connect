@@ -72,10 +72,10 @@ export default function PatientsPage() {
       ]} />
       <Card className="border-border bg-card shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between gap-4 flex-wrap">
-          <CardTitle className="font-display text-xl text-foreground">Meus Pacientes</CardTitle>
+          <CardTitle className="font-display text-xl text-foreground">Pacientes</CardTitle>
           <Button variant="cta" onClick={() => setDialogOpen(true)}>
             <UserPlus className="h-4 w-4" />
-            Novo Paciente
+            Adicionar paciente
           </Button>
         </CardHeader>
         <CardContent className="space-y-4">

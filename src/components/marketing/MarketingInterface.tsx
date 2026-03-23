@@ -199,7 +199,7 @@ const MarketingInterface = () => {
 
       if (error) throw error;
 
-      toast({ title: 'Sucesso', description: 'Texto excluído com sucesso!' });
+      toast({ description: 'Conteúdo removido' });
 
       if (selectedId === textToDelete) {
         handleNewText();

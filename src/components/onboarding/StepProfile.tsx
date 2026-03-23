@@ -80,7 +80,7 @@ export default function StepProfile({ onNext, onSkip }: StepProfileProps) {
       <Card className="rounded-2xl shadow-sm border">
         <CardContent className="p-6 space-y-5">
           <div className="space-y-2">
-            <Label>Como podemos te chamar?</Label>
+            <Label>Como prefere ser chamado?</Label>
             <Input value={nickname} onChange={e => setNickname(e.target.value)} placeholder="Ex: Dr. Ana" />
           </div>
 

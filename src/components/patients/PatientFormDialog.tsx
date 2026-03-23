@@ -287,7 +287,7 @@ export default function PatientFormDialog({ open, onOpenChange, editData, onSave
             <h3 className="text-sm font-semibold text-foreground mb-3">Configurações do atendimento</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Dia e horário habitual</Label>
+                <Label>Dia e horário do atendimento</Label>
                 <Input value={form.session_day_time} onChange={e => set("session_day_time", e.target.value)} placeholder="Ex: Terças 14h" />
               </div>
               <div className="space-y-2">

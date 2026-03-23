@@ -307,10 +307,10 @@ const MarketingInterface = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="generated">Texto gerado / editável</Label>
+              <Label htmlFor="generated">Conteúdo gerado (editável)</Label>
               <Textarea
                 id="generated"
-                placeholder="O texto gerado pela IA aparecerá aqui e poderá ser editado..."
+                placeholder="O conteúdo gerado pela IA aparecerá aqui. Edite antes de publicar."
                 value={generatedText}
                 onChange={(e) => setGeneratedText(e.target.value)}
                 rows={12}

@@ -263,7 +263,7 @@ export default function PatientFormDialog({ open, onOpenChange, editData, onSave
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Diagnóstico CID-10</Label>
+                  <Label>Hipótese diagnóstica (CID-10)</Label>
                   <Input value={form.cid_10} onChange={e => set("cid_10", e.target.value)} placeholder="Ex: F41.1" />
                 </div>
                 <div className="space-y-2">

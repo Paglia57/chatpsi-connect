@@ -48,7 +48,7 @@ export default function EvolutionOutput({ content, isLoading, onRegenerate, onSa
           <CardTitle className="font-display text-xl text-foreground">Evolução</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <p className="text-sm text-muted-foreground">Analisando sessão e gerando evolução...</p>
+          <p className="text-sm text-muted-foreground">Analisando relato da sessão e estruturando a evolução clínica...</p>
           <Progress value={33} className="w-full" />
           <div className="space-y-3 mt-4">
             <Skeleton className="h-4 w-3/4" />

@@ -81,7 +81,7 @@ const BuscaPlanoInterface = () => {
     if (trial.hasReachedLimit) {
       toast({
         title: "Limite atingido",
-        description: "Você atingiu o limite de buscas gratuitas este mês. Assine para continuar.",
+        description: "Limite de buscas atingido este mês. Assine para continuar pesquisando.",
         variant: "destructive"
       });
       return;
@@ -110,14 +110,14 @@ const BuscaPlanoInterface = () => {
       trial.refetch();
       toast({
         title: "Resposta recebida",
-        description: "Plano de ação processado com sucesso!",
+        description: "Plano terapêutico processado com sucesso!",
         variant: "default"
       });
     } catch (error: any) {
       console.error('Error sending message:', error);
       toast({
-        title: "Erro ao enviar mensagem",
-        description: error.message || "Ocorreu um erro ao processar sua solicitação.",
+        title: "Não foi possível processar sua solicitação",
+        description: "Verifique sua conexão e tente novamente.",
         variant: "destructive"
       });
     } finally {
@@ -144,8 +144,8 @@ const BuscaPlanoInterface = () => {
     setPendingReset(true);
     setShowSuggestions(true);
     toast({
-      title: "Nova conversa",
-      description: "O contexto será renovado na próxima mensagem.",
+      title: "Nova consulta",
+      description: "O contexto será renovado na próxima consulta.",
     });
   };
 
@@ -164,7 +164,7 @@ const BuscaPlanoInterface = () => {
               className="gap-1.5 text-xs text-muted-foreground hover:text-foreground"
             >
               <RotateCcw className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Nova conversa</span>
+              <span className="hidden sm:inline">Nova consulta</span>
             </Button>
           </div>
         )}
@@ -188,19 +188,19 @@ const BuscaPlanoInterface = () => {
                   <FirstTimeGuide
                     guideKey="plano"
                     icon={<Target className="h-8 w-8 text-amber-600" />}
-                    title="Busca Plano de Ação"
-                    description="Descreva o caso clínico e receba um plano de ação terapêutico personalizado com base em evidências."
+                    title="Planos Terapêuticos"
+                    description="Descreva o quadro clínico do paciente e receba planos terapêuticos estruturados com objetivos e intervenções baseadas em evidências."
                     tips={[
                       "Descreva o quadro clínico, idade e contexto do paciente",
                       "Peça intervenções específicas por abordagem terapêutica",
                       "Use os planos como base e adapte à sua prática clínica",
                     ]}
                     examples={[
-                      "Plano de ação para depressão em adolescentes",
+                      "Plano terapêutico para depressão em adolescentes",
                       "Intervenções para ansiedade generalizada",
                       "Estratégias para TDAH em adultos",
                     ]}
-                    ctaText="Entendi, buscar um plano!"
+                    ctaText="Buscar plano terapêutico"
                     onDismiss={async () => {
                       if (user && !tourActive) {
                         const current = (profile?.seen_guides as any) || {};
@@ -226,13 +226,13 @@ const BuscaPlanoInterface = () => {
                   <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-4 sm:mb-5">
                     <Sparkles className="h-8 w-8 sm:h-10 sm:w-10 text-amber-600" />
                   </div>
-                  <h3 className="text-base sm:text-lg font-medium mb-2">Busca Plano de Ação</h3>
+                   <h3 className="text-base sm:text-lg font-medium mb-2">Planos Terapêuticos</h3>
                   <p className="text-sm sm:text-base text-muted-foreground mb-6 max-w-md mx-auto text-overflow-anywhere">
-                    Descreva o caso clínico ou situação e receba um plano de ação terapêutico personalizado.
+                    Planos terapêuticos estruturados com objetivos, intervenções e prazos. Descreva o quadro clínico para começar.
                   </p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 max-w-lg mx-auto">
                     {[
-                      "Plano de ação para depressão em adolescentes",
+                      "Plano terapêutico para depressão em adolescentes",
                       "Intervenções para ansiedade generalizada",
                       "Estratégias para TDAH em adultos",
                       "Plano terapêutico para luto complicado",
@@ -322,7 +322,7 @@ const BuscaPlanoInterface = () => {
         <div className="w-full px-3 sm:px-4 md:px-6">
           <form onSubmit={handleSendMessage} className="flex gap-2 sm:gap-3 items-end mx-[30px]">
             <div className="flex-1 min-w-0 w-full">
-              <AutoTextarea value={newMessage} onChange={e => setNewMessage(e.target.value)} placeholder="Digite sua pergunta sobre plano de ação..." disabled={isLoading || trial.hasReachedLimit} minRows={isMobile ? 1 : 2} maxRows={isMobile ? 4 : 6} className="w-full max-w-full text-base resize-none" onKeyDown={e => {
+              <AutoTextarea value={newMessage} onChange={e => setNewMessage(e.target.value)} placeholder="Descreva o quadro clínico do paciente..." disabled={isLoading || trial.hasReachedLimit} minRows={isMobile ? 1 : 2} maxRows={isMobile ? 4 : 6} className="w-full max-w-full text-base resize-none" onKeyDown={e => {
               if (e.key === 'Enter' && !e.shiftKey && !isMobile) {
                 e.preventDefault();
                 handleSendMessage(e);

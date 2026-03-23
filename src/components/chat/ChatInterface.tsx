@@ -157,8 +157,8 @@ const ChatInterface = () => {
     } catch (error) {
       logger.error('Error in fetchMessages', error);
       toast({
-        title: "Erro ao carregar mensagens",
-        description: GENERIC_ERROR_MESSAGES.NETWORK_ERROR,
+        title: "Não foi possível carregar o histórico de mensagens",
+        description: "Verifique sua conexão e tente novamente.",
         variant: "destructive"
       });
       return false;
@@ -344,7 +344,7 @@ const ChatInterface = () => {
     await fetchMessages(true);
     toast({
       title: "Chat atualizado",
-      description: "Resposta interrompida e mensagens recarregadas.",
+      description: "Histórico de mensagens recarregado.",
       variant: "default"
     });
   };
@@ -353,7 +353,7 @@ const ChatInterface = () => {
     if (!canSendMessage) {
       toast({
         title: "Assinatura necessária",
-        description: "Você precisa de uma assinatura ativa para enviar mensagens.",
+        description: "Assinatura necessária para enviar mensagens no Chat Clínico.",
         variant: "destructive"
       });
       return;
@@ -399,7 +399,7 @@ const ChatInterface = () => {
         const success = await fetchMessages(false);
         if (success) {
           toast({
-            title: "Resposta demorou mais que o esperado",
+            title: "A resposta está demorando mais que o esperado",
             description: "Mensagens atualizadas automaticamente.",
             variant: "default"
           });
@@ -438,8 +438,8 @@ const ChatInterface = () => {
         clearTimeout(responseTimeoutRef.current);
       }
       toast({
-        title: "Erro ao enviar mensagem",
-        description: GENERIC_ERROR_MESSAGES.NETWORK_ERROR,
+        title: "Não foi possível enviar a mensagem",
+        description: "Verifique sua conexão e tente novamente.",
         variant: "destructive"
       });
     }
@@ -497,8 +497,8 @@ const ChatInterface = () => {
                   <FirstTimeGuide
                     guideKey="chat"
                     icon={<MessageCircle className="h-8 w-8 text-primary" />}
-                    title="Chat Clínico com IA"
-                    description="Tire dúvidas clínicas, peça sugestões de intervenção e consulte protocolos em tempo real."
+                    title="Chat Clínico"
+                    description="O Chat Clínico é seu assistente especializado. Tire dúvidas sobre abordagens, CID, manejo clínico e mais."
                     tips={[
                       "Envie texto, áudio, imagens ou documentos para a IA analisar",
                       "Pergunte sobre técnicas, protocolos e critérios diagnósticos",
@@ -509,7 +509,7 @@ const ChatInterface = () => {
                       "Sugira atividades para um paciente com depressão",
                       "Critérios diagnósticos do TDAH no DSM-5",
                     ]}
-                    ctaText="Entendi, começar a conversar!"
+                    ctaText="Iniciar conversa"
                     onDismiss={async () => {
                       if (user && !tourActive) {
                         const current = (profile?.seen_guides as any) || {};
@@ -529,11 +529,11 @@ const ChatInterface = () => {
                 ) : (
                 <div className="text-center py-8 sm:py-12 px-4">
                   <Bot className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground mx-auto mb-3 sm:mb-4" />
-                  <h3 className="text-base sm:text-lg font-medium mb-2">Bem-vindo ao ChatPsi!</h3>
+                   <h3 className="text-base sm:text-lg font-medium mb-2">Chat Clínico</h3>
                   <p className="text-sm sm:text-base text-muted-foreground mb-4 text-overflow-anywhere">
-                    {canSendMessage ? "Envie mensagens, áudios, imagens ou documentos para começar a conversar com a IA." : "Você precisa de uma assinatura ativa para começar a conversar."}
+                    {canSendMessage ? "O Chat Clínico é seu assistente especializado. Tire dúvidas sobre abordagens, CID, manejo clínico e mais." : "Assinatura necessária para acessar o Chat Clínico."}
                   </p>
-                  {!canSendMessage && <Button variant="cta" className="touch-target">Ativar Assinatura</Button>}
+                  {!canSendMessage && <Button variant="cta" className="touch-target">Assinar para acessar</Button>}
                   {canSendMessage && <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-w-lg mx-auto mt-6">
                       {["Como estruturar uma evolução de sessão?", "Sugira técnicas de TCC para ansiedade", "Me ajude a montar um plano terapêutico", "Quais registros devo manter do paciente?"].map((prompt) => (
                         <Button key={prompt} variant="outline" className="text-left text-sm h-auto py-3 px-4 justify-start gap-2 hover:bg-muted whitespace-normal" onClick={() => { setNewMessage(prompt); setTimeout(() => { const form = document.querySelector('form'); if (form) form.requestSubmit(); }, 50); }}>
@@ -727,12 +727,12 @@ const ChatInterface = () => {
             
             <input ref={fileInputRef} type="file" accept=".jpg,.jpeg,.png,.heic,.webp,audio/*,.mp3,.ogg,.wav,.m4a,video/*,.pdf,.doc,.docx" onChange={handleFileSelect} className="hidden" />
           </div> : <div className="max-w-4xl mx-auto text-center py-4">
-            <div className="flex items-center justify-center gap-2 text-muted-foreground mb-2">
+             <div className="flex items-center justify-center gap-2 text-muted-foreground mb-2">
               <Lock className="h-4 w-4" />
-              <span className="text-sm">Assinatura necessária para enviar mensagens</span>
+              <span className="text-sm">Assinatura necessária para enviar mensagens no Chat Clínico</span>
             </div>
             <Button variant="cta" size="sm" className="touch-target">
-              Ativar Assinatura
+              Assinar para acessar
             </Button>
           </div>}
       </div>

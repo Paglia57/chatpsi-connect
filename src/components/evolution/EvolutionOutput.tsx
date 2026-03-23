@@ -48,7 +48,7 @@ export default function EvolutionOutput({ content, isLoading, onRegenerate, onSa
           <CardTitle className="font-display text-xl text-foreground">Evolução</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <p className="text-sm text-muted-foreground">Analisando sessão e gerando evolução...</p>
+          <p className="text-sm text-muted-foreground">Analisando relato da sessão e estruturando a evolução clínica...</p>
           <Progress value={33} className="w-full" />
           <div className="space-y-3 mt-4">
             <Skeleton className="h-4 w-3/4" />
@@ -97,29 +97,29 @@ export default function EvolutionOutput({ content, isLoading, onRegenerate, onSa
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" size="sm" onClick={handleCopy}>
             {copied ? <Check className="h-4 w-4" /> : <ClipboardCopy className="h-4 w-4" />}
-            {copied ? "Copiado!" : "Copiar tudo"}
+            {copied ? "Copiado!" : "Copiar evolução"}
           </Button>
           {isEditing ? (
             <Button variant="outline" size="sm" onClick={() => setIsEditing(false)}>
-              Cancelar edição
+              Descartar alterações
             </Button>
           ) : (
             <Button variant="outline" size="sm" onClick={handleEdit}>
               <Pencil className="h-4 w-4" />
-              Editar
+              Editar texto
             </Button>
           )}
           <Button variant="cta" size="sm" onClick={handleSave} disabled={isSaving}>
             {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-            {isSaving ? "Salvando..." : "Salvar"}
+            {isSaving ? "Salvando..." : "Salvar no prontuário"}
           </Button>
           <Button variant="outline" size="sm" onClick={onRegenerate} disabled={isLoading}>
             <RefreshCw className="h-4 w-4" />
-            Gerar novamente
+            Regenerar evolução
           </Button>
           <Button variant="outline" size="sm" onClick={() => exportEvolutionPdf(displayContent)}>
             <Download className="h-4 w-4" />
-            Exportar PDF
+            Exportar como PDF
           </Button>
         </div>
       </CardContent>

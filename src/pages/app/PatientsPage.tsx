@@ -72,10 +72,10 @@ export default function PatientsPage() {
       ]} />
       <Card className="border-border bg-card shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between gap-4 flex-wrap">
-          <CardTitle className="font-display text-xl text-foreground">Meus Pacientes</CardTitle>
+          <CardTitle className="font-display text-xl text-foreground">Pacientes</CardTitle>
           <Button variant="cta" onClick={() => setDialogOpen(true)}>
             <UserPlus className="h-4 w-4" />
-            Novo Paciente
+            Adicionar paciente
           </Button>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -84,13 +84,13 @@ export default function PatientsPage() {
               <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center mb-6">
                 <Users className="h-10 w-10 text-primary" />
               </div>
-              <h2 className="text-xl font-semibold text-foreground mb-2">Nenhum paciente cadastrado ainda</h2>
+              <h2 className="text-xl font-semibold text-foreground mb-2">Seus pacientes aparecerão aqui</h2>
               <p className="text-muted-foreground max-w-md mb-6">
                 Cadastre seus pacientes para acompanhar evoluções, manter o histórico organizado e ter contexto personalizado nas sessões.
               </p>
               <Button variant="cta" size="lg" onClick={() => setDialogOpen(true)} className="mb-8">
                 <UserPlus className="h-5 w-5" />
-                Cadastrar primeiro paciente
+                Adicionar primeiro paciente
               </Button>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full max-w-lg">
                 {[
@@ -111,7 +111,7 @@ export default function PatientsPage() {
               <div className="flex flex-col sm:flex-row gap-3">
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar por nome..." className="pl-9" />
+                  <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar paciente por nome..." className="pl-9" />
                 </div>
                 <Select value={filterApproach} onValueChange={setFilterApproach}>
                   <SelectTrigger className="w-full sm:w-[200px]"><SelectValue placeholder="Abordagem" /></SelectTrigger>
@@ -123,9 +123,9 @@ export default function PatientsPage() {
                 <Select value={filterStatus} onValueChange={setFilterStatus}>
                   <SelectTrigger className="w-full sm:w-[150px]"><SelectValue placeholder="Status" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Todos</SelectItem>
-                    <SelectItem value="active">Ativos</SelectItem>
-                    <SelectItem value="inactive">Inativos</SelectItem>
+                     <SelectItem value="all">Todos</SelectItem>
+                    <SelectItem value="active">Em acompanhamento</SelectItem>
+                    <SelectItem value="inactive">Alta ou pausado</SelectItem>
                   </SelectContent>
                 </Select>
                 <Select value={sortBy} onValueChange={setSortBy}>
@@ -155,7 +155,7 @@ export default function PatientsPage() {
               ) : filtered.length === 0 ? (
                 <div className="text-center py-12">
                   <Users className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-                  <p className="text-muted-foreground">Nenhum paciente encontrado</p>
+                  <p className="text-muted-foreground">Nenhum paciente corresponde aos filtros aplicados</p>
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -183,7 +183,7 @@ export default function PatientsPage() {
                         </div>
                       </div>
                       <Badge variant={p.status === "active" ? "default" : "outline"} className="shrink-0">
-                        {p.status === "active" ? "Ativo" : "Inativo"}
+                        {p.status === "active" ? "Em acompanhamento" : "Pausado"}
                       </Badge>
                     </div>
                   ))}

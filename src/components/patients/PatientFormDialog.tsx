@@ -99,7 +99,7 @@ export default function PatientFormDialog({ open, onOpenChange, editData, onSave
   const handleSave = async () => {
     if (!user) return;
     if (!form.full_name.trim() || !form.initials.trim()) {
-      toast.error("Nome e iniciais são obrigatórios");
+      toast.error("Informe o nome completo e as iniciais do paciente");
       return;
     }
     setSaving(true);
@@ -128,7 +128,7 @@ export default function PatientFormDialog({ open, onOpenChange, editData, onSave
           })
           .eq("id", editData.id);
         if (error) throw error;
-        toast.success("Paciente atualizado!");
+        toast.success("Prontuário atualizado com sucesso");
       } else {
         // Insert
         const { data: inserted, error } = await supabase
@@ -188,15 +188,15 @@ export default function PatientFormDialog({ open, onOpenChange, editData, onSave
                 .eq("id", inserted.id);
             } else {
               console.error("Thread creation failed:", resp.status);
-              toast.warning("Paciente salvo, mas o contexto de IA será criado na próxima evolução");
+               toast.warning("Paciente adicionado. O contexto de IA será ativado na primeira evolução.");
             }
           }
         } catch (threadErr) {
           console.error("Thread error:", threadErr);
-          toast.warning("Paciente salvo, mas o contexto de IA será criado na próxima evolução");
+          toast.warning("Paciente adicionado. O contexto de IA será ativado na primeira evolução.");
         }
 
-        toast.success("Paciente cadastrado com sucesso!");
+        toast.success("Paciente adicionado ao seu prontuário");
       }
 
       onSaved();
@@ -212,20 +212,20 @@ export default function PatientFormDialog({ open, onOpenChange, editData, onSave
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="font-display">{editData?.id ? "Editar Paciente" : "Novo Paciente"}</DialogTitle>
+          <DialogTitle className="font-display">{editData?.id ? "Editar prontuário" : "Adicionar paciente"}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6">
           {/* Identification */}
           <div>
-            <h3 className="text-sm font-semibold text-foreground mb-3">Dados de Identificação</h3>
+            <h3 className="text-sm font-semibold text-foreground mb-3">Identificação do paciente</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Nome completo *</Label>
+                <Label>Nome completo do paciente *</Label>
                 <Input value={form.full_name} onChange={e => set("full_name", e.target.value)} placeholder="Nome completo do paciente" />
               </div>
               <div className="space-y-2">
-                <Label>Iniciais *</Label>
+                <Label>Iniciais do paciente *</Label>
                 <Input value={form.initials} onChange={e => set("initials", e.target.value.toUpperCase().slice(0, 5))} placeholder="Ex: JSM" maxLength={5} />
               </div>
               <div className="space-y-2">
@@ -246,7 +246,7 @@ export default function PatientFormDialog({ open, onOpenChange, editData, onSave
 
           {/* Clinical */}
           <div>
-            <h3 className="text-sm font-semibold text-foreground mb-3">Dados Clínicos</h3>
+            <h3 className="text-sm font-semibold text-foreground mb-3">Informações clínicas</h3>
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label>Abordagem terapêutica</Label>
@@ -258,25 +258,25 @@ export default function PatientFormDialog({ open, onOpenChange, editData, onSave
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Queixa principal / motivo do tratamento</Label>
+                <Label>Queixa principal</Label>
                 <Textarea value={form.main_complaint} onChange={e => set("main_complaint", e.target.value)} placeholder="Ex: Ansiedade generalizada, dificuldade de relacionamento" rows={3} />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Diagnóstico CID-10</Label>
+                  <Label>Hipótese diagnóstica (CID-10)</Label>
                   <Input value={form.cid_10} onChange={e => set("cid_10", e.target.value)} placeholder="Ex: F41.1" />
                 </div>
                 <div className="space-y-2">
-                  <Label>Diagnóstico DSM-5</Label>
+                  <Label>Hipótese diagnóstica (DSM-5)</Label>
                   <Input value={form.dsm_5} onChange={e => set("dsm_5", e.target.value)} placeholder="Ex: 300.02" />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>Medicação em uso</Label>
+                <Label>Medicação atual</Label>
                 <Textarea value={form.medication} onChange={e => set("medication", e.target.value)} placeholder="Ex: Sertralina 50mg" rows={2} />
               </div>
               <div className="space-y-2">
-                <Label>Observações gerais</Label>
+                <Label>Observações clínicas</Label>
                 <Textarea value={form.notes} onChange={e => set("notes", e.target.value)} placeholder="Observações relevantes" rows={2} />
               </div>
             </div>
@@ -284,10 +284,10 @@ export default function PatientFormDialog({ open, onOpenChange, editData, onSave
 
           {/* Session config */}
           <div>
-            <h3 className="text-sm font-semibold text-foreground mb-3">Configurações da Sessão</h3>
+            <h3 className="text-sm font-semibold text-foreground mb-3">Configurações do atendimento</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Dia e horário habitual</Label>
+                <Label>Dia e horário do atendimento</Label>
                 <Input value={form.session_day_time} onChange={e => set("session_day_time", e.target.value)} placeholder="Ex: Terças 14h" />
               </div>
               <div className="space-y-2">
@@ -300,7 +300,7 @@ export default function PatientFormDialog({ open, onOpenChange, editData, onSave
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Tipo de atendimento</Label>
+                <Label>Modalidade do atendimento</Label>
                 <Select value={form.default_session_type} onValueChange={v => set("default_session_type", v)}>
                   <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                   <SelectContent>
@@ -309,7 +309,7 @@ export default function PatientFormDialog({ open, onOpenChange, editData, onSave
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Frequência</Label>
+                <Label>Frequência dos atendimentos</Label>
                 <Select value={form.session_frequency} onValueChange={v => set("session_frequency", v)}>
                   <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                   <SelectContent>
@@ -326,8 +326,8 @@ export default function PatientFormDialog({ open, onOpenChange, editData, onSave
             <Select value={form.status} onValueChange={v => set("status", v)}>
               <SelectTrigger className="w-full sm:w-[200px]"><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="active">Ativo</SelectItem>
-                <SelectItem value="inactive">Inativo</SelectItem>
+                 <SelectItem value="active">Em acompanhamento</SelectItem>
+                <SelectItem value="inactive">Pausado</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -337,7 +337,7 @@ export default function PatientFormDialog({ open, onOpenChange, editData, onSave
           <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={saving}>Cancelar</Button>
           <Button variant="cta" onClick={handleSave} disabled={saving}>
             {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-            {editData?.id ? "Salvar Alterações" : "Cadastrar Paciente"}
+            {editData?.id ? "Salvar alterações no prontuário" : "Adicionar paciente"}
           </Button>
         </DialogFooter>
       </DialogContent>

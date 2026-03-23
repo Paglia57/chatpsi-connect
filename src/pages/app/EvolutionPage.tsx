@@ -137,7 +137,7 @@ export default function EvolutionPage() {
       }
     } catch (err: any) {
       console.error(err);
-      toast.error(err.message || "Erro ao gerar evolução");
+      toast.error("Não foi possível gerar a evolução. Verifique sua conexão e tente novamente.");
     } finally {
       setIsGenerating(false);
     }
@@ -167,10 +167,10 @@ export default function EvolutionPage() {
         patient_id: params.patient_id || null,
       });
       if (error) throw error;
-      toast.success("Evolução salva com sucesso!");
+      toast.success("Evolução salva no prontuário!");
       trial.refetch();
     } catch (err: any) {
-      toast.error("Erro ao salvar: " + (err.message || "Erro desconhecido"));
+      toast.error("Não foi possível salvar a evolução. Tente novamente em alguns instantes.");
     } finally {
       setIsSaving(false);
     }
@@ -181,7 +181,7 @@ export default function EvolutionPage() {
       <AppBreadcrumb items={[
         { label: "Clínica", href: "/app/evolucao" },
         { label: "Evolução", href: "/app/evolucao" },
-        { label: "Nova Evolução" },
+        { label: "Nova Evolução Clínica" },
       ]} />
       {!trial.isSubscribed && (
         <TrialLimitBanner
@@ -208,7 +208,7 @@ export default function EvolutionPage() {
             "Paciente relatou melhora nos sintomas de ansiedade",
             "Trabalhamos técnicas de regulação emocional",
           ]}
-          ctaText="Entendi, criar uma evolução!"
+          ctaText="Iniciar primeira evolução"
           onDismiss={async () => {
             setGuideDismissed(true);
             if (user && !tourActive) {

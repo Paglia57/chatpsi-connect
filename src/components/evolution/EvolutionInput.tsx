@@ -131,16 +131,16 @@ export default function EvolutionInput({ onGenerate, isLoading, trialReached }: 
   return (
     <Card className="border-border bg-card text-card-foreground shadow-sm">
       <CardHeader>
-        <CardTitle className="font-display text-xl text-foreground">Nova Evolução</CardTitle>
+        <CardTitle className="font-display text-xl text-foreground">Nova Evolução Clínica</CardTitle>
       </CardHeader>
       <CardContent className="space-y-5">
         {/* Patient selector with Switch toggle */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <Label className="text-sm font-medium text-foreground">Paciente *</Label>
+            <Label className="text-sm font-medium text-foreground">Paciente vinculado *</Label>
             <div className="flex items-center gap-2">
               <Label htmlFor="avulso-switch" className="text-xs text-muted-foreground cursor-pointer">
-                Sem paciente cadastrado
+                Evolução avulsa (sem prontuário)
               </Label>
               <Switch
                 id="avulso-switch"
@@ -159,7 +159,7 @@ export default function EvolutionInput({ onGenerate, isLoading, trialReached }: 
                 onChange={e => setPatientInitials(e.target.value)}
                 placeholder="Nome ou iniciais do paciente (ex: J.S.)"
               />
-              <p className="text-xs text-muted-foreground">Evoluções sem paciente cadastrado não acumulam contexto na IA</p>
+              <p className="text-xs text-muted-foreground">Evoluções avulsas não acumulam contexto clínico na IA. Cadastre o paciente para melhores resultados.</p>
             </div>
           ) : (
             <PatientSelector value={selectedPatient} onChange={(p) => {
@@ -183,7 +183,7 @@ export default function EvolutionInput({ onGenerate, isLoading, trialReached }: 
         {/* Session info - shorter labels */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="space-y-2 min-w-0">
-            <Label className="text-sm font-medium text-foreground">Nº sessão</Label>
+            <Label className="text-sm font-medium text-foreground">Número da sessão</Label>
             <Input
               type="number"
               value={sessionNumber}
@@ -193,7 +193,7 @@ export default function EvolutionInput({ onGenerate, isLoading, trialReached }: 
             />
           </div>
           <div className="space-y-2 min-w-0">
-            <Label className="text-sm font-medium text-foreground">Duração</Label>
+            <Label className="text-sm font-medium text-foreground">Duração da sessão</Label>
             <Select value={sessionDuration} onValueChange={setSessionDuration}>
               <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
               <SelectContent>
@@ -202,7 +202,7 @@ export default function EvolutionInput({ onGenerate, isLoading, trialReached }: 
             </Select>
           </div>
           <div className="space-y-2 min-w-0">
-            <Label className="text-sm font-medium text-foreground">Tipo</Label>
+            <Label className="text-sm font-medium text-foreground">Modalidade do atendimento</Label>
             <Select value={sessionType} onValueChange={setSessionType}>
               <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
               <SelectContent>
@@ -305,12 +305,12 @@ export default function EvolutionInput({ onGenerate, isLoading, trialReached }: 
             {isLoading ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Gerando evolução...
+                Gerando evolução clínica...
               </>
             ) : (
               <>
                 <Sparkles className="h-4 w-4" />
-                Gerar Evolução
+                Gerar evolução clínica
               </>
             )}
           </Button>

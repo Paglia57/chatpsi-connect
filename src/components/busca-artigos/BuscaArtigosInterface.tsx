@@ -79,7 +79,7 @@ const BuscaArtigosInterface = () => {
     if (trial.hasReachedLimit) {
       toast({
         title: "Limite atingido",
-        description: "Você atingiu o limite de buscas gratuitas este mês. Assine para continuar.",
+        description: "Limite de buscas atingido este mês. Assine para continuar pesquisando.",
         variant: "destructive"
       });
       return;
@@ -104,14 +104,14 @@ const BuscaArtigosInterface = () => {
       trial.refetch();
       toast({
         title: "Resposta recebida",
-        description: "Artigos processados com sucesso!",
+        description: "Artigos encontrados",
         variant: "default"
       });
     } catch (error: any) {
       console.error('Error sending message:', error);
       toast({
-        title: "Erro ao enviar mensagem",
-        description: error.message || "Ocorreu um erro ao processar sua solicitação.",
+        title: "Não foi possível buscar artigos",
+        description: "Verifique sua conexão e tente novamente.",
         variant: "destructive"
       });
     } finally {
@@ -158,8 +158,8 @@ const BuscaArtigosInterface = () => {
                   <FirstTimeGuide
                     guideKey="artigos"
                     icon={<BookOpen className="h-8 w-8 text-blue-600" />}
-                    title="Busca Artigos Científicos"
-                    description="Encontre evidências científicas para embasar suas intervenções e relatórios clínicos."
+                    title="Artigos Científicos"
+                    description="Busque artigos científicos relevantes para suas hipóteses diagnósticas e abordagens terapêuticas."
                     tips={[
                       "Pesquise por tema, técnica ou quadro clínico específico",
                       "Use as referências em relatórios e evoluções clínicas",
@@ -170,7 +170,7 @@ const BuscaArtigosInterface = () => {
                       "Evidências sobre mindfulness na ansiedade",
                       "Estudos recentes sobre EMDR",
                     ]}
-                    ctaText="Entendi, buscar artigos!"
+                    ctaText="Buscar artigo científico"
                     onDismiss={async () => {
                       if (user && !tourActive) {
                         const current = (profile?.seen_guides as any) || {};
@@ -195,9 +195,9 @@ const BuscaArtigosInterface = () => {
                   <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-blue-500/10 flex items-center justify-center mx-auto mb-4 sm:mb-5">
                     <BookOpen className="h-8 w-8 sm:h-10 sm:w-10 text-blue-600" />
                   </div>
-                  <h3 className="text-base sm:text-lg font-medium mb-2">Busca Artigos Científicos</h3>
+                   <h3 className="text-base sm:text-lg font-medium mb-2">Artigos Científicos</h3>
                   <p className="text-sm sm:text-base text-muted-foreground mb-6 max-w-md mx-auto text-overflow-anywhere">
-                    Pesquise artigos científicos relevantes para embasar sua prática clínica.
+                    Busque artigos científicos relevantes para suas hipóteses diagnósticas e abordagens terapêuticas.
                   </p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 max-w-lg mx-auto">
                     {[
@@ -260,7 +260,7 @@ const BuscaArtigosInterface = () => {
         <div className="w-full px-3 sm:px-4 md:px-6">
           <form onSubmit={handleSendMessage} className="flex gap-2 sm:gap-3 items-end mx-[30px]">
             <div className="flex-1 min-w-0 w-full">
-              <AutoTextarea value={newMessage} onChange={e => setNewMessage(e.target.value)} placeholder="Digite sua pergunta sobre artigos científicos..." disabled={isLoading || trial.hasReachedLimit} minRows={isMobile ? 1 : 2} maxRows={isMobile ? 4 : 6} className="w-full max-w-full text-base resize-none" onKeyDown={e => {
+              <AutoTextarea value={newMessage} onChange={e => setNewMessage(e.target.value)} placeholder="Descreva o tema, técnica ou quadro clínico que deseja pesquisar..." disabled={isLoading || trial.hasReachedLimit} minRows={isMobile ? 1 : 2} maxRows={isMobile ? 4 : 6} className="w-full max-w-full text-base resize-none" onKeyDown={e => {
               if (e.key === 'Enter' && !e.shiftKey && !isMobile) {
                 e.preventDefault();
                 handleSendMessage(e);

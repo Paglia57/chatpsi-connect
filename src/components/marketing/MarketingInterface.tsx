@@ -66,7 +66,6 @@ const MarketingInterface = () => {
       console.error('Erro ao carregar histórico:', error);
       toast({
         variant: 'destructive',
-        title: 'Erro',
         description: 'Não foi possível carregar o histórico',
       });
     } finally {
@@ -78,8 +77,7 @@ const MarketingInterface = () => {
     if (!prompt.trim()) {
       toast({
         variant: 'destructive',
-        title: 'Erro',
-        description: 'Digite um pedido para o assistente',
+        description: 'Descreva o conteúdo que deseja gerar',
       });
       return;
     }
@@ -94,7 +92,7 @@ const MarketingInterface = () => {
 
       if (data?.success) {
         setGeneratedText(data.generated_text);
-        toast({ title: 'Sucesso', description: 'Texto gerado com IA!' });
+        toast({ description: 'Conteúdo gerado com sucesso' });
         trial.refetch();
       } else {
         throw new Error(data?.error || 'Erro ao gerar texto');
@@ -103,8 +101,7 @@ const MarketingInterface = () => {
       console.error('Erro ao gerar:', error);
       toast({
         variant: 'destructive',
-        title: 'Erro',
-        description: 'Não foi possível gerar o texto',
+        description: 'Não foi possível gerar o conteúdo. Tente novamente.',
       });
     } finally {
       setIsGenerating(false);
@@ -115,8 +112,7 @@ const MarketingInterface = () => {
     if (!generatedText.trim()) {
       toast({
         variant: 'destructive',
-        title: 'Erro',
-        description: 'Não há texto para salvar',
+        description: 'Nenhum conteúdo para salvar. Gere um conteúdo primeiro.',
       });
       return;
     }
@@ -153,7 +149,7 @@ const MarketingInterface = () => {
         if (error) throw error;
       }
 
-      toast({ title: 'Sucesso', description: 'Texto salvo com sucesso!' });
+      toast({ description: 'Conteúdo salvo' });
       await fetchHistory();
 
       if (!selectedId) {
@@ -164,8 +160,7 @@ const MarketingInterface = () => {
       console.error('Erro ao salvar:', error);
       toast({
         variant: 'destructive',
-        title: 'Erro',
-        description: 'Não foi possível salvar o texto',
+        description: 'Não foi possível salvar. Tente novamente.',
       });
     } finally {
       setIsSaving(false);
@@ -203,7 +198,7 @@ const MarketingInterface = () => {
 
       if (error) throw error;
 
-      toast({ title: 'Sucesso', description: 'Texto excluído com sucesso!' });
+      toast({ description: 'Conteúdo removido' });
 
       if (selectedId === textToDelete) {
         handleNewText();
@@ -214,8 +209,7 @@ const MarketingInterface = () => {
       console.error('Erro ao excluir:', error);
       toast({
         variant: 'destructive',
-        title: 'Erro',
-        description: 'Não foi possível excluir o texto',
+        description: 'Não foi possível excluir o conteúdo. Tente novamente.',
       });
     } finally {
       setDeleteDialogOpen(false);
@@ -228,15 +222,15 @@ const MarketingInterface = () => {
       <div className="p-4 md:p-6 border-b">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl md:text-2xl font-bold">IA de Marketing</h1>
+             <h1 className="text-xl md:text-2xl font-bold">Marketing para sua prática</h1>
             <p className="text-muted-foreground text-xs md:text-sm">
-              Gere textos de marketing com inteligência artificial
+              Gere conteúdo profissional para suas redes sociais com IA especializada em saúde mental.
             </p>
           </div>
           {(selectedId || activeTab === 'historico') && (
             <Button size="sm" variant="outline" onClick={handleNewText}>
               <Plus className="h-4 w-4 mr-1" />
-              Novo
+              Novo conteúdo
             </Button>
           )}
         </div>
@@ -245,8 +239,8 @@ const MarketingInterface = () => {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
         <div className="px-4 md:px-6 pt-4">
           <TabsList>
-            <TabsTrigger value="novo">Novo Texto</TabsTrigger>
-            <TabsTrigger value="historico">Histórico</TabsTrigger>
+             <TabsTrigger value="novo">Criar conteúdo</TabsTrigger>
+            <TabsTrigger value="historico">Conteúdos salvos</TabsTrigger>
           </TabsList>
         </div>
 
@@ -277,7 +271,7 @@ const MarketingInterface = () => {
                   "Escreva um texto educativo sobre como funciona a TCC para o meu site",
                   "Gere 5 ideias de conteúdo sobre saúde mental para redes sociais",
                 ]}
-                ctaText="Entendi, criar um texto!"
+                ctaText="Criar primeiro conteúdo"
                 onDismiss={async () => {
                   if (user && !tourActive) {
                     const current = profile?.seen_guides || {};
@@ -295,10 +289,10 @@ const MarketingInterface = () => {
               />
             )}
             <div className="space-y-2">
-              <Label htmlFor="prompt">Pedido ao assistente</Label>
+              <Label htmlFor="prompt">Descreva o conteúdo desejado</Label>
               <Textarea
                 id="prompt"
-                placeholder="Descreva o que você quer que a IA crie..."
+                placeholder="Ex: Post para Instagram sobre a importância da terapia para ansiedade"
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
                 rows={4}
@@ -307,10 +301,10 @@ const MarketingInterface = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="generated">Texto gerado / editável</Label>
+              <Label htmlFor="generated">Conteúdo gerado (editável)</Label>
               <Textarea
                 id="generated"
-                placeholder="O texto gerado pela IA aparecerá aqui e poderá ser editado..."
+                placeholder="O conteúdo gerado pela IA aparecerá aqui. Edite antes de publicar."
                 value={generatedText}
                 onChange={(e) => setGeneratedText(e.target.value)}
                 rows={12}
@@ -341,7 +335,7 @@ const MarketingInterface = () => {
                   ) : (
                     <>
                       <Sparkles className="mr-2 h-4 w-4" />
-                      Gerar com IA
+                      Gerar conteúdo
                     </>
                   )}
                 </Button>
@@ -361,7 +355,7 @@ const MarketingInterface = () => {
                 ) : (
                   <>
                     <Save className="mr-2 h-4 w-4" />
-                    Salvar
+                    Salvar conteúdo
                   </>
                 )}
               </Button>
@@ -392,9 +386,9 @@ const MarketingInterface = () => {
                   </div>
                 ))}
               </div>
-            ) : texts.length === 0 ? (
+             ) : texts.length === 0 ? (
               <div className="py-12 text-center text-muted-foreground">
-                Nenhum texto salvo ainda
+                Seus conteúdos gerados aparecerão aqui. Crie o primeiro para começar.
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -444,9 +438,9 @@ const MarketingInterface = () => {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+             <AlertDialogTitle>Excluir este conteúdo?</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja excluir este texto? Esta ação não pode ser desfeita.
+              Este conteúdo será permanentemente removido. Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

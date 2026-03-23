@@ -13,7 +13,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Search, Trash2, ClipboardList, ClipboardCopy, Pencil, X, Download, ChevronDown, Loader2 } from "lucide-react";
+import { Search, Trash2, ClipboardList, ClipboardCopy, Pencil, X, Download, ChevronDown, Loader2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
 import { parseEvolutionContent, getContentPreview, exportEvolutionPdf } from "@/lib/evolutionParser";
@@ -148,10 +148,10 @@ export default function HistoryPage() {
 
   const handleDelete = async (id: string) => {
     const { error } = await supabase.from("evolutions").delete().eq("id", id);
-    if (error) {
-      toast.error("Erro ao excluir");
+     if (error) {
+      toast.error("Não foi possível excluir a evolução. Tente novamente.");
     } else {
-      toast.success("Evolução excluída");
+      toast.success("Evolução removida do histórico");
       setEvolutions(prev => prev.filter(e => e.id !== id));
       if (selectedEvolution?.id === id) setSelectedEvolution(null);
     }
@@ -226,9 +226,13 @@ export default function HistoryPage() {
 
       {/* List */}
       {filtered.length === 0 ? (
-        <div className="text-center py-12">
+         <div className="text-center py-12">
           <ClipboardList className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-          <p className="text-muted-foreground">Nenhuma evolução encontrada</p>
+          <p className="text-muted-foreground mb-4">O histórico consolida todas as evoluções dos seus pacientes. Gere sua primeira evolução para começar a construí-lo.</p>
+          <Button variant="cta" onClick={() => window.location.href = '/app/evolucao'}>
+            <Sparkles className="h-4 w-4" />
+            Gerar evolução
+          </Button>
         </div>
       ) : (
         <ScrollArea className="max-h-[calc(100vh-240px)]">
@@ -287,7 +291,7 @@ export default function HistoryPage() {
                     </AlertDialogTrigger>
                     <AlertDialogContent onClick={e => e.stopPropagation()}>
                       <AlertDialogHeader>
-                        <AlertDialogTitle>Excluir evolução?</AlertDialogTitle>
+                        <AlertDialogTitle>Excluir esta evolução?</AlertDialogTitle>
                         <AlertDialogDescription>
                           Esta ação não pode ser desfeita. A evolução de {ev.patient_initials} será permanentemente excluída.
                         </AlertDialogDescription>
@@ -318,7 +322,7 @@ export default function HistoryPage() {
               {selectedEvolution && <PatientAvatar initials={selectedEvolution.patient_initials} />}
               <div>
                 <DialogTitle className="font-display">
-                  Evolução — {selectedEvolution?.patient_initials}
+                  Evolução clínica — {selectedEvolution?.patient_initials}
                 </DialogTitle>
                 {selectedEvolution && (
                   <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap mt-1">
@@ -366,9 +370,9 @@ export default function HistoryPage() {
                           .eq("id", selectedEvolution.id);
                         setSaving(false);
                         if (error) {
-                          toast.error("Erro ao salvar alterações");
+                           toast.error("Não foi possível salvar as alterações. Tente novamente.");
                         } else {
-                          toast.success("Evolução atualizada!");
+                          toast.success("Evolução atualizada com sucesso");
                           setEvolutions(prev => prev.map(e => e.id === selectedEvolution.id ? { ...e, output_content: editedContent } : e));
                           setSelectedEvolution({ ...selectedEvolution, output_content: editedContent });
                           setIsEditing(false);
@@ -380,7 +384,7 @@ export default function HistoryPage() {
                           <Loader2 className="h-4 w-4 animate-spin" />
                           Salvando...
                         </>
-                      ) : "Salvar"}
+                      ) : "Salvar alterações"}
                     </Button>
                     <Button variant="ghost" size="sm" onClick={() => setIsEditing(false)}>
                       <X className="h-4 w-4" />
@@ -405,7 +409,7 @@ export default function HistoryPage() {
                       size="sm"
                       onClick={() => {
                         navigator.clipboard.writeText(selectedEvolution.output_content || "");
-                        toast.success("Evolução copiada!");
+                        toast.success("Evolução copiada para a área de transferência");
                       }}
                     >
                       <ClipboardCopy className="h-4 w-4" />

@@ -177,8 +177,8 @@ export default function PatientDetailPage() {
             <span className="text-sm text-muted-foreground">({patient.initials})</span>
           </div>
           <div className="flex items-center gap-2 mt-1 flex-wrap">
-            <Badge variant={patient.status === "active" ? "default" : "outline"}>
-              {patient.status === "active" ? "Ativo" : "Inativo"}
+             <Badge variant={patient.status === "active" ? "default" : "outline"}>
+              {patient.status === "active" ? "Em acompanhamento" : "Pausado"}
             </Badge>
             {patient.approach && <Badge variant="secondary">{patient.approach}</Badge>}
           </div>
@@ -188,14 +188,14 @@ export default function PatientDetailPage() {
             <Pencil className="h-4 w-4" /> Editar
           </Button>
           <Button variant="cta" size="sm" onClick={() => navigate(`/app/evolucao?patient=${patient.id}`)}>
-            <Sparkles className="h-4 w-4" /> Nova Evolução
+            <Sparkles className="h-4 w-4" /> Gerar evolução
           </Button>
         </div>
       </div>
 
       {/* Clinical data */}
       <Card className="border-border bg-card shadow-sm">
-        <CardHeader><CardTitle className="font-display text-lg">Dados Clínicos</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="font-display text-lg">Informações clínicas</CardTitle></CardHeader>
         <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <InfoItem label="Queixa principal" value={patient.main_complaint} />
           <InfoItem label="CID-10" value={patient.cid_10} />
@@ -213,10 +213,10 @@ export default function PatientDetailPage() {
 
       {/* Evolution history */}
       <Card className="border-border bg-card shadow-sm">
-        <CardHeader><CardTitle className="font-display text-lg">Histórico de Evoluções</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="font-display text-lg">Evoluções clínicas</CardTitle></CardHeader>
         <CardContent>
           {evolutions.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Nenhuma evolução registrada para este paciente.</p>
+            <p className="text-sm text-muted-foreground">Nenhuma evolução clínica gerada para este paciente. Gere a primeira após a próxima sessão.</p>
           ) : (
             <div className="space-y-2">
               {evolutions.map(ev => (
@@ -246,21 +246,21 @@ export default function PatientDetailPage() {
         <CardContent className="flex items-center gap-4 py-4">
           <Brain className="h-8 w-8 text-primary shrink-0" />
           <div className="flex-1">
-            <p className="text-sm font-medium text-foreground">Contexto Acumulado da IA</p>
+            <p className="text-sm font-medium text-foreground">Contexto clínico acumulado</p>
             {patient.openai_thread_id ? (
               <p className="text-xs text-muted-foreground mt-0.5">
                 {patient.total_sessions} sessão(ões) no contexto. A IA acumula o histórico de todas as sessões deste paciente.
               </p>
             ) : (
-              <p className="text-xs text-muted-foreground mt-0.5">
-                O contexto de IA ainda não foi ativado para este paciente.
+               <p className="text-xs text-muted-foreground mt-0.5">
+                A IA ainda não possui histórico deste paciente. Ative para que as evoluções considerem sessões anteriores.
               </p>
             )}
           </div>
           {!patient.openai_thread_id && (
             <Button variant="outline" size="sm" onClick={handleActivateThread} disabled={activatingThread}>
               {activatingThread && <Loader2 className="h-4 w-4 animate-spin" />}
-              Ativar contexto de IA
+              Ativar contexto clínico
             </Button>
           )}
         </CardContent>
@@ -271,7 +271,7 @@ export default function PatientDetailPage() {
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="font-display">
-              Evolução — {selectedEvo && new Date(selectedEvo.created_at).toLocaleDateString("pt-BR")}
+              Evolução clínica — {selectedEvo && new Date(selectedEvo.created_at).toLocaleDateString("pt-BR")}
             </DialogTitle>
           </DialogHeader>
           <div className="whitespace-pre-wrap text-sm text-foreground leading-relaxed">

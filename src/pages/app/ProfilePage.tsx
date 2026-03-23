@@ -91,9 +91,9 @@ export default function ProfilePage() {
         })
         .eq("user_id", user.id);
       if (error) throw error;
-      toast.success("Perfil atualizado!");
+      toast.success("Perfil clínico atualizado");
     } catch (err: any) {
-      toast.error("Erro ao salvar: " + (err.message || "Erro desconhecido"));
+      toast.error("Não foi possível atualizar o perfil. Tente novamente.");
     } finally {
       setSaving(false);
     }
@@ -107,14 +107,14 @@ export default function ProfilePage() {
       .from("avatars")
       .upload(filePath, file, { upsert: true });
     if (uploadError) {
-      toast.error("Erro ao enviar foto");
+      toast.error("Não foi possível enviar a foto. Tente com um arquivo menor.");
       return;
     }
     const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(filePath);
     const url = urlData.publicUrl;
     await supabase.from("profiles").update({ avatar_url: url }).eq("user_id", user.id);
     setAvatarUrl(url);
-    toast.success("Foto atualizada!");
+    toast.success("Foto de perfil atualizada");
   };
 
   const initials = fullName
@@ -153,7 +153,7 @@ export default function ProfilePage() {
       <AppBreadcrumb items={[{ label: "Meu Perfil" }]} />
       <Card className="border-border bg-card text-card-foreground shadow-sm">
         <CardHeader>
-          <CardTitle className="font-display text-xl text-foreground">Perfil Profissional</CardTitle>
+          <CardTitle className="font-display text-xl text-foreground">Seu perfil clínico</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Avatar */}
@@ -175,17 +175,17 @@ export default function ProfilePage() {
           {/* Fields */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Nome completo</Label>
+              <Label>Nome completo do profissional</Label>
               <Input value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Seu nome" />
               <p className="text-xs text-muted-foreground">Usado no cabeçalho das evoluções clínicas</p>
             </div>
             <div className="space-y-2">
-              <Label>Apelido</Label>
+              <Label>Como prefere ser chamado</Label>
               <Input value={nickname} onChange={e => setNickname(e.target.value)} placeholder="Como quer ser chamado" />
               <p className="text-xs text-muted-foreground">Como você quer ser chamado dentro do app</p>
             </div>
             <div className="space-y-2">
-              <Label>CRP</Label>
+              <Label>Registro profissional (CRP/CRM)</Label>
               <Input value={crp} onChange={e => setCrp(e.target.value)} placeholder="Ex: 06/123456" />
               <p className="text-xs text-muted-foreground">Formato: UF/número (ex: 06/123456). Aparece nas evoluções geradas</p>
             </div>
@@ -197,18 +197,18 @@ export default function ProfilePage() {
           </div>
 
           <div className="space-y-2">
-            <Label>Abordagem principal</Label>
+            <Label>Abordagem terapêutica principal</Label>
             <Select value={mainApproach} onValueChange={setMainApproach}>
               <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
               <SelectContent>
                 {APPROACHES.map(a => <SelectItem key={a} value={a}>{a}</SelectItem>)}
               </SelectContent>
             </Select>
-            <p className="text-xs text-muted-foreground">Será pré-selecionada ao criar novas evoluções</p>
+            <p className="text-xs text-muted-foreground">Pré-selecionada automaticamente ao gerar evoluções clínicas</p>
           </div>
 
           <div className="space-y-2">
-            <Label>Especialidades</Label>
+            <Label>Áreas de atuação</Label>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {SPECIALTIES.map(s => (
                 <label key={s} className="flex items-center gap-2 cursor-pointer">
@@ -220,12 +220,12 @@ export default function ProfilePage() {
                 </label>
               ))}
             </div>
-            <p className="text-xs text-muted-foreground">Ajudam a IA a personalizar sugestões e planos de ação</p>
+            <p className="text-xs text-muted-foreground">A IA priorizará conteúdos e sugestões dessas áreas</p>
           </div>
 
           <Button variant="cta" onClick={handleSave} disabled={saving}>
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-            Salvar alterações
+            Salvar perfil
           </Button>
         </CardContent>
       </Card>

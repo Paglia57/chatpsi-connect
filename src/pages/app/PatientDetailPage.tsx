@@ -216,7 +216,7 @@ export default function PatientDetailPage() {
         <CardHeader><CardTitle className="font-display text-lg">Evoluções clínicas</CardTitle></CardHeader>
         <CardContent>
           {evolutions.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Nenhuma evolução registrada para este paciente.</p>
+            <p className="text-sm text-muted-foreground">Nenhuma evolução clínica gerada para este paciente. Gere a primeira após a próxima sessão.</p>
           ) : (
             <div className="space-y-2">
               {evolutions.map(ev => (

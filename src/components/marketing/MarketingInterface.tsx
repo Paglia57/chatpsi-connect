@@ -361,7 +361,7 @@ const MarketingInterface = () => {
                 ) : (
                   <>
                     <Save className="mr-2 h-4 w-4" />
-                    Salvar
+                    Salvar conteúdo
                   </>
                 )}
               </Button>

@@ -110,7 +110,7 @@ const BuscaPlanoInterface = () => {
       trial.refetch();
       toast({
         title: "Resposta recebida",
-        description: "Plano de ação processado com sucesso!",
+        description: "Plano terapêutico processado com sucesso!",
         variant: "default"
       });
     } catch (error: any) {

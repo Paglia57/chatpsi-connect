@@ -267,7 +267,7 @@ export default function PatientFormDialog({ open, onOpenChange, editData, onSave
                   <Input value={form.cid_10} onChange={e => set("cid_10", e.target.value)} placeholder="Ex: F41.1" />
                 </div>
                 <div className="space-y-2">
-                  <Label>Diagnóstico DSM-5</Label>
+                  <Label>Hipótese diagnóstica (DSM-5)</Label>
                   <Input value={form.dsm_5} onChange={e => set("dsm_5", e.target.value)} placeholder="Ex: 300.02" />
                 </div>
               </div>

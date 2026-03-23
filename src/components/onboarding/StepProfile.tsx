@@ -73,7 +73,7 @@ export default function StepProfile({ onNext, onSkip }: StepProfileProps) {
   return (
     <div className="max-w-lg mx-auto space-y-6 px-4">
       <div className="text-center space-y-2">
-        <h2 className="text-2xl font-bold text-foreground font-playfair">Sobre você</h2>
+        <h2 className="text-2xl font-bold text-foreground font-playfair">Seu perfil clínico</h2>
         <p className="text-muted-foreground">Essas informações personalizam a IA para sua prática clínica.</p>
       </div>
 

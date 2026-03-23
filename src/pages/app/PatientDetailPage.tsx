@@ -195,7 +195,7 @@ export default function PatientDetailPage() {
 
       {/* Clinical data */}
       <Card className="border-border bg-card shadow-sm">
-        <CardHeader><CardTitle className="font-display text-lg">Dados Clínicos</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="font-display text-lg">Informações clínicas</CardTitle></CardHeader>
         <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <InfoItem label="Queixa principal" value={patient.main_complaint} />
           <InfoItem label="CID-10" value={patient.cid_10} />

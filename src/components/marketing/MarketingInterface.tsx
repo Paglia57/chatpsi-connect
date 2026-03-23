@@ -341,7 +341,7 @@ const MarketingInterface = () => {
                   ) : (
                     <>
                       <Sparkles className="mr-2 h-4 w-4" />
-                      Gerar com IA
+                      Gerar conteúdo
                     </>
                   )}
                 </Button>

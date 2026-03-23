@@ -183,7 +183,7 @@ export default function EvolutionInput({ onGenerate, isLoading, trialReached }: 
         {/* Session info - shorter labels */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="space-y-2 min-w-0">
-            <Label className="text-sm font-medium text-foreground">Nº sessão</Label>
+            <Label className="text-sm font-medium text-foreground">Número da sessão</Label>
             <Input
               type="number"
               value={sessionNumber}

@@ -201,7 +201,7 @@ const HomePage = () => {
             </div>
             <div>
               {loadingStats ? <Skeleton className="h-7 w-10" /> : <p className="text-2xl font-bold text-foreground">{evolutionsCount}</p>}
-              <p className="text-xs text-muted-foreground">Evoluções este mês</p>
+              <p className="text-xs text-muted-foreground">Evoluções geradas este mês</p>
             </div>
           </CardContent>
         </Card>

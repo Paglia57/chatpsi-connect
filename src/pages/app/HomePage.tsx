@@ -185,8 +185,8 @@ const HomePage = () => {
 
       {/* Greeting */}
       <div>
-        <h1 className="text-2xl md:text-3xl font-bold text-foreground font-playfair">Olá, {displayName}! 👋</h1>
-        <p className="text-muted-foreground mt-1">O que vamos fazer hoje?</p>
+        <h1 className="text-2xl md:text-3xl font-bold text-foreground font-playfair">Olá, {displayName}</h1>
+        <p className="text-muted-foreground font-semibold mt-1">Seu painel clínico</p>
       </div>
 
       {/* Redeem referral banner for new/recent users */}

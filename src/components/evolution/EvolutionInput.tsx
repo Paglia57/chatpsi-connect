@@ -140,7 +140,7 @@ export default function EvolutionInput({ onGenerate, isLoading, trialReached }: 
             <Label className="text-sm font-medium text-foreground">Paciente vinculado *</Label>
             <div className="flex items-center gap-2">
               <Label htmlFor="avulso-switch" className="text-xs text-muted-foreground cursor-pointer">
-                Sem paciente cadastrado
+                Evolução avulsa (sem prontuário)
               </Label>
               <Switch
                 id="avulso-switch"

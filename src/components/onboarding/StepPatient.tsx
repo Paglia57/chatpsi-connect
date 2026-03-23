@@ -91,7 +91,7 @@ export default function StepPatient({ selectedApproach, onNext, onSkip }: StepPa
   return (
     <div className="max-w-lg mx-auto space-y-6 px-4">
       <div className="text-center space-y-2">
-        <h2 className="text-2xl font-bold text-foreground font-playfair">Seu primeiro paciente</h2>
+        <h2 className="text-2xl font-bold text-foreground font-playfair">Cadastre seu primeiro paciente</h2>
         <p className="text-muted-foreground">Cadastre um paciente para vincular às suas evoluções. Use iniciais ou apelido — os dados ficam protegidos.</p>
       </div>
 

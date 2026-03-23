@@ -392,9 +392,9 @@ const MarketingInterface = () => {
                   </div>
                 ))}
               </div>
-            ) : texts.length === 0 ? (
+             ) : texts.length === 0 ? (
               <div className="py-12 text-center text-muted-foreground">
-                Nenhum texto salvo ainda
+                Seus conteúdos gerados aparecerão aqui. Crie o primeiro para começar.
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

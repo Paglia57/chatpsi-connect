@@ -322,7 +322,7 @@ export default function HistoryPage() {
               {selectedEvolution && <PatientAvatar initials={selectedEvolution.patient_initials} />}
               <div>
                 <DialogTitle className="font-display">
-                  Evolução — {selectedEvolution?.patient_initials}
+                  Evolução clínica — {selectedEvolution?.patient_initials}
                 </DialogTitle>
                 {selectedEvolution && (
                   <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap mt-1">

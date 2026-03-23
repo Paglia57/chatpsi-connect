@@ -226,7 +226,7 @@ export default function StepEvolution({ selectedApproach, createdPatient, onNext
         <CardContent className="p-6 space-y-4">
           <div className="grid grid-cols-3 gap-3">
             <div className="space-y-1.5">
-              <Label className="text-xs">Nº sessão</Label>
+              <Label className="text-xs">Número da sessão</Label>
               <Input type="number" value={sessionNumber} onChange={e => setSessionNumber(e.target.value)} placeholder="1" min={1} />
             </div>
             <div className="space-y-1.5">

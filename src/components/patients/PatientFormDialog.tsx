@@ -337,7 +337,7 @@ export default function PatientFormDialog({ open, onOpenChange, editData, onSave
           <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={saving}>Cancelar</Button>
           <Button variant="cta" onClick={handleSave} disabled={saving}>
             {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-            {editData?.id ? "Salvar Alterações" : "Cadastrar Paciente"}
+            {editData?.id ? "Salvar alterações no prontuário" : "Adicionar paciente"}
           </Button>
         </DialogFooter>
       </DialogContent>

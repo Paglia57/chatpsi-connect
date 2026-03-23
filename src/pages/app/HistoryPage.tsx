@@ -148,10 +148,10 @@ export default function HistoryPage() {
 
   const handleDelete = async (id: string) => {
     const { error } = await supabase.from("evolutions").delete().eq("id", id);
-    if (error) {
-      toast.error("Erro ao excluir");
+     if (error) {
+      toast.error("Não foi possível excluir a evolução. Tente novamente.");
     } else {
-      toast.success("Evolução excluída");
+      toast.success("Evolução removida do histórico");
       setEvolutions(prev => prev.filter(e => e.id !== id));
       if (selectedEvolution?.id === id) setSelectedEvolution(null);
     }

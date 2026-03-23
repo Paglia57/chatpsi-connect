@@ -245,8 +245,8 @@ const MarketingInterface = () => {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
         <div className="px-4 md:px-6 pt-4">
           <TabsList>
-            <TabsTrigger value="novo">Novo Texto</TabsTrigger>
-            <TabsTrigger value="historico">Histórico</TabsTrigger>
+             <TabsTrigger value="novo">Criar conteúdo</TabsTrigger>
+            <TabsTrigger value="historico">Conteúdos salvos</TabsTrigger>
           </TabsList>
         </div>
 

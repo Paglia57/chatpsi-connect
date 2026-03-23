@@ -309,7 +309,7 @@ export default function PatientFormDialog({ open, onOpenChange, editData, onSave
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Frequência</Label>
+                <Label>Frequência dos atendimentos</Label>
                 <Select value={form.session_frequency} onValueChange={v => set("session_frequency", v)}>
                   <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                   <SelectContent>

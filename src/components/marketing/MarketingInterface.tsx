@@ -150,7 +150,7 @@ const MarketingInterface = () => {
         if (error) throw error;
       }
 
-      toast({ title: 'Sucesso', description: 'Texto salvo com sucesso!' });
+      toast({ description: 'Conteúdo salvo' });
       await fetchHistory();
 
       if (!selectedId) {

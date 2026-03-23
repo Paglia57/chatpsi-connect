@@ -497,7 +497,7 @@ const ChatInterface = () => {
                   <FirstTimeGuide
                     guideKey="chat"
                     icon={<MessageCircle className="h-8 w-8 text-primary" />}
-                    title="Chat Clínico com IA"
+                    title="Chat Clínico"
                     description="Tire dúvidas clínicas, peça sugestões de intervenção e consulte protocolos em tempo real."
                     tips={[
                       "Envie texto, áudio, imagens ou documentos para a IA analisar",

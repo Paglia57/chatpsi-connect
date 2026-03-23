@@ -344,7 +344,7 @@ const ChatInterface = () => {
     await fetchMessages(true);
     toast({
       title: "Chat atualizado",
-      description: "Resposta interrompida e mensagens recarregadas.",
+      description: "Histórico de mensagens recarregado.",
       variant: "default"
     });
   };

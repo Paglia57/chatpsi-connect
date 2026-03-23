@@ -529,9 +529,9 @@ const ChatInterface = () => {
                 ) : (
                 <div className="text-center py-8 sm:py-12 px-4">
                   <Bot className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground mx-auto mb-3 sm:mb-4" />
-                  <h3 className="text-base sm:text-lg font-medium mb-2">Bem-vindo ao ChatPsi!</h3>
+                   <h3 className="text-base sm:text-lg font-medium mb-2">Chat Clínico</h3>
                   <p className="text-sm sm:text-base text-muted-foreground mb-4 text-overflow-anywhere">
-                    {canSendMessage ? "Envie mensagens, áudios, imagens ou documentos para começar a conversar com a IA." : "Você precisa de uma assinatura ativa para começar a conversar."}
+                    {canSendMessage ? "O Chat Clínico é seu assistente especializado. Tire dúvidas sobre abordagens, CID, manejo clínico e mais." : "Assinatura necessária para acessar o Chat Clínico."}
                   </p>
                   {!canSendMessage && <Button variant="cta" className="touch-target">Ativar Assinatura</Button>}
                   {canSendMessage && <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-w-lg mx-auto mt-6">

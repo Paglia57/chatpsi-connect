@@ -84,13 +84,13 @@ export default function PatientsPage() {
               <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center mb-6">
                 <Users className="h-10 w-10 text-primary" />
               </div>
-              <h2 className="text-xl font-semibold text-foreground mb-2">Nenhum paciente cadastrado ainda</h2>
+              <h2 className="text-xl font-semibold text-foreground mb-2">Seus pacientes aparecerão aqui</h2>
               <p className="text-muted-foreground max-w-md mb-6">
                 Cadastre seus pacientes para acompanhar evoluções, manter o histórico organizado e ter contexto personalizado nas sessões.
               </p>
               <Button variant="cta" size="lg" onClick={() => setDialogOpen(true)} className="mb-8">
                 <UserPlus className="h-5 w-5" />
-                Cadastrar primeiro paciente
+                Adicionar primeiro paciente
               </Button>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full max-w-lg">
                 {[

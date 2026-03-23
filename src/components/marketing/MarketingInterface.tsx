@@ -93,7 +93,7 @@ const MarketingInterface = () => {
 
       if (data?.success) {
         setGeneratedText(data.generated_text);
-        toast({ title: 'Sucesso', description: 'Texto gerado com IA!' });
+        toast({ description: 'Conteúdo gerado com sucesso' });
         trial.refetch();
       } else {
         throw new Error(data?.error || 'Erro ao gerar texto');

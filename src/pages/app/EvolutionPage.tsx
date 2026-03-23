@@ -167,10 +167,10 @@ export default function EvolutionPage() {
         patient_id: params.patient_id || null,
       });
       if (error) throw error;
-      toast.success("Evolução salva com sucesso!");
+      toast.success("Evolução salva no prontuário!");
       trial.refetch();
     } catch (err: any) {
-      toast.error("Erro ao salvar: " + (err.message || "Erro desconhecido"));
+      toast.error("Não foi possível salvar a evolução. Tente novamente em alguns instantes.");
     } finally {
       setIsSaving(false);
     }

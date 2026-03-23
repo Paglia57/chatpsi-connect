@@ -444,9 +444,9 @@ const MarketingInterface = () => {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+             <AlertDialogTitle>Excluir este conteúdo?</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja excluir este texto? Esta ação não pode ser desfeita.
+              Este conteúdo será permanentemente removido. Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

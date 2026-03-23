@@ -370,9 +370,9 @@ export default function HistoryPage() {
                           .eq("id", selectedEvolution.id);
                         setSaving(false);
                         if (error) {
-                          toast.error("Erro ao salvar alterações");
+                           toast.error("Não foi possível salvar as alterações. Tente novamente.");
                         } else {
-                          toast.success("Evolução atualizada!");
+                          toast.success("Evolução atualizada com sucesso");
                           setEvolutions(prev => prev.map(e => e.id === selectedEvolution.id ? { ...e, output_content: editedContent } : e));
                           setSelectedEvolution({ ...selectedEvolution, output_content: editedContent });
                           setIsEditing(false);

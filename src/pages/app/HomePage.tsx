@@ -155,11 +155,11 @@ const HomePage = () => {
       {showBanner && (
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center justify-between gap-3">
           <p className="text-sm text-foreground flex-1">
-            ⚡ Você ainda não completou a configuração inicial. Complete agora para personalizar a IA.
+            Você ainda não finalizou a configuração do seu consultório. Complete para personalizar a IA.
           </p>
           <div className="flex items-center gap-2 shrink-0">
             <Button variant="outline" size="sm" onClick={handleResume}>
-              Retomar →
+              Retomar configuração
             </Button>
             <button onClick={handleDismissBanner} className="text-muted-foreground hover:text-foreground p-1">
               <X className="h-4 w-4" />

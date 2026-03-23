@@ -164,7 +164,7 @@ const BuscaPlanoInterface = () => {
               className="gap-1.5 text-xs text-muted-foreground hover:text-foreground"
             >
               <RotateCcw className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Nova conversa</span>
+              <span className="hidden sm:inline">Nova consulta</span>
             </Button>
           </div>
         )}

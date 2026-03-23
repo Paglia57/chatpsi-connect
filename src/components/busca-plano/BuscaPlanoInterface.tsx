@@ -232,7 +232,7 @@ const BuscaPlanoInterface = () => {
                   </p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 max-w-lg mx-auto">
                     {[
-                      "Plano de ação para depressão em adolescentes",
+                      "Plano terapêutico para depressão em adolescentes",
                       "Intervenções para ansiedade generalizada",
                       "Estratégias para TDAH em adultos",
                       "Plano terapêutico para luto complicado",

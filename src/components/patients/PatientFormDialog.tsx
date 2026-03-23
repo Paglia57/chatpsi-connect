@@ -218,7 +218,7 @@ export default function PatientFormDialog({ open, onOpenChange, editData, onSave
         <div className="space-y-6">
           {/* Identification */}
           <div>
-            <h3 className="text-sm font-semibold text-foreground mb-3">Dados de Identificação</h3>
+            <h3 className="text-sm font-semibold text-foreground mb-3">Identificação do paciente</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Nome completo *</Label>

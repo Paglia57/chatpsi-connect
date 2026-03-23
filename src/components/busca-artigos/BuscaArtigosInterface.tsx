@@ -158,8 +158,8 @@ const BuscaArtigosInterface = () => {
                   <FirstTimeGuide
                     guideKey="artigos"
                     icon={<BookOpen className="h-8 w-8 text-blue-600" />}
-                    title="Busca Artigos Científicos"
-                    description="Encontre evidências científicas para embasar suas intervenções e relatórios clínicos."
+                    title="Artigos Científicos"
+                    description="Busque artigos científicos relevantes para suas hipóteses diagnósticas e abordagens terapêuticas."
                     tips={[
                       "Pesquise por tema, técnica ou quadro clínico específico",
                       "Use as referências em relatórios e evoluções clínicas",

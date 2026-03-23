@@ -115,7 +115,7 @@ export default function EvolutionOutput({ content, isLoading, onRegenerate, onSa
           </Button>
           <Button variant="outline" size="sm" onClick={onRegenerate} disabled={isLoading}>
             <RefreshCw className="h-4 w-4" />
-            Gerar novamente
+            Regenerar evolução
           </Button>
           <Button variant="outline" size="sm" onClick={() => exportEvolutionPdf(displayContent)}>
             <Download className="h-4 w-4" />

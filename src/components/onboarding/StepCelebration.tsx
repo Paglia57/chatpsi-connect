@@ -40,7 +40,8 @@ export default function StepCelebration({ evolutionContent, onFinish }: StepCele
   return (
     <div className="max-w-lg mx-auto space-y-6 px-4">
       <div className="text-center space-y-2">
-        <h2 className="text-2xl font-bold text-foreground font-playfair">Sua primeira evolução foi gerada! 🎉</h2>
+        <h2 className="text-2xl font-bold text-foreground font-playfair">Evolução clínica gerada com sucesso</h2>
+        <p className="text-muted-foreground text-sm">Copie o texto abaixo ou explore as outras ferramentas do ChatPsi.</p>
       </div>
 
       <Card className="rounded-2xl shadow-sm border">

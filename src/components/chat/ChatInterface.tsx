@@ -533,7 +533,7 @@ const ChatInterface = () => {
                   <p className="text-sm sm:text-base text-muted-foreground mb-4 text-overflow-anywhere">
                     {canSendMessage ? "O Chat Clínico é seu assistente especializado. Tire dúvidas sobre abordagens, CID, manejo clínico e mais." : "Assinatura necessária para acessar o Chat Clínico."}
                   </p>
-                  {!canSendMessage && <Button variant="cta" className="touch-target">Ativar Assinatura</Button>}
+                  {!canSendMessage && <Button variant="cta" className="touch-target">Assinar para acessar</Button>}
                   {canSendMessage && <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-w-lg mx-auto mt-6">
                       {["Como estruturar uma evolução de sessão?", "Sugira técnicas de TCC para ansiedade", "Me ajude a montar um plano terapêutico", "Quais registros devo manter do paciente?"].map((prompt) => (
                         <Button key={prompt} variant="outline" className="text-left text-sm h-auto py-3 px-4 justify-start gap-2 hover:bg-muted whitespace-normal" onClick={() => { setNewMessage(prompt); setTimeout(() => { const form = document.querySelector('form'); if (form) form.requestSubmit(); }, 50); }}>

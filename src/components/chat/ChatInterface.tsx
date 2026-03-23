@@ -157,8 +157,8 @@ const ChatInterface = () => {
     } catch (error) {
       logger.error('Error in fetchMessages', error);
       toast({
-        title: "Erro ao carregar mensagens",
-        description: GENERIC_ERROR_MESSAGES.NETWORK_ERROR,
+        title: "Não foi possível carregar o histórico de mensagens",
+        description: "Verifique sua conexão e tente novamente.",
         variant: "destructive"
       });
       return false;

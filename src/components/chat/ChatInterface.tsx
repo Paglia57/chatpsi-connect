@@ -399,7 +399,7 @@ const ChatInterface = () => {
         const success = await fetchMessages(false);
         if (success) {
           toast({
-            title: "Resposta demorou mais que o esperado",
+            title: "A resposta está demorando mais que o esperado",
             description: "Mensagens atualizadas automaticamente.",
             variant: "default"
           });

@@ -78,8 +78,7 @@ const MarketingInterface = () => {
     if (!prompt.trim()) {
       toast({
         variant: 'destructive',
-        title: 'Erro',
-        description: 'Digite um pedido para o assistente',
+        description: 'Descreva o conteúdo que deseja gerar',
       });
       return;
     }

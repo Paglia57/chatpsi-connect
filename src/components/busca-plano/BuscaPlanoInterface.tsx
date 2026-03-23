@@ -226,9 +226,9 @@ const BuscaPlanoInterface = () => {
                   <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-4 sm:mb-5">
                     <Sparkles className="h-8 w-8 sm:h-10 sm:w-10 text-amber-600" />
                   </div>
-                  <h3 className="text-base sm:text-lg font-medium mb-2">Busca Plano de Ação</h3>
+                   <h3 className="text-base sm:text-lg font-medium mb-2">Planos Terapêuticos</h3>
                   <p className="text-sm sm:text-base text-muted-foreground mb-6 max-w-md mx-auto text-overflow-anywhere">
-                    Descreva o caso clínico ou situação e receba um plano de ação terapêutico personalizado.
+                    Planos terapêuticos estruturados com objetivos, intervenções e prazos. Descreva o quadro clínico para começar.
                   </p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 max-w-lg mx-auto">
                     {[

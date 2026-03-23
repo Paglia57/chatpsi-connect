@@ -161,8 +161,7 @@ const MarketingInterface = () => {
       console.error('Erro ao salvar:', error);
       toast({
         variant: 'destructive',
-        title: 'Erro',
-        description: 'Não foi possível salvar o texto',
+        description: 'Não foi possível salvar. Tente novamente.',
       });
     } finally {
       setIsSaving(false);

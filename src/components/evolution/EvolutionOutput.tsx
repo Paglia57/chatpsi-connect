@@ -97,7 +97,7 @@ export default function EvolutionOutput({ content, isLoading, onRegenerate, onSa
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" size="sm" onClick={handleCopy}>
             {copied ? <Check className="h-4 w-4" /> : <ClipboardCopy className="h-4 w-4" />}
-            {copied ? "Copiado!" : "Copiar tudo"}
+            {copied ? "Copiado!" : "Copiar evolução"}
           </Button>
           {isEditing ? (
             <Button variant="outline" size="sm" onClick={() => setIsEditing(false)}>

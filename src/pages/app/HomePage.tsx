@@ -263,7 +263,7 @@ const HomePage = () => {
           <CardContent className="p-5 space-y-3">
             <div className="flex items-center gap-2 mb-1">
               <Lightbulb className="h-4 w-4 text-warning" />
-              <h3 className="text-sm font-semibold text-foreground">Próximo passo</h3>
+              <h3 className="text-sm font-semibold text-foreground">Sugestão</h3>
             </div>
             <ul className="space-y-2">
               {tips.slice(0, 2).map((tip, i) => (

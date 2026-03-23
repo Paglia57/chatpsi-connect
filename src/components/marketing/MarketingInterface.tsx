@@ -102,8 +102,7 @@ const MarketingInterface = () => {
       console.error('Erro ao gerar:', error);
       toast({
         variant: 'destructive',
-        title: 'Erro',
-        description: 'Não foi possível gerar o texto',
+        description: 'Não foi possível gerar o conteúdo. Tente novamente.',
       });
     } finally {
       setIsGenerating(false);

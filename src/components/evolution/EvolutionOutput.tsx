@@ -101,7 +101,7 @@ export default function EvolutionOutput({ content, isLoading, onRegenerate, onSa
           </Button>
           {isEditing ? (
             <Button variant="outline" size="sm" onClick={() => setIsEditing(false)}>
-              Cancelar edição
+              Descartar alterações
             </Button>
           ) : (
             <Button variant="outline" size="sm" onClick={handleEdit}>

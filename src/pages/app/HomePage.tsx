@@ -212,7 +212,7 @@ const HomePage = () => {
             </div>
             <div>
               {loadingStats ? <Skeleton className="h-7 w-10" /> : <p className="text-2xl font-bold text-foreground">{patientsCount}</p>}
-              <p className="text-xs text-muted-foreground">Pacientes ativos</p>
+              <p className="text-xs text-muted-foreground">Pacientes em acompanhamento</p>
             </div>
           </CardContent>
         </Card>

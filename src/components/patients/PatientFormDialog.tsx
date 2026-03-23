@@ -99,7 +99,7 @@ export default function PatientFormDialog({ open, onOpenChange, editData, onSave
   const handleSave = async () => {
     if (!user) return;
     if (!form.full_name.trim() || !form.initials.trim()) {
-      toast.error("Nome e iniciais são obrigatórios");
+      toast.error("Informe o nome completo e as iniciais do paciente");
       return;
     }
     setSaving(true);

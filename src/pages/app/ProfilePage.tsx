@@ -220,7 +220,7 @@ export default function ProfilePage() {
                 </label>
               ))}
             </div>
-            <p className="text-xs text-muted-foreground">Ajudam a IA a personalizar sugestões e planos de ação</p>
+            <p className="text-xs text-muted-foreground">A IA priorizará conteúdos e sugestões dessas áreas</p>
           </div>
 
           <Button variant="cta" onClick={handleSave} disabled={saving}>

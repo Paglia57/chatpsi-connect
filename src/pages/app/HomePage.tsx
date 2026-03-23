@@ -15,11 +15,11 @@ import {
 } from 'lucide-react';
 
 const shortcuts = [
-  { icon: MessageCircle, title: 'Chat Clínico', description: 'Consulte protocolos e abordagens terapêuticas', path: '/chat' },
-  { icon: BookOpen, title: 'Buscar Artigos', description: 'Encontre evidências científicas para suas intervenções', path: '/busca-artigos' },
-  { icon: Target, title: 'Planos de Ação', description: 'Monte planos terapêuticos com apoio de IA', path: '/busca-plano' },
-  { icon: Users, title: 'Pacientes', description: 'Gerencie seus pacientes e fichas clínicas', path: '/app/pacientes' },
-  { icon: Clock, title: 'Histórico', description: 'Veja todas as evoluções clínicas geradas', path: '/app/historico' },
+  { icon: MessageCircle, title: 'Chat Clínico', description: 'Tire dúvidas sobre manejo clínico, CID e protocolos', path: '/chat' },
+  { icon: BookOpen, title: 'Artigos Científicos', description: 'Busque evidências para suas hipóteses diagnósticas', path: '/busca-artigos' },
+  { icon: Target, title: 'Planos Terapêuticos', description: 'Estruture objetivos e intervenções com IA', path: '/busca-plano' },
+  { icon: Users, title: 'Pacientes', description: 'Acesse prontuários e fichas clínicas', path: '/app/pacientes' },
+  { icon: Clock, title: 'Histórico de Evoluções', description: 'Consulte evoluções anteriores por paciente', path: '/app/historico' },
   { icon: Megaphone, title: 'IA de Marketing', description: 'Crie conteúdo para redes sociais e divulgação', path: '/marketing' },
 ];
 
@@ -129,18 +129,18 @@ const HomePage = () => {
   const loadingStats = loadingEvolutions || loadingPatients;
 
   const tips: { text: string; path: string }[] = [];
-  if (patientsCount === 0) tips.push({ text: 'Cadastre seu primeiro paciente para organizar suas evoluções', path: '/app/pacientes' });
-  if (evolutionsCount === 0) tips.push({ text: 'Experimente gerar sua primeira evolução clínica', path: '/app/evolucao' });
-  if (patientsCount > 0 && evolutionsCount > 0) tips.push({ text: 'Use o Chat Clínico para discutir casos complexos com a IA', path: '/chat' });
+  if (patientsCount === 0) tips.push({ text: 'Cadastre um paciente para gerar evoluções vinculadas ao prontuário', path: '/app/pacientes' });
+  if (evolutionsCount === 0) tips.push({ text: 'Gere sua primeira evolução clínica com IA', path: '/app/evolucao' });
+  if (patientsCount > 0 && evolutionsCount > 0) tips.push({ text: 'Explore o Chat Clínico para consultar protocolos e discutir casos', path: '/chat' });
 
   const getHeroContent = () => {
     if (patientsCount === 0 && !loadingStats) {
-      return { title: 'Comece cadastrando seus pacientes', description: 'Organize suas fichas clínicas para gerar evoluções personalizadas com IA', ctaLabel: 'Cadastrar paciente', ctaPath: '/app/pacientes', secondaryCta: null };
+      return { title: 'Cadastre seu primeiro paciente', description: 'Organize suas fichas clínicas para gerar evoluções personalizadas com IA', ctaLabel: 'Adicionar paciente', ctaPath: '/app/pacientes', secondaryCta: null };
     }
     if (evolutionsCount > 0 && !loadingStats) {
-      return { title: 'Gerar Evolução Clínica', description: `Você gerou ${evolutionsCount} ${evolutionsCount === 1 ? 'evolução' : 'evoluções'} este mês. Continue documentando suas sessões!`, ctaLabel: 'Começar agora', ctaPath: '/app/evolucao', secondaryCta: { label: 'Ver histórico', path: '/app/historico' } };
+      return { title: 'Gerar Evolução Clínica', description: `Você gerou ${evolutionsCount} ${evolutionsCount === 1 ? 'evolução' : 'evoluções'} este mês. Continue documentando suas sessões!`, ctaLabel: 'Gerar nova evolução', ctaPath: '/app/evolucao', secondaryCta: { label: 'Consultar histórico', path: '/app/historico' } };
     }
-    return { title: 'Gerar Evolução Clínica', description: 'Transforme suas anotações de sessão em documentação clínica completa com IA', ctaLabel: 'Começar agora', ctaPath: '/app/evolucao', secondaryCta: null };
+    return { title: 'Gerar Evolução Clínica', description: 'Transforme suas anotações de sessão em documentação clínica completa com IA', ctaLabel: 'Gerar primeira evolução', ctaPath: '/app/evolucao', secondaryCta: null };
   };
 
   const hero = getHeroContent();
@@ -155,11 +155,11 @@ const HomePage = () => {
       {showBanner && (
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center justify-between gap-3">
           <p className="text-sm text-foreground flex-1">
-            ⚡ Você ainda não completou a configuração inicial. Complete agora para personalizar a IA.
+            Você ainda não finalizou a configuração do seu consultório. Complete para personalizar a IA.
           </p>
           <div className="flex items-center gap-2 shrink-0">
             <Button variant="outline" size="sm" onClick={handleResume}>
-              Retomar →
+              Retomar configuração
             </Button>
             <button onClick={handleDismissBanner} className="text-muted-foreground hover:text-foreground p-1">
               <X className="h-4 w-4" />
@@ -185,8 +185,8 @@ const HomePage = () => {
 
       {/* Greeting */}
       <div>
-        <h1 className="text-2xl md:text-3xl font-bold text-foreground font-playfair">Olá, {displayName}! 👋</h1>
-        <p className="text-muted-foreground mt-1">O que vamos fazer hoje?</p>
+        <h1 className="text-2xl md:text-3xl font-bold text-foreground font-playfair">Olá, {displayName}</h1>
+        <p className="text-muted-foreground font-semibold mt-1">Seu painel clínico</p>
       </div>
 
       {/* Redeem referral banner for new/recent users */}
@@ -201,7 +201,7 @@ const HomePage = () => {
             </div>
             <div>
               {loadingStats ? <Skeleton className="h-7 w-10" /> : <p className="text-2xl font-bold text-foreground">{evolutionsCount}</p>}
-              <p className="text-xs text-muted-foreground">Evoluções este mês</p>
+              <p className="text-xs text-muted-foreground">Evoluções geradas este mês</p>
             </div>
           </CardContent>
         </Card>
@@ -212,7 +212,7 @@ const HomePage = () => {
             </div>
             <div>
               {loadingStats ? <Skeleton className="h-7 w-10" /> : <p className="text-2xl font-bold text-foreground">{patientsCount}</p>}
-              <p className="text-xs text-muted-foreground">Pacientes ativos</p>
+              <p className="text-xs text-muted-foreground">Pacientes em acompanhamento</p>
             </div>
           </CardContent>
         </Card>
@@ -263,7 +263,7 @@ const HomePage = () => {
           <CardContent className="p-5 space-y-3">
             <div className="flex items-center gap-2 mb-1">
               <Lightbulb className="h-4 w-4 text-warning" />
-              <h3 className="text-sm font-semibold text-foreground">Próximo passo</h3>
+              <h3 className="text-sm font-semibold text-foreground">Sugestão</h3>
             </div>
             <ul className="space-y-2">
               {tips.slice(0, 2).map((tip, i) => (

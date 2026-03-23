@@ -14,10 +14,10 @@ interface StepCelebrationProps {
 }
 
 const features = [
-  { icon: MessageCircle, title: 'Chat Clínico', desc: 'Discuta casos e consulte protocolos', emoji: '💬', route: '/chat' },
-  { icon: BookOpen, title: 'Artigos Científicos', desc: 'Busque evidências para suas intervenções', emoji: '📚', route: '/busca-artigos' },
-  { icon: Target, title: 'Planos de Ação', desc: 'Monte planos terapêuticos com IA', emoji: '🎯', route: '/busca-plano' },
-  { icon: Megaphone, title: 'IA de Marketing', desc: 'Crie conteúdo para redes sociais', emoji: '✍️', route: '/marketing' },
+  { icon: MessageCircle, title: 'Chat Clínico', desc: 'Discuta casos e consulte protocolos', route: '/chat' },
+  { icon: BookOpen, title: 'Artigos Científicos', desc: 'Busque evidências para suas intervenções', route: '/busca-artigos' },
+  { icon: Target, title: 'Planos Terapêuticos', desc: 'Estruture objetivos e intervenções com IA', route: '/busca-plano' },
+  { icon: Megaphone, title: 'IA de Marketing', desc: 'Crie conteúdo para redes sociais', route: '/marketing' },
 ];
 
 export default function StepCelebration({ evolutionContent, onFinish }: StepCelebrationProps) {
@@ -40,7 +40,8 @@ export default function StepCelebration({ evolutionContent, onFinish }: StepCele
   return (
     <div className="max-w-lg mx-auto space-y-6 px-4">
       <div className="text-center space-y-2">
-        <h2 className="text-2xl font-bold text-foreground font-playfair">Sua primeira evolução foi gerada! 🎉</h2>
+        <h2 className="text-2xl font-bold text-foreground font-playfair">Evolução clínica gerada com sucesso</h2>
+        <p className="text-muted-foreground text-sm">Copie o texto abaixo ou explore as outras ferramentas do ChatPsi.</p>
       </div>
 
       <Card className="rounded-2xl shadow-sm border">
@@ -78,7 +79,7 @@ export default function StepCelebration({ evolutionContent, onFinish }: StepCele
               onClick={() => { onFinish(); navigate(f.route); }}
             >
               <CardContent className="p-3 text-center space-y-1">
-                <span className="text-xl">{f.emoji}</span>
+                <f.icon className="h-5 w-5 text-primary mx-auto" />
                 <p className="text-xs font-semibold text-foreground">{f.title}</p>
                 <p className="text-xs text-muted-foreground leading-tight">{f.desc}</p>
               </CardContent>
@@ -88,7 +89,7 @@ export default function StepCelebration({ evolutionContent, onFinish }: StepCele
       </div>
 
       <Button variant="cta" className="w-full" size="lg" onClick={onFinish}>
-        Explorar o ChatPsi →
+        Ir para o painel
       </Button>
     </div>
   );

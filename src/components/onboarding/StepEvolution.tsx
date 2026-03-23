@@ -207,7 +207,7 @@ export default function StepEvolution({ selectedApproach, createdPatient, onNext
   return (
     <div className="max-w-lg mx-auto space-y-6 px-4">
       <div className="text-center space-y-2">
-        <h2 className="text-2xl font-bold text-foreground font-playfair">Sua primeira evolução com IA ✨</h2>
+        <h2 className="text-2xl font-bold text-foreground font-playfair">Gere sua primeira evolução clínica</h2>
         <p className="text-muted-foreground">Descreva brevemente o que aconteceu na sessão. A IA faz o resto.</p>
       </div>
 
@@ -226,7 +226,7 @@ export default function StepEvolution({ selectedApproach, createdPatient, onNext
         <CardContent className="p-6 space-y-4">
           <div className="grid grid-cols-3 gap-3">
             <div className="space-y-1.5">
-              <Label className="text-xs">Nº sessão</Label>
+              <Label className="text-xs">Número da sessão</Label>
               <Input type="number" value={sessionNumber} onChange={e => setSessionNumber(e.target.value)} placeholder="1" min={1} />
             </div>
             <div className="space-y-1.5">
@@ -342,7 +342,7 @@ export default function StepEvolution({ selectedApproach, createdPatient, onNext
       ) : (
         <Button variant="cta" className="w-full" size="lg" onClick={handleGenerate} disabled={!canSubmit}>
           <Sparkles className="h-4 w-4" />
-          ✨ Gerar minha primeira evolução
+          Gerar evolução clínica
         </Button>
       )}
     </div>

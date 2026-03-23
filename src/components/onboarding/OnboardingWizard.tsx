@@ -7,7 +7,7 @@ import StepPatient from './StepPatient';
 import StepEvolution from './StepEvolution';
 import StepCelebration from './StepCelebration';
 
-const STEP_LABELS = ['Boas-vindas', 'Seu perfil', 'Primeiro paciente', 'Primeira evolução', 'Pronto!'];
+const STEP_LABELS = ['Boas-vindas', 'Perfil clínico', 'Primeiro paciente', 'Primeira evolução', 'Conclusão'];
 
 interface OnboardingWizardProps {
   initialStep?: number;

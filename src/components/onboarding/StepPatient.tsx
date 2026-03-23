@@ -91,18 +91,19 @@ export default function StepPatient({ selectedApproach, onNext, onSkip }: StepPa
   return (
     <div className="max-w-lg mx-auto space-y-6 px-4">
       <div className="text-center space-y-2">
-        <h2 className="text-2xl font-bold text-foreground font-playfair">Seu primeiro paciente</h2>
+        <h2 className="text-2xl font-bold text-foreground font-playfair">Cadastre seu primeiro paciente</h2>
         <p className="text-muted-foreground">Cadastre um paciente para vincular às suas evoluções. Use iniciais ou apelido — os dados ficam protegidos.</p>
       </div>
 
       <Card className="rounded-2xl shadow-sm border">
         <CardContent className="p-6 space-y-5">
           <div className="space-y-2">
-            <Label>Nome ou iniciais do paciente *</Label>
+            <Label>Nome completo ou iniciais do paciente *</Label>
             <Input value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Ex: Maria S. ou M.S." />
+            <p className="text-xs text-muted-foreground">Use iniciais para maior sigilo. Você poderá editar depois.</p>
           </div>
           <div className="space-y-2">
-            <Label>Abordagem terapêutica</Label>
+            <Label>Abordagem para este paciente</Label>
             <Select value={approach} onValueChange={setApproach}>
               <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
               <SelectContent>
@@ -115,11 +116,11 @@ export default function StepPatient({ selectedApproach, onNext, onSkip }: StepPa
 
       <Button variant="cta" className="w-full" size="lg" onClick={handleCreate} disabled={saving || !fullName.trim()}>
         {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-        Cadastrar e continuar →
+        Cadastrar paciente e continuar
       </Button>
 
-      <button onClick={handleSkipPatient} className="block mx-auto text-sm text-muted-foreground hover:text-foreground transition-colors">
-        Pular, cadastro depois
+      <button onClick={handleSkipPatient} className="block mx-auto text-sm text-muted-foreground/60 hover:text-foreground transition-colors">
+        Cadastrar depois
       </button>
     </div>
   );

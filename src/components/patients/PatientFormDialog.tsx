@@ -128,7 +128,7 @@ export default function PatientFormDialog({ open, onOpenChange, editData, onSave
           })
           .eq("id", editData.id);
         if (error) throw error;
-        toast.success("Paciente atualizado!");
+        toast.success("Prontuário atualizado com sucesso");
       } else {
         // Insert
         const { data: inserted, error } = await supabase

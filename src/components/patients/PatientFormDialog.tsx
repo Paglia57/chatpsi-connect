@@ -258,7 +258,7 @@ export default function PatientFormDialog({ open, onOpenChange, editData, onSave
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Queixa principal / motivo do tratamento</Label>
+                <Label>Queixa principal</Label>
                 <Textarea value={form.main_complaint} onChange={e => set("main_complaint", e.target.value)} placeholder="Ex: Ansiedade generalizada, dificuldade de relacionamento" rows={3} />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

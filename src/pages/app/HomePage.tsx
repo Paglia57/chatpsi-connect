@@ -135,7 +135,7 @@ const HomePage = () => {
 
   const getHeroContent = () => {
     if (patientsCount === 0 && !loadingStats) {
-      return { title: 'Comece cadastrando seus pacientes', description: 'Organize suas fichas clínicas para gerar evoluções personalizadas com IA', ctaLabel: 'Cadastrar paciente', ctaPath: '/app/pacientes', secondaryCta: null };
+      return { title: 'Cadastre seu primeiro paciente', description: 'Organize suas fichas clínicas para gerar evoluções personalizadas com IA', ctaLabel: 'Adicionar paciente', ctaPath: '/app/pacientes', secondaryCta: null };
     }
     if (evolutionsCount > 0 && !loadingStats) {
       return { title: 'Gerar Evolução Clínica', description: `Você gerou ${evolutionsCount} ${evolutionsCount === 1 ? 'evolução' : 'evoluções'} este mês. Continue documentando suas sessões!`, ctaLabel: 'Começar agora', ctaPath: '/app/evolucao', secondaryCta: { label: 'Ver histórico', path: '/app/historico' } };

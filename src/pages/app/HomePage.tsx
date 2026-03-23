@@ -140,7 +140,7 @@ const HomePage = () => {
     if (evolutionsCount > 0 && !loadingStats) {
       return { title: 'Gerar Evolução Clínica', description: `Você gerou ${evolutionsCount} ${evolutionsCount === 1 ? 'evolução' : 'evoluções'} este mês. Continue documentando suas sessões!`, ctaLabel: 'Gerar nova evolução', ctaPath: '/app/evolucao', secondaryCta: { label: 'Consultar histórico', path: '/app/historico' } };
     }
-    return { title: 'Gerar Evolução Clínica', description: 'Transforme suas anotações de sessão em documentação clínica completa com IA', ctaLabel: 'Começar agora', ctaPath: '/app/evolucao', secondaryCta: null };
+    return { title: 'Gerar Evolução Clínica', description: 'Transforme suas anotações de sessão em documentação clínica completa com IA', ctaLabel: 'Gerar primeira evolução', ctaPath: '/app/evolucao', secondaryCta: null };
   };
 
   const hero = getHeroContent();

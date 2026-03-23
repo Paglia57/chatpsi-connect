@@ -295,10 +295,10 @@ const MarketingInterface = () => {
               />
             )}
             <div className="space-y-2">
-              <Label htmlFor="prompt">Pedido ao assistente</Label>
+              <Label htmlFor="prompt">Descreva o conteúdo desejado</Label>
               <Textarea
                 id="prompt"
-                placeholder="Descreva o que você quer que a IA crie..."
+                placeholder="Ex: Post para Instagram sobre a importância da terapia para ansiedade"
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
                 rows={4}

@@ -137,7 +137,7 @@ export default function EvolutionPage() {
       }
     } catch (err: any) {
       console.error(err);
-      toast.error(err.message || "Erro ao gerar evolução");
+      toast.error("Não foi possível gerar a evolução. Verifique sua conexão e tente novamente.");
     } finally {
       setIsGenerating(false);
     }

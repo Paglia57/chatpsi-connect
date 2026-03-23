@@ -208,7 +208,7 @@ export default function ProfilePage() {
           </div>
 
           <div className="space-y-2">
-            <Label>Especialidades</Label>
+            <Label>Áreas de atuação</Label>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {SPECIALTIES.map(s => (
                 <label key={s} className="flex items-center gap-2 cursor-pointer">

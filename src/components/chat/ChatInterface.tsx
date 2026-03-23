@@ -353,7 +353,7 @@ const ChatInterface = () => {
     if (!canSendMessage) {
       toast({
         title: "Assinatura necessária",
-        description: "Você precisa de uma assinatura ativa para enviar mensagens.",
+        description: "Assinatura necessária para enviar mensagens no Chat Clínico.",
         variant: "destructive"
       });
       return;

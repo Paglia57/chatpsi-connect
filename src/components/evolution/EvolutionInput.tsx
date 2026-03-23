@@ -137,7 +137,7 @@ export default function EvolutionInput({ onGenerate, isLoading, trialReached }: 
         {/* Patient selector with Switch toggle */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <Label className="text-sm font-medium text-foreground">Paciente *</Label>
+            <Label className="text-sm font-medium text-foreground">Paciente vinculado *</Label>
             <div className="flex items-center gap-2">
               <Label htmlFor="avulso-switch" className="text-xs text-muted-foreground cursor-pointer">
                 Sem paciente cadastrado

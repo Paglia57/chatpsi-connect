@@ -96,7 +96,8 @@ export default function StepProfile({ onNext, onSkip }: StepProfileProps) {
           </div>
 
           <div className="space-y-2">
-            <Label>Quais suas especialidades? *</Label>
+            <Label>Áreas de atuação *</Label>
+            <p className="text-xs text-muted-foreground">Selecione ao menos uma. A IA priorizará conteúdos dessas áreas.</p>
             <div className="grid grid-cols-2 gap-2">
               {SPECIALTIES.map(s => {
                 const isSelected = selectedSpecialties.includes(s);

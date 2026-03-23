@@ -221,7 +221,7 @@ export default function PatientFormDialog({ open, onOpenChange, editData, onSave
             <h3 className="text-sm font-semibold text-foreground mb-3">Identificação do paciente</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Nome completo *</Label>
+                <Label>Nome completo do paciente *</Label>
                 <Input value={form.full_name} onChange={e => set("full_name", e.target.value)} placeholder="Nome completo do paciente" />
               </div>
               <div className="space-y-2">

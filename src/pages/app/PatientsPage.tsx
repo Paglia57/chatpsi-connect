@@ -123,9 +123,9 @@ export default function PatientsPage() {
                 <Select value={filterStatus} onValueChange={setFilterStatus}>
                   <SelectTrigger className="w-full sm:w-[150px]"><SelectValue placeholder="Status" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Todos</SelectItem>
-                    <SelectItem value="active">Ativos</SelectItem>
-                    <SelectItem value="inactive">Inativos</SelectItem>
+                     <SelectItem value="all">Todos</SelectItem>
+                    <SelectItem value="active">Em acompanhamento</SelectItem>
+                    <SelectItem value="inactive">Alta ou pausado</SelectItem>
                   </SelectContent>
                 </Select>
                 <Select value={sortBy} onValueChange={setSortBy}>

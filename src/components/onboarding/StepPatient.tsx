@@ -98,8 +98,9 @@ export default function StepPatient({ selectedApproach, onNext, onSkip }: StepPa
       <Card className="rounded-2xl shadow-sm border">
         <CardContent className="p-6 space-y-5">
           <div className="space-y-2">
-            <Label>Nome ou iniciais do paciente *</Label>
+            <Label>Nome completo ou iniciais do paciente *</Label>
             <Input value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Ex: Maria S. ou M.S." />
+            <p className="text-xs text-muted-foreground">Use iniciais para maior sigilo. Você poderá editar depois.</p>
           </div>
           <div className="space-y-2">
             <Label>Abordagem terapêutica</Label>

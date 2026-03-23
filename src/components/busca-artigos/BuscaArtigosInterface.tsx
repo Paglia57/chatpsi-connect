@@ -195,9 +195,9 @@ const BuscaArtigosInterface = () => {
                   <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-blue-500/10 flex items-center justify-center mx-auto mb-4 sm:mb-5">
                     <BookOpen className="h-8 w-8 sm:h-10 sm:w-10 text-blue-600" />
                   </div>
-                  <h3 className="text-base sm:text-lg font-medium mb-2">Busca Artigos Científicos</h3>
+                   <h3 className="text-base sm:text-lg font-medium mb-2">Artigos Científicos</h3>
                   <p className="text-sm sm:text-base text-muted-foreground mb-6 max-w-md mx-auto text-overflow-anywhere">
-                    Pesquise artigos científicos relevantes para embasar sua prática clínica.
+                    Busque artigos científicos relevantes para suas hipóteses diagnósticas e abordagens terapêuticas.
                   </p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 max-w-lg mx-auto">
                     {[

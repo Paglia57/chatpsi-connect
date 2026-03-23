@@ -276,7 +276,7 @@ export default function PatientFormDialog({ open, onOpenChange, editData, onSave
                 <Textarea value={form.medication} onChange={e => set("medication", e.target.value)} placeholder="Ex: Sertralina 50mg" rows={2} />
               </div>
               <div className="space-y-2">
-                <Label>Observações gerais</Label>
+                <Label>Observações clínicas</Label>
                 <Textarea value={form.notes} onChange={e => set("notes", e.target.value)} placeholder="Observações relevantes" rows={2} />
               </div>
             </div>

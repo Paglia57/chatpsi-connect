@@ -185,7 +185,7 @@ export default function ProfilePage() {
               <p className="text-xs text-muted-foreground">Como você quer ser chamado dentro do app</p>
             </div>
             <div className="space-y-2">
-              <Label>CRP</Label>
+              <Label>Registro profissional (CRP/CRM)</Label>
               <Input value={crp} onChange={e => setCrp(e.target.value)} placeholder="Ex: 06/123456" />
               <p className="text-xs text-muted-foreground">Formato: UF/número (ex: 06/123456). Aparece nas evoluções geradas</p>
             </div>

@@ -85,13 +85,14 @@ export default function StepProfile({ onNext, onSkip }: StepProfileProps) {
           </div>
 
           <div className="space-y-2">
-            <Label>Qual sua abordagem principal?</Label>
+            <Label>Abordagem terapêutica principal</Label>
             <Select value={approach} onValueChange={setApproach}>
               <SelectTrigger><SelectValue placeholder="Selecione a abordagem" /></SelectTrigger>
               <SelectContent>
                 {APPROACHES.map(a => <SelectItem key={a} value={a}>{a}</SelectItem>)}
               </SelectContent>
             </Select>
+            <p className="text-xs text-muted-foreground">Influencia o estilo e a terminologia das evoluções geradas.</p>
           </div>
 
           <div className="space-y-2">

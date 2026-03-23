@@ -225,7 +225,7 @@ export default function PatientFormDialog({ open, onOpenChange, editData, onSave
                 <Input value={form.full_name} onChange={e => set("full_name", e.target.value)} placeholder="Nome completo do paciente" />
               </div>
               <div className="space-y-2">
-                <Label>Iniciais *</Label>
+                <Label>Iniciais do paciente *</Label>
                 <Input value={form.initials} onChange={e => set("initials", e.target.value.toUpperCase().slice(0, 5))} placeholder="Ex: JSM" maxLength={5} />
               </div>
               <div className="space-y-2">

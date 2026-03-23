@@ -384,7 +384,7 @@ export default function HistoryPage() {
                           <Loader2 className="h-4 w-4 animate-spin" />
                           Salvando...
                         </>
-                      ) : "Salvar"}
+                      ) : "Salvar alterações"}
                     </Button>
                     <Button variant="ghost" size="sm" onClick={() => setIsEditing(false)}>
                       <X className="h-4 w-4" />

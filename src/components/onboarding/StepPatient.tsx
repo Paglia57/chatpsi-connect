@@ -103,7 +103,7 @@ export default function StepPatient({ selectedApproach, onNext, onSkip }: StepPa
             <p className="text-xs text-muted-foreground">Use iniciais para maior sigilo. Você poderá editar depois.</p>
           </div>
           <div className="space-y-2">
-            <Label>Abordagem terapêutica</Label>
+            <Label>Abordagem para este paciente</Label>
             <Select value={approach} onValueChange={setApproach}>
               <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
               <SelectContent>

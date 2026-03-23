@@ -193,7 +193,7 @@ export default function PatientFormDialog({ open, onOpenChange, editData, onSave
           }
         } catch (threadErr) {
           console.error("Thread error:", threadErr);
-          toast.warning("Paciente salvo, mas o contexto de IA será criado na próxima evolução");
+          toast.warning("Paciente adicionado. O contexto de IA será ativado na primeira evolução.");
         }
 
         toast.success("Paciente cadastrado com sucesso!");

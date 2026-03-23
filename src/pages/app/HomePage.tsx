@@ -15,11 +15,11 @@ import {
 } from 'lucide-react';
 
 const shortcuts = [
-  { icon: MessageCircle, title: 'Chat Clínico', description: 'Consulte protocolos e abordagens terapêuticas', path: '/chat' },
-  { icon: BookOpen, title: 'Buscar Artigos', description: 'Encontre evidências científicas para suas intervenções', path: '/busca-artigos' },
-  { icon: Target, title: 'Planos de Ação', description: 'Monte planos terapêuticos com apoio de IA', path: '/busca-plano' },
-  { icon: Users, title: 'Pacientes', description: 'Gerencie seus pacientes e fichas clínicas', path: '/app/pacientes' },
-  { icon: Clock, title: 'Histórico', description: 'Veja todas as evoluções clínicas geradas', path: '/app/historico' },
+  { icon: MessageCircle, title: 'Chat Clínico', description: 'Tire dúvidas sobre manejo clínico, CID e protocolos', path: '/chat' },
+  { icon: BookOpen, title: 'Artigos Científicos', description: 'Busque evidências para suas hipóteses diagnósticas', path: '/busca-artigos' },
+  { icon: Target, title: 'Planos Terapêuticos', description: 'Estruture objetivos e intervenções com IA', path: '/busca-plano' },
+  { icon: Users, title: 'Pacientes', description: 'Acesse prontuários e fichas clínicas', path: '/app/pacientes' },
+  { icon: Clock, title: 'Histórico de Evoluções', description: 'Consulte evoluções anteriores por paciente', path: '/app/historico' },
   { icon: Megaphone, title: 'IA de Marketing', description: 'Crie conteúdo para redes sociais e divulgação', path: '/marketing' },
 ];
 

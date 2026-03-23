@@ -226,9 +226,13 @@ export default function HistoryPage() {
 
       {/* List */}
       {filtered.length === 0 ? (
-        <div className="text-center py-12">
+         <div className="text-center py-12">
           <ClipboardList className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-          <p className="text-muted-foreground">Nenhuma evolução encontrada</p>
+          <p className="text-muted-foreground mb-4">O histórico consolida todas as evoluções dos seus pacientes. Gere sua primeira evolução para começar a construí-lo.</p>
+          <Button variant="cta" onClick={() => window.location.href = '/app/evolucao'}>
+            <Sparkles className="h-4 w-4" />
+            Gerar evolução
+          </Button>
         </div>
       ) : (
         <ScrollArea className="max-h-[calc(100vh-240px)]">

@@ -291,7 +291,7 @@ export default function HistoryPage() {
                     </AlertDialogTrigger>
                     <AlertDialogContent onClick={e => e.stopPropagation()}>
                       <AlertDialogHeader>
-                        <AlertDialogTitle>Excluir evolução?</AlertDialogTitle>
+                        <AlertDialogTitle>Excluir esta evolução?</AlertDialogTitle>
                         <AlertDialogDescription>
                           Esta ação não pode ser desfeita. A evolução de {ev.patient_initials} será permanentemente excluída.
                         </AlertDialogDescription>

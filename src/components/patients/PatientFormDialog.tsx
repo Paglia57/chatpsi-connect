@@ -300,7 +300,7 @@ export default function PatientFormDialog({ open, onOpenChange, editData, onSave
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Tipo de atendimento</Label>
+                <Label>Modalidade do atendimento</Label>
                 <Select value={form.default_session_type} onValueChange={v => set("default_session_type", v)}>
                   <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                   <SelectContent>

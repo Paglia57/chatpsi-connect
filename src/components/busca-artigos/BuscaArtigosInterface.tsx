@@ -110,8 +110,8 @@ const BuscaArtigosInterface = () => {
     } catch (error: any) {
       console.error('Error sending message:', error);
       toast({
-        title: "Erro ao enviar mensagem",
-        description: error.message || "Ocorreu um erro ao processar sua solicitação.",
+        title: "Não foi possível buscar artigos",
+        description: "Verifique sua conexão e tente novamente.",
         variant: "destructive"
       });
     } finally {

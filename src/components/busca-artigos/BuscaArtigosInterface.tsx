@@ -104,7 +104,7 @@ const BuscaArtigosInterface = () => {
       trial.refetch();
       toast({
         title: "Resposta recebida",
-        description: "Artigos processados com sucesso!",
+        description: "Artigos encontrados",
         variant: "default"
       });
     } catch (error: any) {

@@ -246,7 +246,7 @@ export default function PatientFormDialog({ open, onOpenChange, editData, onSave
 
           {/* Clinical */}
           <div>
-            <h3 className="text-sm font-semibold text-foreground mb-3">Dados Clínicos</h3>
+            <h3 className="text-sm font-semibold text-foreground mb-3">Informações clínicas</h3>
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label>Abordagem terapêutica</Label>

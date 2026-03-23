@@ -204,7 +204,7 @@ export default function ProfilePage() {
                 {APPROACHES.map(a => <SelectItem key={a} value={a}>{a}</SelectItem>)}
               </SelectContent>
             </Select>
-            <p className="text-xs text-muted-foreground">Será pré-selecionada ao criar novas evoluções</p>
+            <p className="text-xs text-muted-foreground">Pré-selecionada automaticamente ao gerar evoluções clínicas</p>
           </div>
 
           <div className="space-y-2">

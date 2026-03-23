@@ -138,7 +138,7 @@ const HomePage = () => {
       return { title: 'Cadastre seu primeiro paciente', description: 'Organize suas fichas clínicas para gerar evoluções personalizadas com IA', ctaLabel: 'Adicionar paciente', ctaPath: '/app/pacientes', secondaryCta: null };
     }
     if (evolutionsCount > 0 && !loadingStats) {
-      return { title: 'Gerar Evolução Clínica', description: `Você gerou ${evolutionsCount} ${evolutionsCount === 1 ? 'evolução' : 'evoluções'} este mês. Continue documentando suas sessões!`, ctaLabel: 'Começar agora', ctaPath: '/app/evolucao', secondaryCta: { label: 'Ver histórico', path: '/app/historico' } };
+      return { title: 'Gerar Evolução Clínica', description: `Você gerou ${evolutionsCount} ${evolutionsCount === 1 ? 'evolução' : 'evoluções'} este mês. Continue documentando suas sessões!`, ctaLabel: 'Gerar nova evolução', ctaPath: '/app/evolucao', secondaryCta: { label: 'Consultar histórico', path: '/app/historico' } };
     }
     return { title: 'Gerar Evolução Clínica', description: 'Transforme suas anotações de sessão em documentação clínica completa com IA', ctaLabel: 'Começar agora', ctaPath: '/app/evolucao', secondaryCta: null };
   };

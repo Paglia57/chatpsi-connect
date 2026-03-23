@@ -193,7 +193,7 @@ export default function EvolutionInput({ onGenerate, isLoading, trialReached }: 
             />
           </div>
           <div className="space-y-2 min-w-0">
-            <Label className="text-sm font-medium text-foreground">Duração</Label>
+            <Label className="text-sm font-medium text-foreground">Duração da sessão</Label>
             <Select value={sessionDuration} onValueChange={setSessionDuration}>
               <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
               <SelectContent>

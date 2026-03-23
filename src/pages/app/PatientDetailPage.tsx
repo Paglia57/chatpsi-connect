@@ -246,7 +246,7 @@ export default function PatientDetailPage() {
         <CardContent className="flex items-center gap-4 py-4">
           <Brain className="h-8 w-8 text-primary shrink-0" />
           <div className="flex-1">
-            <p className="text-sm font-medium text-foreground">Contexto Acumulado da IA</p>
+            <p className="text-sm font-medium text-foreground">Contexto clínico acumulado</p>
             {patient.openai_thread_id ? (
               <p className="text-xs text-muted-foreground mt-0.5">
                 {patient.total_sessions} sessão(ões) no contexto. A IA acumula o histórico de todas as sessões deste paciente.

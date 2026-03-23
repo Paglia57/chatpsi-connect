@@ -252,8 +252,8 @@ export default function PatientDetailPage() {
                 {patient.total_sessions} sessão(ões) no contexto. A IA acumula o histórico de todas as sessões deste paciente.
               </p>
             ) : (
-              <p className="text-xs text-muted-foreground mt-0.5">
-                O contexto de IA ainda não foi ativado para este paciente.
+               <p className="text-xs text-muted-foreground mt-0.5">
+                A IA ainda não possui histórico deste paciente. Ative para que as evoluções considerem sessões anteriores.
               </p>
             )}
           </div>

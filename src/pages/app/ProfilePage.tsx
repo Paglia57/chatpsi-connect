@@ -153,7 +153,7 @@ export default function ProfilePage() {
       <AppBreadcrumb items={[{ label: "Meu Perfil" }]} />
       <Card className="border-border bg-card text-card-foreground shadow-sm">
         <CardHeader>
-          <CardTitle className="font-display text-xl text-foreground">Perfil Profissional</CardTitle>
+          <CardTitle className="font-display text-xl text-foreground">Seu perfil clínico</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Avatar */}

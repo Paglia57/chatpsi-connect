@@ -1,177 +1,225 @@
 
 
-# Plano de Revisao — Dashboard e Onboarding
+# Plano de Revisao de Microcopy — Vocabulario Clinico e Copy Profissional
 
-Este plano cobre exclusivamente as duas areas de maior impacto na ativacao do profissional. Nenhuma funcionalidade sera quebrada — apenas CSS, copy e layout serao alterados.
-
----
-
-## A. ONBOARDING (5 etapas)
-
-### A1. StepWelcome (etapa 0)
-
-**Layout**: Centralizado, mobile-first (cabe em 375px sem scroll). Remover emoji do titulo.
-
-**Copy atual → novo**:
-- Titulo: "Bem-vindo ao ChatPsi, {nome}! 🎉" → "Bem-vindo ao ChatPsi, {nome}"
-- Subtitulo: "Vamos configurar tudo em 3 passos rapidos..." → "Vamos preparar seu consultorio virtual em menos de 2 minutos para voce gerar sua primeira evolucao clinica com IA."
-- CTA: "Vamos comecar →" → "Configurar meu consultorio"
-- Skip: manter texto "Pular configuracao" mas reduzir destaque (opacity menor)
-
-**Componentes**: Nenhuma mudanca estrutural.
-
-### A2. StepProfile (etapa 1)
-
-**Layout**: Manter card unico. Ajustar grid de especialidades para `grid-cols-2 sm:grid-cols-3` para aproveitar melhor o espaco.
-
-**Copy**:
-- Titulo: "Sobre voce" → "Seu perfil clinico"
-- Subtitulo: manter ("Essas informacoes personalizam a IA para sua pratica clinica.")
-- Label "Como podemos te chamar?" → "Como prefere ser chamado?"
-- Label "Qual sua abordagem principal?" → "Abordagem terapeutica principal"
-- Label "Quais suas especialidades? *" → "Areas de atuacao *"
-- Helper text abaixo de abordagem: "Influencia o estilo e a terminologia das evolucoes geradas."
-- Helper text abaixo de especialidades: "Selecione ao menos uma. A IA priorizara conteudos dessas areas."
-- Mensagem de erro: "Selecione ao menos uma especialidade" → "Selecione ao menos uma area de atuacao para personalizar a IA"
-- CTA: "Continuar →" → "Salvar e continuar"
-
-**Componentes**: Remover cores hardcoded `teal-50`/`teal-200` dos checkboxes selecionados — usar `bg-primary/10 border-primary/30` (tokens do sistema).
-
-### A3. StepPatient (etapa 2)
-
-**Copy**:
-- Titulo: "Seu primeiro paciente" → "Cadastre seu primeiro paciente"
-- Subtitulo: manter copy atual (ja esta bom)
-- Label "Nome ou iniciais do paciente *" → "Nome completo ou iniciais do paciente *"
-- Helper text abaixo do nome: "Use iniciais para maior sigilo. Voce podera editar depois."
-- Label "Abordagem terapeutica" → "Abordagem para este paciente"
-- CTA: "Cadastrar e continuar →" → "Cadastrar paciente e continuar"
-- Skip: "Pular, cadastro depois" → "Cadastrar depois"
-
-### A4. StepEvolution (etapa 3)
-
-**Copy**:
-- Titulo: "Sua primeira evolucao com IA ✨" → "Gere sua primeira evolucao clinica"
-- Subtitulo: manter ("Descreva brevemente o que aconteceu na sessao. A IA faz o resto.")
-- Labels de sessao: "N sessao" → "Numero da sessao", "Duracao" e "Tipo" mantidos
-- CTA: "✨ Gerar minha primeira evolucao" → "Gerar evolucao clinica" (remover emoji duplicado, ja tem icone Sparkles)
-- Mensagens de loading: manter (ja estao boas)
-- Placeholder do textarea: manter (ja esta contextual e clinico)
-
-**Componentes**: Remover emoji do Sparkles no botao (redundante com o icone SVG).
-
-### A5. StepCelebration (etapa 4)
-
-**Copy**:
-- Titulo: "Sua primeira evolucao foi gerada! 🎉" → "Evolucao clinica gerada com sucesso"
-- Subtitulo adicionar: "Copie o texto abaixo ou explore as outras ferramentas do ChatPsi."
-- Label dos features: manter textos atuais (ja estao bons)
-- CTA: "Explorar o ChatPsi →" → "Ir para o painel"
-
-**Componentes**: Remover emojis dos cards de features (💬📚🎯✍️) — ja tem icones SVG (MessageCircle, BookOpen, etc). Manter confetti (funcional, celebra marco importante).
-
-### A6. OnboardingWizard (container)
-
-**Layout**: Manter estrutura atual (fullscreen, progress bar, logo no topo). Sem mudancas estruturais.
-
-**Copy**:
-- STEP_LABELS: `['Boas-vindas', 'Seu perfil', 'Primeiro paciente', 'Primeira evolucao', 'Pronto!']` → `['Boas-vindas', 'Perfil clinico', 'Primeiro paciente', 'Primeira evolucao', 'Conclusao']`
+Revisao sistematica de textos em todos os modulos do app para alinhar ao vocabulario clinico obrigatorio, melhorar empty states, CTAs, labels, mensagens de erro e tooltips.
 
 ---
 
-## B. DASHBOARD (HomePage)
+## 1. Evolucoes (`EvolutionInput.tsx` + `EvolutionOutput.tsx` + `EvolutionPage.tsx`)
 
-### B1. Saudacao
+**Labels**:
+- "Nº sessão" → "Numero da sessao"
+- "Tipo" → "Modalidade do atendimento"
+- "Duração" → "Duracao da sessao"
+- "Paciente *" → "Paciente vinculado *"
+- "Sem paciente cadastrado" → "Evolucao avulsa (sem prontuario)"
+- Helper "Evoluções sem paciente cadastrado não acumulam contexto na IA" → "Evolucoes avulsas nao acumulam contexto clinico na IA. Cadastre o paciente para melhores resultados."
 
-**Copy atual → novo**:
-- "Ola, {nome}! 👋" → "Ola, {nome}"
-- "O que vamos fazer hoje?" → "Seu painel clinico"
+**CTAs**:
+- "Gerar Evolução" → "Gerar evolucao clinica"
+- "Gerando evolução..." → "Gerando evolucao clinica..."
+- "Salvar" → "Salvar no prontuario"
+- "Copiar tudo" → "Copiar evolucao"
+- "Editar" → "Editar texto"
+- "Cancelar edição" → "Descartar alteracoes"
+- "Gerar novamente" → "Regenerar evolucao"
+- "Exportar PDF" → "Exportar como PDF"
 
-**Componentes**: Remover emoji. Usar `font-semibold` no subtitulo para criar hierarquia.
+**Breadcrumb**: "Nova Evolução" → "Nova Evolucao Clinica"
 
-### B2. Cards de metricas
+**Empty state (FirstTimeGuide)**: Copy ja esta bom. Ajustar CTA "Entendi, criar uma evolução!" → "Iniciar primeira evolucao"
 
-**Layout**: Manter grid 2 colunas. Sem mudancas estruturais.
+**Erros**:
+- `toast.error(err.message || "Erro ao gerar evolução")` → "Nao foi possivel gerar a evolucao. Verifique sua conexao e tente novamente."
+- `toast.error("Erro ao salvar: " + ...)` → "Nao foi possivel salvar a evolucao. Tente novamente em alguns instantes."
 
-**Copy**:
-- "Evolucoes este mes" → "Evolucoes geradas este mes"
-- "Pacientes ativos" → "Pacientes em acompanhamento"
-
-### B3. Hero CTA
-
-**Copy — estado sem pacientes**:
-- Titulo: "Comece cadastrando seus pacientes" → "Cadastre seu primeiro paciente"
-- Descricao: manter
-- CTA: "Cadastrar paciente" → "Adicionar paciente"
-
-**Copy — estado com evolucoes**:
-- Titulo: "Gerar Evolucao Clinica" → manter
-- Descricao: manter (ja e dinamica e boa)
-- CTA: "Comecar agora" → "Gerar nova evolucao"
-- CTA secundario: "Ver historico" → "Consultar historico"
-
-**Copy — estado padrao (com pacientes, sem evolucoes)**:
-- Titulo: "Gerar Evolucao Clinica" → manter
-- CTA: "Comecar agora" → "Gerar primeira evolucao"
-
-### B4. Grid de atalhos
-
-**Copy**:
-- "Chat Clinico" → manter
-- Descricao: "Consulte protocolos e abordagens terapeuticas" → "Tire duvidas sobre manejo clinico, CID e protocolos"
-- "Buscar Artigos" → "Artigos Cientificos"
-- Descricao: "Encontre evidencias cientificas para suas intervencoes" → "Busque evidencias para suas hipoteses diagnosticas"
-- "Planos de Acao" → "Planos Terapeuticos"
-- Descricao: "Monte planos terapeuticos com apoio de IA" → "Estruture objetivos e intervencoes com IA"
-- "Pacientes" → manter
-- Descricao: "Gerencie seus pacientes e fichas clinicas" → "Acesse prontuarios e fichas clinicas"
-- "Historico" → "Historico de Evolucoes"
-- Descricao: "Veja todas as evolucoes clinicas geradas" → "Consulte evolucoes anteriores por paciente"
-- "IA de Marketing" → manter
-- Descricao: manter
-
-### B5. Dicas contextuais (tips)
-
-**Copy**:
-- "Cadastre seu primeiro paciente para organizar suas evolucoes" → "Cadastre um paciente para gerar evolucoes vinculadas ao prontuario"
-- "Experimente gerar sua primeira evolucao clinica" → "Gere sua primeira evolucao clinica com IA"
-- "Use o Chat Clinico para discutir casos complexos com a IA" → "Explore o Chat Clinico para consultar protocolos e discutir casos"
-- Label "Proximo passo" → "Sugestao"
-
-### B6. Banner de retomada do onboarding
-
-**Copy**:
-- "⚡ Voce ainda nao completou a configuracao inicial..." → "Voce ainda nao finalizou a configuracao do seu consultorio. Complete para personalizar a IA."
-- CTA: "Retomar →" → "Retomar configuracao"
-- Remover emoji ⚡
-
-### B7. Sidebar tooltip
-
-**Copy**: Manter texto atual (ja esta bom e contextual).
+**Loading**: "Analisando sessão e gerando evolução..." → "Analisando relato da sessao e estruturando a evolucao clinica..."
 
 ---
 
-## C. DESIGN TOKENS (mudancas transversais aplicadas nos componentes acima)
+## 2. Pacientes (`PatientsPage.tsx` + `PatientFormDialog.tsx` + `PatientDetailPage.tsx`)
 
-Nenhum novo token sera criado. Mudancas pontuais:
+**PatientsPage**:
+- Titulo "Meus Pacientes" → "Pacientes"
+- CTA "Novo Paciente" → "Adicionar paciente"
+- Placeholder busca "Buscar por nome..." → "Buscar paciente por nome..."
+- Empty state titulo "Nenhum paciente cadastrado ainda" → "Seus pacientes aparecerão aqui"
+- Empty state descricao: manter (ja esta boa)
+- CTA empty "Cadastrar primeiro paciente" → "Adicionar primeiro paciente"
+- Filtro "Ativos" / "Inativos" → "Em acompanhamento" / "Alta ou pausado"
+- Badge "Ativo" → "Em acompanhamento", "Inativo" → "Pausado"
+- Empty filtro "Nenhum paciente encontrado" → "Nenhum paciente corresponde aos filtros aplicados"
+- Beneficio cards: "Histórico de sessões organizado por paciente" ok, "Contexto automático para a IA nas evoluções" ok, "Acompanhamento de progresso ao longo do tempo" ok
 
-1. **Checkboxes selecionados no onboarding**: `bg-teal-50 border-teal-200` → `bg-primary/10 border-primary/30` (usar tokens existentes)
-2. **Remocao de emojis decorativos**: 🎉👋✨💬📚🎯✍️⚡ — substituidos por icones Lucide ja presentes ou simplesmente removidos
-3. **Skip buttons**: adicionar `opacity-60` para reduzir destaque visual sem esconder
+**PatientFormDialog**:
+- Titulo "Novo Paciente" → "Adicionar paciente"
+- Titulo edicao "Editar Paciente" → "Editar prontuario"
+- Secao "Dados de Identificação" → "Identificacao do paciente"
+- Secao "Dados Clínicos" → "Informacoes clinicas"
+- Secao "Configurações da Sessão" → "Configuracoes do atendimento"
+- Label "Nome completo *" → "Nome completo do paciente *"
+- Label "Iniciais *" → "Iniciais do paciente *"
+- Label "Queixa principal / motivo do tratamento" → "Queixa principal"
+- Label "Diagnóstico CID-10" → "Hipotese diagnostica (CID-10)"
+- Label "Diagnóstico DSM-5" → "Hipotese diagnostica (DSM-5)"
+- Label "Medicação em uso" → "Medicacao atual"
+- Label "Observações gerais" → "Observacoes clinicas"
+- Label "Dia e horário habitual" → "Dia e horario do atendimento"
+- Label "Tipo de atendimento" → "Modalidade do atendimento"
+- Label "Frequência" → "Frequencia dos atendimentos"
+- CTA "Cadastrar Paciente" → "Adicionar paciente"
+- CTA edicao "Salvar Alterações" → "Salvar alteracoes no prontuario"
+- Erro validacao "Nome e iniciais são obrigatórios" → "Informe o nome completo e as iniciais do paciente"
+- Toast sucesso "Paciente cadastrado com sucesso!" → "Paciente adicionado ao seu prontuario"
+- Toast sucesso edicao "Paciente atualizado!" → "Prontuario atualizado com sucesso"
+- Toast warning thread "Paciente salvo, mas o contexto de IA será criado na próxima evolução" → "Paciente adicionado. O contexto de IA sera ativado na primeira evolucao."
+
+**PatientDetailPage**:
+- Secao "Dados Clínicos" → "Informacoes clinicas"
+- Secao "Histórico de Evoluções" → "Evolucoes clinicas"
+- CTA "Nova Evolução" → "Gerar evolucao"
+- Empty evolucoes "Nenhuma evolução registrada para este paciente." → "Nenhuma evolucao clinica gerada para este paciente. Gere a primeira apos a proxima sessao."
+- "Contexto Acumulado da IA" → "Contexto clinico acumulado"
+- "O contexto de IA ainda não foi ativado para este paciente." → "A IA ainda nao possui historico deste paciente. Ative para que as evolucoes considerem sessoes anteriores."
+- CTA "Ativar contexto de IA" → "Ativar contexto clinico"
+
+---
+
+## 3. Historico (`HistoryPage.tsx`)
+
+- Empty state "Nenhuma evolução encontrada" → "O historico consolida todas as evolucoes dos seus pacientes. Gere sua primeira evolucao para comecar a construi-lo."
+- Adicionar CTA no empty: botao "Gerar evolucao" → navega para `/app/evolucao`
+- Dialog titulo "Evolução —" → "Evolucao clinica —"
+- Toast "Erro ao excluir" → "Nao foi possivel excluir a evolucao. Tente novamente."
+- Toast "Evolução excluída" → "Evolucao removida do historico"
+- Dialog excluir titulo "Excluir evolução?" → "Excluir esta evolucao?"
+- Dialog excluir descricao: manter (ja contextual)
+- CTA "Salvar" (no dialog edicao) → "Salvar alteracoes"
+- Toast "Erro ao salvar alterações" → "Nao foi possivel salvar as alteracoes. Tente novamente."
+- Toast "Evolução atualizada!" → "Evolucao atualizada com sucesso"
+- Toast "Evolução copiada!" → "Evolucao copiada para a area de transferencia"
+
+---
+
+## 4. Chat Clinico (`ChatInterface.tsx`)
+
+- Empty state titulo "Bem-vindo ao ChatPsi!" → "Chat Clinico"
+- Empty state descricao (subscriber) "Envie mensagens, áudios, imagens ou documentos para começar a conversar com a IA." → "O Chat Clinico e seu assistente especializado. Tire duvidas sobre abordagens, CID, manejo clinico e mais."
+- Empty state descricao (no subscription) "Você precisa de uma assinatura ativa para começar a conversar." → "Assinatura necessaria para acessar o Chat Clinico."
+- CTA "Ativar Assinatura" → "Assinar para acessar"
+- FirstTimeGuide CTA "Entendi, começar a conversar!" → "Iniciar conversa"
+- Toast "Gravação iniciada" → manter
+- Toast "Gravação concluída" → manter
+- Toast "Gravação cancelada" → manter
+- Toast erro "Erro ao carregar mensagens" → "Nao foi possivel carregar o historico de mensagens. Verifique sua conexao."
+- Toast "Resposta demorou mais que o esperado" → "A resposta esta demorando mais que o esperado. Mensagens atualizadas automaticamente."
+- Toast "Erro ao enviar mensagem" → "Nao foi possivel enviar a mensagem. Verifique sua conexao e tente novamente."
+- Toast "Assinatura necessária" → "Assinatura necessaria para enviar mensagens no Chat Clinico."
+- Toast "Chat atualizado" descricao "Resposta interrompida e mensagens recarregadas." → "Historico de mensagens recarregado."
+
+---
+
+## 5. Planos Terapeuticos (`BuscaPlanoInterface.tsx`)
+
+- FirstTimeGuide titulo "Busca Plano de Ação" → "Planos Terapeuticos"
+- FirstTimeGuide descricao "Descreva o caso clínico e receba um plano de ação terapêutico..." → "Descreva o quadro clinico do paciente e receba planos terapeuticos estruturados com objetivos e intervencoes baseadas em evidencias."
+- Empty state titulo "Busca Plano de Ação" → "Planos Terapeuticos"
+- Empty state descricao "Descreva o caso clínico ou situação e receba um plano de ação terapêutico personalizado." → "Planos terapeuticos estruturados com objetivos, intervencoes e prazos. Descreva o quadro clinico para comecar."
+- Sugestoes: "Plano de ação para..." → "Plano terapeutico para..."
+- CTA FirstTimeGuide "Entendi, buscar um plano!" → "Buscar plano terapeutico"
+- Toast "Nova conversa" → "Nova consulta"
+- Toast "O contexto será renovado na próxima mensagem." → "O contexto sera renovado na proxima consulta."
+- Botao "Nova conversa" → "Nova consulta"
+
+---
+
+## 6. Artigos Cientificos (`BuscaArtigosInterface.tsx`)
+
+- FirstTimeGuide titulo "Busca Artigos Científicos" → "Artigos Cientificos"
+- CTA "Entendi, buscar artigos!" → "Buscar artigo cientifico"
+- Empty state titulo "Busca Artigos Científicos" → "Artigos Cientificos"
+- Empty state descricao "Pesquise artigos científicos relevantes para embasar sua prática clínica." → "Busque artigos cientificos relevantes para suas hipoteses diagnosticas e abordagens terapeuticas."
+- Placeholder "Digite sua pergunta sobre artigos científicos..." → "Descreva o tema, tecnica ou quadro clinico que deseja pesquisar..."
+- Toast sucesso "Artigos processados com sucesso!" → "Artigos encontrados"
+- Toast erro "Ocorreu um erro ao processar sua solicitação." → "Nao foi possivel buscar artigos. Verifique sua conexao e tente novamente."
+- Toast limite "Você atingiu o limite de buscas gratuitas este mês. Assine para continuar." → "Limite de buscas atingido este mes. Assine para continuar pesquisando."
+
+---
+
+## 7. Marketing (`MarketingInterface.tsx`)
+
+- Titulo "IA de Marketing" → "Marketing para sua pratica"
+- Subtitulo "Gere textos de marketing com inteligência artificial" → "Gere conteudo profissional para suas redes sociais com IA especializada em saude mental."
+- Label "Pedido ao assistente" → "Descreva o conteudo desejado"
+- Placeholder "Descreva o que você quer que a IA crie..." → "Ex: Post para Instagram sobre a importancia da terapia para ansiedade"
+- Label "Texto gerado / editável" → "Conteudo gerado (editavel)"
+- Placeholder "O texto gerado pela IA aparecerá aqui e poderá ser editado..." → "O conteudo gerado pela IA aparecera aqui. Edite antes de publicar."
+- CTA "Gerar com IA" → "Gerar conteudo"
+- CTA "Salvar" → "Salvar conteudo"
+- Tab "Novo Texto" → "Criar conteudo"
+- Tab "Histórico" → "Conteudos salvos"
+- CTA "Novo" → "Novo conteudo"
+- Empty historico "Nenhum texto salvo ainda" → "Seus conteudos gerados aparecerão aqui. Crie o primeiro para comecar."
+- FirstTimeGuide CTA "Entendi, criar um texto!" → "Criar primeiro conteudo"
+- Toast "Texto gerado com IA!" → "Conteudo gerado com sucesso"
+- Toast "Texto salvo com sucesso!" → "Conteudo salvo"
+- Toast "Texto excluído com sucesso!" → "Conteudo removido"
+- Dialog excluir "Confirmar exclusão" → "Excluir este conteudo?"
+- Dialog excluir descricao "Tem certeza que deseja excluir este texto? Esta ação não pode ser desfeita." → "Este conteudo sera permanentemente removido. Esta acao nao pode ser desfeita."
+- Toast erro vazio "Digite um pedido para o assistente" → "Descreva o conteudo que deseja gerar"
+- Toast erro salvar "Não há texto para salvar" → "Nenhum conteudo para salvar. Gere um conteudo primeiro."
+- Toast erro generico "Erro" titulo → remover titulo generico, usar descricao contextual: "Nao foi possivel gerar o conteudo. Tente novamente." / "Nao foi possivel salvar. Tente novamente."
+
+---
+
+## 8. Perfil (`ProfilePage.tsx`)
+
+- Titulo "Perfil Profissional" → "Seu perfil clinico"
+- Label "Nome completo" → "Nome completo do profissional"
+- Label "Apelido" → "Como prefere ser chamado"
+- Label "CRP" → "Registro profissional (CRP/CRM)"
+- Helper CRP: manter
+- Label "Abordagem principal" → "Abordagem terapeutica principal"
+- Helper abordagem "Será pré-selecionada ao criar novas evoluções" → "Pre-selecionada automaticamente ao gerar evolucoes clinicas"
+- Label "Especialidades" → "Areas de atuacao"
+- Helper especialidades "Ajudam a IA a personalizar sugestões e planos de ação" → "A IA priorizara conteudos e sugestoes dessas areas"
+- CTA "Salvar alterações" → "Salvar perfil"
+- Toast sucesso "Perfil atualizado!" → "Perfil clinico atualizado"
+- Toast erro "Erro ao salvar: ..." → "Nao foi possivel atualizar o perfil. Tente novamente."
+- Toast avatar "Foto atualizada!" → "Foto de perfil atualizada"
+- Toast avatar erro "Erro ao enviar foto" → "Nao foi possivel enviar a foto. Tente com um arquivo menor."
+
+---
+
+## 9. Indicacoes (`ReferralsPage.tsx`)
+
+- Sem mudancas significativas necessarias (copy ja esta contextual).
+
+---
+
+## 10. Logger / Mensagens genericas (`logger.ts`)
+
+- Verificar `GENERIC_ERROR_MESSAGES` — se houver mensagens tecnicas expostas, substituir por mensagens amigaveis seguindo o padrao "O que aconteceu + O que fazer".
 
 ---
 
 ## Arquivos a modificar
 
-| Arquivo | Tipo de mudanca |
+| Arquivo | Mudancas |
 |---|---|
-| `src/components/onboarding/StepWelcome.tsx` | Copy + remover emoji |
-| `src/components/onboarding/StepProfile.tsx` | Copy + tokens de cor |
-| `src/components/onboarding/StepPatient.tsx` | Copy |
-| `src/components/onboarding/StepEvolution.tsx` | Copy + remover emoji |
-| `src/components/onboarding/StepCelebration.tsx` | Copy + remover emojis |
-| `src/components/onboarding/OnboardingWizard.tsx` | Copy (labels) |
-| `src/pages/app/HomePage.tsx` | Copy + remover emojis |
+| `src/components/evolution/EvolutionInput.tsx` | Labels, CTAs, helpers, placeholder |
+| `src/components/evolution/EvolutionOutput.tsx` | CTAs, loading copy |
+| `src/pages/app/EvolutionPage.tsx` | Breadcrumb, erros, FirstTimeGuide CTA |
+| `src/pages/app/PatientsPage.tsx` | Titulo, CTAs, empty states, badges, filtros |
+| `src/components/patients/PatientFormDialog.tsx` | Labels, secoes, CTAs, validacao, toasts |
+| `src/pages/app/PatientDetailPage.tsx` | Secoes, CTAs, empty states, contexto IA |
+| `src/pages/app/HistoryPage.tsx` | Empty state com CTA, toasts, dialog copy |
+| `src/components/chat/ChatInterface.tsx` | Empty states, toasts, CTAs |
+| `src/components/busca-plano/BuscaPlanoInterface.tsx` | Titulos, descricoes, sugestoes, toasts |
+| `src/components/busca-artigos/BuscaArtigosInterface.tsx` | Titulos, descricoes, placeholder, toasts |
+| `src/components/marketing/MarketingInterface.tsx` | Titulo, labels, CTAs, tabs, empty state, toasts |
+| `src/pages/app/ProfilePage.tsx` | Titulo, labels, helpers, CTAs, toasts |
 
-Nenhum arquivo de logica, rotas ou backend sera alterado.
+Nenhuma logica de negocio sera alterada. Apenas strings de texto, labels e mensagens.
 

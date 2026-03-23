@@ -212,7 +212,7 @@ export default function PatientFormDialog({ open, onOpenChange, editData, onSave
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="font-display">{editData?.id ? "Editar Paciente" : "Novo Paciente"}</DialogTitle>
+          <DialogTitle className="font-display">{editData?.id ? "Editar prontuário" : "Adicionar paciente"}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6">

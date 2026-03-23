@@ -181,7 +181,7 @@ export default function EvolutionPage() {
       <AppBreadcrumb items={[
         { label: "Clínica", href: "/app/evolucao" },
         { label: "Evolução", href: "/app/evolucao" },
-        { label: "Nova Evolução" },
+        { label: "Nova Evolução Clínica" },
       ]} />
       {!trial.isSubscribed && (
         <TrialLimitBanner

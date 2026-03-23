@@ -326,8 +326,8 @@ export default function PatientFormDialog({ open, onOpenChange, editData, onSave
             <Select value={form.status} onValueChange={v => set("status", v)}>
               <SelectTrigger className="w-full sm:w-[200px]"><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="active">Ativo</SelectItem>
-                <SelectItem value="inactive">Inativo</SelectItem>
+                 <SelectItem value="active">Em acompanhamento</SelectItem>
+                <SelectItem value="inactive">Pausado</SelectItem>
               </SelectContent>
             </Select>
           </div>

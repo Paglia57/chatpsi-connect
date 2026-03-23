@@ -106,7 +106,7 @@ export default function EvolutionOutput({ content, isLoading, onRegenerate, onSa
           ) : (
             <Button variant="outline" size="sm" onClick={handleEdit}>
               <Pencil className="h-4 w-4" />
-              Editar
+              Editar texto
             </Button>
           )}
           <Button variant="cta" size="sm" onClick={handleSave} disabled={isSaving}>

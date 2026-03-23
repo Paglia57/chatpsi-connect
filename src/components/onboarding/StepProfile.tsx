@@ -106,7 +106,7 @@ export default function StepProfile({ onNext, onSkip }: StepProfileProps) {
                     key={s}
                     className={`flex items-center gap-2 cursor-pointer px-2.5 py-1.5 rounded-lg border transition-all duration-200 ${
                       isSelected
-                        ? 'bg-teal-50 border-teal-200 scale-[1.02]'
+                        ? 'bg-primary/10 border-primary/30 scale-[1.02]'
                         : 'border-transparent hover:bg-muted/50'
                     }`}
                   >

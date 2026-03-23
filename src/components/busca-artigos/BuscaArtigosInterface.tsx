@@ -79,7 +79,7 @@ const BuscaArtigosInterface = () => {
     if (trial.hasReachedLimit) {
       toast({
         title: "Limite atingido",
-        description: "Você atingiu o limite de buscas gratuitas este mês. Assine para continuar.",
+        description: "Limite de buscas atingido este mês. Assine para continuar pesquisando.",
         variant: "destructive"
       });
       return;

@@ -144,8 +144,8 @@ const BuscaPlanoInterface = () => {
     setPendingReset(true);
     setShowSuggestions(true);
     toast({
-      title: "Nova conversa",
-      description: "O contexto será renovado na próxima mensagem.",
+      title: "Nova consulta",
+      description: "O contexto será renovado na próxima consulta.",
     });
   };
 

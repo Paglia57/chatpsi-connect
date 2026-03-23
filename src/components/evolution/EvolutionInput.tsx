@@ -159,7 +159,7 @@ export default function EvolutionInput({ onGenerate, isLoading, trialReached }: 
                 onChange={e => setPatientInitials(e.target.value)}
                 placeholder="Nome ou iniciais do paciente (ex: J.S.)"
               />
-              <p className="text-xs text-muted-foreground">Evoluções sem paciente cadastrado não acumulam contexto na IA</p>
+              <p className="text-xs text-muted-foreground">Evoluções avulsas não acumulam contexto clínico na IA. Cadastre o paciente para melhores resultados.</p>
             </div>
           ) : (
             <PatientSelector value={selectedPatient} onChange={(p) => {

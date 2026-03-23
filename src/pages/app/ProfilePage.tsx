@@ -197,7 +197,7 @@ export default function ProfilePage() {
           </div>
 
           <div className="space-y-2">
-            <Label>Abordagem principal</Label>
+            <Label>Abordagem terapêutica principal</Label>
             <Select value={mainApproach} onValueChange={setMainApproach}>
               <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
               <SelectContent>

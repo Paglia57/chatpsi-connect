@@ -91,9 +91,9 @@ export default function ProfilePage() {
         })
         .eq("user_id", user.id);
       if (error) throw error;
-      toast.success("Perfil atualizado!");
+      toast.success("Perfil clínico atualizado");
     } catch (err: any) {
-      toast.error("Erro ao salvar: " + (err.message || "Erro desconhecido"));
+      toast.error("Não foi possível atualizar o perfil. Tente novamente.");
     } finally {
       setSaving(false);
     }

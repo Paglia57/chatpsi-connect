@@ -114,7 +114,7 @@ export default function ProfilePage() {
     const url = urlData.publicUrl;
     await supabase.from("profiles").update({ avatar_url: url }).eq("user_id", user.id);
     setAvatarUrl(url);
-    toast.success("Foto atualizada!");
+    toast.success("Foto de perfil atualizada");
   };
 
   const initials = fullName

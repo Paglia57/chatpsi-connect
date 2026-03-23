@@ -13,7 +13,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Search, Trash2, ClipboardList, ClipboardCopy, Pencil, X, Download, ChevronDown, Loader2 } from "lucide-react";
+import { Search, Trash2, ClipboardList, ClipboardCopy, Pencil, X, Download, ChevronDown, Loader2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
 import { parseEvolutionContent, getContentPreview, exportEvolutionPdf } from "@/lib/evolutionParser";

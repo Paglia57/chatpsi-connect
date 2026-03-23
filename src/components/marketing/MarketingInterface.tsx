@@ -66,7 +66,6 @@ const MarketingInterface = () => {
       console.error('Erro ao carregar histórico:', error);
       toast({
         variant: 'destructive',
-        title: 'Erro',
         description: 'Não foi possível carregar o histórico',
       });
     } finally {

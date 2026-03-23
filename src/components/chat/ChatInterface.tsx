@@ -727,12 +727,12 @@ const ChatInterface = () => {
             
             <input ref={fileInputRef} type="file" accept=".jpg,.jpeg,.png,.heic,.webp,audio/*,.mp3,.ogg,.wav,.m4a,video/*,.pdf,.doc,.docx" onChange={handleFileSelect} className="hidden" />
           </div> : <div className="max-w-4xl mx-auto text-center py-4">
-            <div className="flex items-center justify-center gap-2 text-muted-foreground mb-2">
+             <div className="flex items-center justify-center gap-2 text-muted-foreground mb-2">
               <Lock className="h-4 w-4" />
-              <span className="text-sm">Assinatura necessária para enviar mensagens</span>
+              <span className="text-sm">Assinatura necessária para enviar mensagens no Chat Clínico</span>
             </div>
             <Button variant="cta" size="sm" className="touch-target">
-              Ativar Assinatura
+              Assinar para acessar
             </Button>
           </div>}
       </div>

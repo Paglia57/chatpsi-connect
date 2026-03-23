@@ -196,7 +196,7 @@ const BuscaPlanoInterface = () => {
                       "Use os planos como base e adapte à sua prática clínica",
                     ]}
                     examples={[
-                      "Plano de ação para depressão em adolescentes",
+                      "Plano terapêutico para depressão em adolescentes",
                       "Intervenções para ansiedade generalizada",
                       "Estratégias para TDAH em adultos",
                     ]}

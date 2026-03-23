@@ -509,7 +509,7 @@ const ChatInterface = () => {
                       "Sugira atividades para um paciente com depressão",
                       "Critérios diagnósticos do TDAH no DSM-5",
                     ]}
-                    ctaText="Entendi, começar a conversar!"
+                    ctaText="Iniciar conversa"
                     onDismiss={async () => {
                       if (user && !tourActive) {
                         const current = (profile?.seen_guides as any) || {};

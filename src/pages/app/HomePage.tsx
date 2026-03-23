@@ -129,9 +129,9 @@ const HomePage = () => {
   const loadingStats = loadingEvolutions || loadingPatients;
 
   const tips: { text: string; path: string }[] = [];
-  if (patientsCount === 0) tips.push({ text: 'Cadastre seu primeiro paciente para organizar suas evoluções', path: '/app/pacientes' });
-  if (evolutionsCount === 0) tips.push({ text: 'Experimente gerar sua primeira evolução clínica', path: '/app/evolucao' });
-  if (patientsCount > 0 && evolutionsCount > 0) tips.push({ text: 'Use o Chat Clínico para discutir casos complexos com a IA', path: '/chat' });
+  if (patientsCount === 0) tips.push({ text: 'Cadastre um paciente para gerar evoluções vinculadas ao prontuário', path: '/app/pacientes' });
+  if (evolutionsCount === 0) tips.push({ text: 'Gere sua primeira evolução clínica com IA', path: '/app/evolucao' });
+  if (patientsCount > 0 && evolutionsCount > 0) tips.push({ text: 'Explore o Chat Clínico para consultar protocolos e discutir casos', path: '/chat' });
 
   const getHeroContent = () => {
     if (patientsCount === 0 && !loadingStats) {

@@ -208,7 +208,7 @@ export default function EvolutionPage() {
             "Paciente relatou melhora nos sintomas de ansiedade",
             "Trabalhamos técnicas de regulação emocional",
           ]}
-          ctaText="Entendi, criar uma evolução!"
+          ctaText="Iniciar primeira evolução"
           onDismiss={async () => {
             setGuideDismissed(true);
             if (user && !tourActive) {

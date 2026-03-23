@@ -183,7 +183,7 @@ export default function PatientsPage() {
                         </div>
                       </div>
                       <Badge variant={p.status === "active" ? "default" : "outline"} className="shrink-0">
-                        {p.status === "active" ? "Ativo" : "Inativo"}
+                        {p.status === "active" ? "Em acompanhamento" : "Pausado"}
                       </Badge>
                     </div>
                   ))}

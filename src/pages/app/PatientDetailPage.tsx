@@ -271,7 +271,7 @@ export default function PatientDetailPage() {
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="font-display">
-              Evolução — {selectedEvo && new Date(selectedEvo.created_at).toLocaleDateString("pt-BR")}
+              Evolução clínica — {selectedEvo && new Date(selectedEvo.created_at).toLocaleDateString("pt-BR")}
             </DialogTitle>
           </DialogHeader>
           <div className="whitespace-pre-wrap text-sm text-foreground leading-relaxed">

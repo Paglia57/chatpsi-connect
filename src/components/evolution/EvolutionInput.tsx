@@ -305,12 +305,12 @@ export default function EvolutionInput({ onGenerate, isLoading, trialReached }: 
             {isLoading ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Gerando evolução...
+                Gerando evolução clínica...
               </>
             ) : (
               <>
                 <Sparkles className="h-4 w-4" />
-                Gerar Evolução
+                Gerar evolução clínica
               </>
             )}
           </Button>

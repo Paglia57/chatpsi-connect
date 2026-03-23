@@ -409,7 +409,7 @@ export default function HistoryPage() {
                       size="sm"
                       onClick={() => {
                         navigator.clipboard.writeText(selectedEvolution.output_content || "");
-                        toast.success("Evolução copiada!");
+                        toast.success("Evolução copiada para a área de transferência");
                       }}
                     >
                       <ClipboardCopy className="h-4 w-4" />

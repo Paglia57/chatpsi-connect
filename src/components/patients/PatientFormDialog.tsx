@@ -196,7 +196,7 @@ export default function PatientFormDialog({ open, onOpenChange, editData, onSave
           toast.warning("Paciente adicionado. O contexto de IA será ativado na primeira evolução.");
         }
 
-        toast.success("Paciente cadastrado com sucesso!");
+        toast.success("Paciente adicionado ao seu prontuário");
       }
 
       onSaved();

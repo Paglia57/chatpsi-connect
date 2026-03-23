@@ -228,9 +228,9 @@ const MarketingInterface = () => {
       <div className="p-4 md:p-6 border-b">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl md:text-2xl font-bold">IA de Marketing</h1>
+             <h1 className="text-xl md:text-2xl font-bold">Marketing para sua prática</h1>
             <p className="text-muted-foreground text-xs md:text-sm">
-              Gere textos de marketing com inteligência artificial
+              Gere conteúdo profissional para suas redes sociais com IA especializada em saúde mental.
             </p>
           </div>
           {(selectedId || activeTab === 'historico') && (

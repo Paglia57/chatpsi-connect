@@ -175,7 +175,7 @@ export default function ProfilePage() {
           {/* Fields */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Nome completo</Label>
+              <Label>Nome completo do profissional</Label>
               <Input value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Seu nome" />
               <p className="text-xs text-muted-foreground">Usado no cabeçalho das evoluções clínicas</p>
             </div>

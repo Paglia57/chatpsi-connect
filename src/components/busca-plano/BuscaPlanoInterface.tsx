@@ -188,8 +188,8 @@ const BuscaPlanoInterface = () => {
                   <FirstTimeGuide
                     guideKey="plano"
                     icon={<Target className="h-8 w-8 text-amber-600" />}
-                    title="Busca Plano de Ação"
-                    description="Descreva o caso clínico e receba um plano de ação terapêutico personalizado com base em evidências."
+                    title="Planos Terapêuticos"
+                    description="Descreva o quadro clínico do paciente e receba planos terapêuticos estruturados com objetivos e intervenções baseadas em evidências."
                     tips={[
                       "Descreva o quadro clínico, idade e contexto do paciente",
                       "Peça intervenções específicas por abordagem terapêutica",

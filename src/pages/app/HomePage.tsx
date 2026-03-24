@@ -219,7 +219,7 @@ const HomePage = () => {
       </div>
 
       {/* Hero CTA */}
-      <Card className="border-0 bg-primary text-primary-foreground overflow-hidden">
+      <Card className="border border-primary/20 bg-primary text-primary-foreground overflow-hidden">
         <CardContent className="p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center gap-4">
           <div className="flex-1 space-y-2">
             <div className="flex items-center gap-2">

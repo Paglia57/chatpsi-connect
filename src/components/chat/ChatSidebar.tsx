@@ -421,7 +421,7 @@ const ChatSidebar = () => {
             <Popover>
               <PopoverTrigger asChild>
                 <button title="Suporte"
-                  className="p-2 rounded-lg text-muted-foreground hover:text-foreground transition-colors block">
+                  className="p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground transition-colors">
                   <HelpCircle className="h-4 w-4" />
                 </button>
               </PopoverTrigger>

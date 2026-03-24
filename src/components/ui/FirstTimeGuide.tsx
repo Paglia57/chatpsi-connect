@@ -54,7 +54,7 @@ const FirstTimeGuide: React.FC<FirstTimeGuideProps> = ({
           : 'opacity-0 scale-95'
       }`}
     >
-      <div className="bg-card rounded-2xl shadow-sm border border-border p-6 sm:p-8 max-w-2xl mx-auto">
+      <div className="bg-card rounded-xl shadow-sm border border-border p-6 sm:p-8 max-w-2xl mx-auto">
         {/* Icon */}
         <div className="flex justify-center mb-4">
           <div className="bg-primary/10 p-4 rounded-full">

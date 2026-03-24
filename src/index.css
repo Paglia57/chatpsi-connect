@@ -296,31 +296,6 @@ Acessibilidade WCAG AA compliance
     @apply bg-primary relative overflow-hidden;
   }
   
-  .bg-hero::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-image: var(--pattern-dots);
-    background-size: 20px 20px;
-    opacity: 0.3;
-    pointer-events: none;
-  }
-  
-  .bg-hero::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 200px;
-    height: 200px;
-    background: hsl(var(--cta) / 0.15);
-    border-radius: 50%;
-    transform: translate(50%, -50%);
-    pointer-events: none;
-  }
   
   /* Solid accent backgrounds */
   .bg-accent-decorated {

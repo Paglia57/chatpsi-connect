@@ -55,7 +55,7 @@ export default function AppLayout() {
         <div className={`app-shell min-h-screen-mobile flex w-full bg-background no-horizontal-scroll ${isMobile ? 'flex-col' : ''}`}>
         <ChatSidebar />
         <div className="flex-1 flex flex-col min-w-0">
-          <main className="flex-1 p-4 md:p-6 lg:p-8 bg-background overflow-auto">
+          <main className={`flex-1 p-4 md:p-6 lg:p-8 bg-background overflow-auto ${isMobile ? 'pb-20' : ''}`}>
             <Outlet context={{ tourActive: runTour }} />
           </main>
         </div>

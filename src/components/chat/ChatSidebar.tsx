@@ -215,7 +215,7 @@ const ChatSidebar = () => {
         </NavLink>
         <NavLink to="/busca-plano" onClick={onNavigate} className={navLinkClass(isActive('/busca-plano'))} data-tour="nav-plano">
           <Target className="h-4 w-4 shrink-0" />
-          <span>Planos de Ação</span>
+          <span>Planos Terapêuticos</span>
         </NavLink>
         <NavLink to="/busca-artigos" onClick={onNavigate} className={navLinkClass(isActive('/busca-artigos'))} data-tour="nav-artigos">
           <BookOpen className="h-4 w-4 shrink-0" />

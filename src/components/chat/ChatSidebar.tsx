@@ -401,7 +401,7 @@ const ChatSidebar = () => {
                 <Settings className="h-4 w-4" />
               </NavLink>
               <NavLink to="/admin/referrals" title="Validar Indicações"
-                className={`p-2 rounded-lg transition-colors ${isActive('/admin/referrals') ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground hover:bg-sidebar-accent/50'}`}>
+                className={`p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg transition-colors ${isActive('/admin/referrals') ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground hover:bg-sidebar-accent/50'}`}>
                 <Gift className="h-4 w-4" />
               </NavLink>
             </>

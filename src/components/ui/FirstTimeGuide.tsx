@@ -63,7 +63,7 @@ const FirstTimeGuide: React.FC<FirstTimeGuideProps> = ({
         </div>
 
         {/* Title & Description */}
-        <h3 className="text-xl sm:text-2xl font-bold text-foreground text-center mb-2">
+        <h3 className="text-lg sm:text-xl font-semibold text-foreground text-center mb-2">
           {title}
         </h3>
         <p className="text-muted-foreground text-center max-w-md mx-auto mb-6 text-sm sm:text-base">

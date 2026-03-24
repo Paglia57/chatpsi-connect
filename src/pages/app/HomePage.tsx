@@ -185,7 +185,7 @@ const HomePage = () => {
 
       {/* Greeting */}
       <div>
-        <h1 className="text-2xl md:text-3xl font-bold text-foreground font-playfair">Olá, {displayName}</h1>
+        <h1 className="text-2xl md:text-3xl font-bold text-foreground font-display">Olá, {displayName}</h1>
         <p className="text-muted-foreground font-semibold mt-1">Seu painel clínico</p>
       </div>
 
@@ -219,12 +219,12 @@ const HomePage = () => {
       </div>
 
       {/* Hero CTA */}
-      <Card className="border-0 bg-primary text-primary-foreground overflow-hidden">
+      <Card className="border border-primary/20 bg-primary text-primary-foreground overflow-hidden">
         <CardContent className="p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center gap-4">
           <div className="flex-1 space-y-2">
             <div className="flex items-center gap-2">
               <FileText className="h-6 w-6" />
-              <h2 className="text-xl md:text-2xl font-bold font-playfair">{hero.title}</h2>
+              <h2 className="text-xl md:text-2xl font-bold font-display">{hero.title}</h2>
             </div>
             <p className="text-primary-foreground/80 text-sm md:text-base max-w-lg">{hero.description}</p>
           </div>
@@ -242,7 +242,7 @@ const HomePage = () => {
       {/* Shortcuts grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
         {shortcuts.map((item) => (
-          <Card key={item.path} className="cursor-pointer hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 group" onClick={() => navigate(item.path)}>
+          <Card key={item.path} className="cursor-pointer hover:shadow-md transition-all duration-200 group" onClick={() => navigate(item.path)}>
             <CardContent className="p-4 space-y-2">
               <div className="h-10 w-10 rounded-lg bg-accent flex items-center justify-center group-hover:bg-primary/10 transition-colors">
                 <item.icon className="h-5 w-5 text-accent-foreground" />

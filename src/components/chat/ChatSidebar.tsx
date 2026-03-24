@@ -151,7 +151,7 @@ const ChatSidebar = () => {
           </Avatar>
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-sm text-sidebar-foreground truncate">
-              {profile?.nickname || profile?.full_name || 'Usuário'}
+              {profile?.nickname || profile?.full_name || 'Profissional'}
             </p>
             {profile?.subscription_active ? (
               <Badge variant="default" className="text-[10px] px-1.5 py-0 bg-success text-success-foreground">
@@ -215,7 +215,7 @@ const ChatSidebar = () => {
         </NavLink>
         <NavLink to="/busca-plano" onClick={onNavigate} className={navLinkClass(isActive('/busca-plano'))} data-tour="nav-plano">
           <Target className="h-4 w-4 shrink-0" />
-          <span>Planos de Ação</span>
+          <span>Planos Terapêuticos</span>
         </NavLink>
         <NavLink to="/busca-artigos" onClick={onNavigate} className={navLinkClass(isActive('/busca-artigos'))} data-tour="nav-artigos">
           <BookOpen className="h-4 w-4 shrink-0" />
@@ -346,7 +346,7 @@ const ChatSidebar = () => {
           <Separator className="w-6 my-1" />
           {[
             { icon: MessageCircle, path: '/chat', title: 'Chat Clínico' },
-            { icon: Target, path: '/busca-plano', title: 'Planos de Ação' },
+            { icon: Target, path: '/busca-plano', title: 'Planos Terapêuticos' },
             { icon: BookOpen, path: '/busca-artigos', title: 'Artigos Científicos' },
           ].map(item => (
             <NavLink key={item.path} to={item.path} title={item.title}

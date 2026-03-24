@@ -26,10 +26,10 @@ Acessibilidade WCAG AA compliance
     --accent-light: 201 89% 95%;
     
     /* ChatPsi CTA - Dynamic Magenta for actions */
-    --cta: 322 100% 58%; /* #CF007C */
+    --cta: 322 85% 46%;
     --cta-foreground: 0 0% 100%;
-    --cta-hover: 322 100% 50%;
-    --cta-light: 322 100% 95%;
+    --cta-hover: 322 85% 40%;
+    --cta-light: 322 60% 95%;
 
     /* Semantic colors */
     --card: 0 0% 100%;
@@ -41,8 +41,8 @@ Acessibilidade WCAG AA compliance
     --secondary: 201 89% 96%;
     --secondary-foreground: 201 89% 6%;
 
-    --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 45%;
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 9% 46%;
 
     --accent: 201 89% 95%;
     --accent-foreground: 201 89% 25%;
@@ -56,8 +56,8 @@ Acessibilidade WCAG AA compliance
     --success: 142 76% 36%;
     --success-foreground: 0 0% 100%;
 
-    --border: 0 0% 90%;
-    --input: 0 0% 90%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
     --ring: 201 89% 25%;
 
     --radius: 0.5rem;
@@ -172,15 +172,15 @@ Acessibilidade WCAG AA compliance
   }
 
   h1 {
-    @apply text-4xl lg:text-5xl;
+    @apply text-2xl lg:text-3xl;
   }
 
   h2 {
-    @apply text-3xl lg:text-4xl;
+    @apply text-xl lg:text-2xl;
   }
 
   h3 {
-    @apply text-2xl lg:text-3xl;
+    @apply text-lg lg:text-xl;
   }
 
   /* Custom scrollbar */
@@ -224,7 +224,7 @@ Acessibilidade WCAG AA compliance
 
   /* Card hover effects */
   .card-hover {
-    @apply transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-1;
+    @apply transition-all duration-300 hover:shadow-md hover:-translate-y-px;
   }
 
   /* Responsive message bubbles */
@@ -296,31 +296,6 @@ Acessibilidade WCAG AA compliance
     @apply bg-primary relative overflow-hidden;
   }
   
-  .bg-hero::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-image: var(--pattern-dots);
-    background-size: 20px 20px;
-    opacity: 0.3;
-    pointer-events: none;
-  }
-  
-  .bg-hero::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 200px;
-    height: 200px;
-    background: hsl(var(--cta) / 0.15);
-    border-radius: 50%;
-    transform: translate(50%, -50%);
-    pointer-events: none;
-  }
   
   /* Solid accent backgrounds */
   .bg-accent-decorated {
@@ -332,15 +307,6 @@ Acessibilidade WCAG AA compliance
     @apply border-primary/20 bg-card shadow-lg ring-1 ring-primary/10 relative overflow-hidden;
   }
   
-  .card-decorated::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, hsl(var(--cta)), hsl(var(--primary)));
-  }
 
   /* Micro-interactions */
   .animate-fade-in {

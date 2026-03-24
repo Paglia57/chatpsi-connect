@@ -224,7 +224,7 @@ const HomePage = () => {
           <div className="flex-1 space-y-2">
             <div className="flex items-center gap-2">
               <FileText className="h-6 w-6" />
-              <h2 className="text-xl md:text-2xl font-bold font-playfair">{hero.title}</h2>
+              <h2 className="text-xl md:text-2xl font-bold font-display">{hero.title}</h2>
             </div>
             <p className="text-primary-foreground/80 text-sm md:text-base max-w-lg">{hero.description}</p>
           </div>

@@ -89,7 +89,7 @@ const FirstTimeGuide: React.FC<FirstTimeGuideProps> = ({
             <button
               key={i}
               onClick={() => handleExampleClick(example)}
-              className="bg-primary/5 border border-primary/20 rounded-xl px-4 py-3 text-left text-sm text-primary hover:bg-primary/10 transition-colors cursor-pointer flex items-center gap-2"
+              className="bg-primary/5 border border-primary/20 rounded-lg px-4 py-3 text-left text-sm text-primary hover:bg-primary/10 transition-colors cursor-pointer flex items-center gap-2"
             >
               <span className="flex-1">"{example}"</span>
               <ArrowRight className="h-3.5 w-3.5 flex-shrink-0 opacity-50" />

@@ -102,9 +102,9 @@ const FirstTimeGuide: React.FC<FirstTimeGuideProps> = ({
           <Button
             onClick={handleDismiss}
             variant="cta"
-            className="rounded-xl px-6 py-3 text-base font-medium"
+            className="px-6 py-3 text-base font-medium"
           >
-            ✨ {ctaText}
+            {ctaText}
           </Button>
         </div>
       </div>

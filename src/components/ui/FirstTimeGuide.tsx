@@ -54,7 +54,7 @@ const FirstTimeGuide: React.FC<FirstTimeGuideProps> = ({
           : 'opacity-0 scale-95'
       }`}
     >
-      <div className="bg-card rounded-2xl shadow-sm border border-border p-6 sm:p-8 max-w-2xl mx-auto">
+      <div className="bg-card rounded-xl shadow-sm border border-border p-6 sm:p-8 max-w-2xl mx-auto">
         {/* Icon */}
         <div className="flex justify-center mb-4">
           <div className="bg-primary/10 p-4 rounded-full">
@@ -63,7 +63,7 @@ const FirstTimeGuide: React.FC<FirstTimeGuideProps> = ({
         </div>
 
         {/* Title & Description */}
-        <h3 className="text-xl sm:text-2xl font-bold text-foreground text-center mb-2">
+        <h3 className="text-lg sm:text-xl font-semibold text-foreground text-center mb-2">
           {title}
         </h3>
         <p className="text-muted-foreground text-center max-w-md mx-auto mb-6 text-sm sm:text-base">
@@ -89,7 +89,7 @@ const FirstTimeGuide: React.FC<FirstTimeGuideProps> = ({
             <button
               key={i}
               onClick={() => handleExampleClick(example)}
-              className="bg-primary/5 border border-primary/20 rounded-xl px-4 py-3 text-left text-sm text-primary hover:bg-primary/10 transition-colors cursor-pointer flex items-center gap-2"
+              className="bg-primary/5 border border-primary/20 rounded-lg px-4 py-3 text-left text-sm text-primary hover:bg-primary/10 transition-colors cursor-pointer flex items-center gap-2"
             >
               <span className="flex-1">"{example}"</span>
               <ArrowRight className="h-3.5 w-3.5 flex-shrink-0 opacity-50" />
@@ -102,9 +102,9 @@ const FirstTimeGuide: React.FC<FirstTimeGuideProps> = ({
           <Button
             onClick={handleDismiss}
             variant="cta"
-            className="rounded-xl px-6 py-3 text-base font-medium"
+            className="px-6 py-3 text-base font-medium"
           >
-            ✨ {ctaText}
+            {ctaText}
           </Button>
         </div>
       </div>

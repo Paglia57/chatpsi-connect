@@ -282,6 +282,13 @@ const ChatSidebar = () => {
   );
 
   if (isMobile) {
+    const bottomNavItems = [
+      { icon: Home, label: 'Início', path: '/app', exact: true },
+      { icon: ClipboardList, label: 'Evolução', path: '/app/evolucao', exact: false },
+      { icon: Users, label: 'Pacientes', path: '/app/pacientes', exact: false },
+      { icon: MessageCircle, label: 'Chat', path: '/chat', exact: true },
+    ];
+
     return (
       <>
         <div className="fixed top-0 left-0 right-0 z-50 h-14 bg-background border-b border-sidebar-border flex items-center px-4">
@@ -298,9 +305,36 @@ const ChatSidebar = () => {
           <div className="flex-1 flex justify-center">
             <img src="/logo.png" alt="ChatPsi" className="h-8" />
           </div>
-          <div className="w-10" /> {/* Spacer for centering */}
+          <div className="w-10" />
         </div>
-        <div className="h-14" /> {/* Push content below fixed header */}
+        <div className="h-14" />
+
+        {/* Bottom navigation */}
+        <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border flex items-center justify-around px-2 py-1 safe-area-bottom">
+          {bottomNavItems.map(item => {
+            const active = item.exact ? isActive(item.path) : isActivePrefix(item.path);
+            return (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                end={item.exact}
+                className={`flex flex-col items-center justify-center min-h-[44px] min-w-[44px] px-2 py-1 rounded-lg transition-colors ${
+                  active ? 'text-primary font-medium' : 'text-muted-foreground'
+                }`}
+              >
+                <item.icon className="h-5 w-5" />
+                <span className="text-[10px] mt-0.5 leading-none">{item.label}</span>
+              </NavLink>
+            );
+          })}
+          <button
+            onClick={() => setMobileOpen(true)}
+            className="flex flex-col items-center justify-center min-h-[44px] min-w-[44px] px-2 py-1 rounded-lg text-muted-foreground transition-colors"
+          >
+            <Menu className="h-5 w-5" />
+            <span className="text-[10px] mt-0.5 leading-none">Mais</span>
+          </button>
+        </nav>
       </>
     );
   }
@@ -330,7 +364,7 @@ const ChatSidebar = () => {
           </Avatar>
           <Separator className="w-6 my-1" />
           <NavLink to="/app" end title="Início"
-            className={`p-2 rounded-lg transition-colors ${isActive('/app') ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground hover:bg-sidebar-accent/50'}`}>
+            className={`p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg transition-colors ${isActive('/app') ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground hover:bg-sidebar-accent/50'}`}>
             <Home className="h-4 w-4" />
           </NavLink>
           <Separator className="w-6 my-1" />
@@ -339,7 +373,7 @@ const ChatSidebar = () => {
             { icon: Users, path: '/app/pacientes', title: 'Pacientes' },
           ].map(item => (
             <NavLink key={item.path} to={item.path} title={item.title}
-              className={`p-2 rounded-lg transition-colors ${isActive(item.path) || (item.path === '/app/evolucao' && isActive('/app/historico')) ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground hover:bg-sidebar-accent/50'}`}>
+              className={`p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg transition-colors ${isActive(item.path) || (item.path === '/app/evolucao' && isActive('/app/historico')) ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground hover:bg-sidebar-accent/50'}`}>
               <item.icon className="h-4 w-4" />
             </NavLink>
           ))}
@@ -350,44 +384,44 @@ const ChatSidebar = () => {
             { icon: BookOpen, path: '/busca-artigos', title: 'Artigos Científicos' },
           ].map(item => (
             <NavLink key={item.path} to={item.path} title={item.title}
-              className={`p-2 rounded-lg transition-colors ${isActive(item.path) ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground hover:bg-sidebar-accent/50'}`}>
+              className={`p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg transition-colors ${isActive(item.path) ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground hover:bg-sidebar-accent/50'}`}>
               <item.icon className="h-4 w-4" />
             </NavLink>
           ))}
           <Separator className="w-6 my-1" />
           <NavLink to="/marketing" title="IA de Marketing"
-            className={`p-2 rounded-lg transition-colors ${isActive('/marketing') ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground hover:bg-sidebar-accent/50'}`}>
+            className={`p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg transition-colors ${isActive('/marketing') ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground hover:bg-sidebar-accent/50'}`}>
             <PenTool className="h-4 w-4" />
           </NavLink>
           {isAdmin && (
             <>
               <Separator className="w-6 my-1" />
               <NavLink to="/admin" title="Administração"
-                className={`p-2 rounded-lg transition-colors ${isActive('/admin') ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground hover:bg-sidebar-accent/50'}`}>
+                className={`p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg transition-colors ${isActive('/admin') ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground hover:bg-sidebar-accent/50'}`}>
                 <Settings className="h-4 w-4" />
               </NavLink>
               <NavLink to="/admin/referrals" title="Validar Indicações"
-                className={`p-2 rounded-lg transition-colors ${isActive('/admin/referrals') ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground hover:bg-sidebar-accent/50'}`}>
+                className={`p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg transition-colors ${isActive('/admin/referrals') ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground hover:bg-sidebar-accent/50'}`}>
                 <Gift className="h-4 w-4" />
               </NavLink>
             </>
           )}
           <Separator className="w-6 my-1" />
           <NavLink to="/app/indicacoes" title="Indique e Ganhe"
-            className={`p-2 rounded-lg transition-colors ${isActive('/app/indicacoes') ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground hover:bg-sidebar-accent/50'}`}>
+            className={`p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg transition-colors ${isActive('/app/indicacoes') ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground hover:bg-sidebar-accent/50'}`}>
             <Gift className="h-4 w-4" />
           </NavLink>
 
           {/* Footer icons */}
           <div className="mt-auto space-y-1">
             <NavLink to="/app/perfil" title="Meu Perfil"
-              className="p-2 rounded-lg text-muted-foreground hover:text-foreground transition-colors block">
+              className="p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground transition-colors">
               <CircleUser className="h-4 w-4" />
             </NavLink>
             <Popover>
               <PopoverTrigger asChild>
                 <button title="Suporte"
-                  className="p-2 rounded-lg text-muted-foreground hover:text-foreground transition-colors block">
+                  className="p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground transition-colors">
                   <HelpCircle className="h-4 w-4" />
                 </button>
               </PopoverTrigger>
@@ -396,7 +430,7 @@ const ChatSidebar = () => {
               </PopoverContent>
             </Popover>
             <button onClick={signOut} title="Sair"
-              className="p-2 rounded-lg text-muted-foreground hover:text-foreground transition-colors block">
+              className="p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground transition-colors">
               <LogOut className="h-4 w-4" />
             </button>
           </div>

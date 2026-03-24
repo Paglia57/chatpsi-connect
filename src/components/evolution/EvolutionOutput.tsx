@@ -45,7 +45,7 @@ export default function EvolutionOutput({ content, isLoading, onRegenerate, onSa
     return (
       <Card className="border-border bg-card text-card-foreground shadow-sm">
         <CardHeader>
-          <CardTitle className="font-display text-xl text-foreground">Evolução</CardTitle>
+        <CardTitle className="font-display text-xl text-foreground">Evolução Clínica</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground">Analisando relato da sessão e estruturando a evolução clínica...</p>
@@ -68,7 +68,7 @@ export default function EvolutionOutput({ content, isLoading, onRegenerate, onSa
   return (
     <Card className="border-border bg-card text-card-foreground shadow-sm">
       <CardHeader>
-        <CardTitle className="font-display text-xl text-foreground">Evolução</CardTitle>
+        <CardTitle className="font-display text-xl text-foreground">Evolução Clínica</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         {isEditing ? (

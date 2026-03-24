@@ -223,7 +223,7 @@ export default function PatientDetailPage() {
                 <div
                   key={ev.id}
                   onClick={() => setSelectedEvo(ev)}
-                  className="p-3 rounded-lg border border-border hover:shadow-md transition-shadow cursor-pointer"
+                  className="p-3 rounded-lg border border-border bg-card hover:shadow-md transition-shadow cursor-pointer"
                 >
                   <div className="flex items-center gap-2 text-sm">
                     <span className="font-medium text-foreground">

@@ -236,7 +236,7 @@ export default function HistoryPage() {
         </div>
       ) : (
         <ScrollArea className="max-h-[calc(100vh-240px)]">
-          <div className="space-y-3">
+          <div className="space-y-2">
             {filtered.map(ev => (
               <Card
                 key={ev.id}

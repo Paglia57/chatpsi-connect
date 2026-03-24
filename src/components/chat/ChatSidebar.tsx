@@ -151,7 +151,7 @@ const ChatSidebar = () => {
           </Avatar>
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-sm text-sidebar-foreground truncate">
-              {profile?.nickname || profile?.full_name || 'Usuário'}
+              {profile?.nickname || profile?.full_name || 'Profissional'}
             </p>
             {profile?.subscription_active ? (
               <Badge variant="default" className="text-[10px] px-1.5 py-0 bg-success text-success-foreground">

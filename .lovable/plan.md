@@ -1,80 +1,81 @@
 
 
-# Plano de Refinamento Visual — Identidade Clínica Profissional
+# Plano de Hierarquia Visual e Consistência de Interface
 
-## Diagnóstico atual
+## Diagnóstico
 
-Após revisão dos arquivos, identifiquei os seguintes problemas visuais:
+Após revisão completa, o app já tem boa base: breadcrumbs, skeleton loaders, design tokens, sidebar funcional. Os problemas restantes são de **consistência** e **refinamento**:
 
-1. **Neutros frios**: `--muted`, `--border`, `--input` usam `0 0% X%` (cinza puro). Falta warmth.
-2. **Botões pesados**: default `h-12`, lg `h-14`, `shadow-md/lg`, `hover:scale`, `btn-hover-lift` em tudo — excessivo.
-3. **CTA magenta agressivo**: `322 100% 58%` com `shadow-lg hover:shadow-xl hover:scale-[1.02]` — muito chamativo.
-4. **Headings genéricos no CSS base**: `h1 text-4xl lg:text-5xl`, `h2 text-3xl lg:text-4xl` — enormes para app clínico.
-5. **Sidebar copy inconsistente**: "Planos de Ação" (deveria ser "Planos Terapêuticos"), fallback "Usuário".
-6. **`font-playfair` referenciado** no HomePage mas não existe no sistema — usar `font-display` (Inter).
-7. **Cards com `hover:shadow-lg hover:-translate-y-0.5`** — elevação exagerada.
-8. **`card-decorated::before`** com barra gradiente magenta→azul no topo — decoração sem função.
+1. **FirstTimeGuide**: `rounded-2xl` (deveria ser `rounded-xl`), CTA com emoji `✨` (deveria ser ícone Lucide), `text-2xl` no título (excessivo para guide inline)
+2. **Mobile header**: sem bottom nav — apenas hamburger menu (dificulta navegação entre sessões)
+3. **Card inconsistências**: alguns cards usam `shadow-sm`, outros não. PatientDetail evolutions não usam `bg-card`
+4. **Sidebar collapsed icons**: touch targets `p-2` (32px) — abaixo do mínimo 44px
+5. **EvolutionOutput**: título genérico "Evolução" sem contexto do paciente
+6. **Heading weights**: inconsistente — alguns `font-bold`, outros `font-semibold`
+7. **Spacing**: maioria OK com system, mas HistoryPage usa `space-y-6` no root com `space-y-3` nos cards (inconsistente com PatientsPage que usa `space-y-2`)
 
 ---
 
 ## Mudanças propostas
 
-### 1. Design Tokens (`src/index.css` — `:root`)
+### 1. FirstTimeGuide — consistência premium
 
-**Neutros quentes** (undertone azul-quente em vez de cinza puro):
-- `--muted: 0 0% 96%` → `220 14% 96%`
-- `--muted-foreground: 0 0% 45%` → `220 9% 46%`
-- `--border: 0 0% 90%` → `220 13% 91%`
-- `--input: 0 0% 90%` → `220 13% 91%`
+**Arquivo: `src/components/ui/FirstTimeGuide.tsx`**
+- `rounded-2xl` → `rounded-xl` (consistente com cards do sistema)
+- Título: `text-xl sm:text-2xl font-bold` → `text-lg sm:text-xl font-semibold` (hierarquia: guide < page title)
+- CTA: remover `✨` emoji hardcoded, manter apenas texto
+- CTA: remover `rounded-xl` inline (herda do button component `rounded-lg`)
+- Example buttons: `rounded-xl` → `rounded-lg`
 
-**CTA menos saturado**:
-- `--cta: 322 100% 58%` → `322 85% 46%` (magenta mais sóbrio, ainda distinto)
-- `--cta-hover: 322 100% 50%` → `322 85% 40%`
+### 2. Bottom navigation mobile
 
-**Headings base** — reduzir tamanhos globais (app, não landing page):
-- `h1: text-4xl lg:text-5xl` → `text-2xl lg:text-3xl`
-- `h2: text-3xl lg:text-4xl` → `text-xl lg:text-2xl`
-- `h3: text-2xl lg:text-3xl` → `text-lg lg:text-xl`
+**Arquivo: `src/components/chat/ChatSidebar.tsx`**
+- Adicionar bottom nav fixo no mobile com 5 itens: Início, Evolução, Pacientes, Chat, Mais (abre sheet)
+- Touch targets 44px (h-11 w-11 mínimo)
+- Ícones 20px (h-5 w-5) com label 10px abaixo
+- Active state: `text-primary font-medium`, inactive: `text-muted-foreground`
+- Background: `bg-background border-t border-border`
+- "Mais" abre o Sheet existente para acesso completo
 
-**Remover decorações sem função**:
-- `.card-decorated::before` (barra gradiente topo) — remover
-- `.bg-hero::before` e `::after` (dots e circle) — remover
+**Arquivo: `src/components/app/AppLayout.tsx`**
+- Adicionar `pb-16` no main quando mobile (espaço para bottom nav)
 
-### 2. Botões (`src/components/ui/button.tsx`)
+### 3. Sidebar collapsed — touch targets
 
-Reduzir peso visual mantendo toque profissional:
+**Arquivo: `src/components/chat/ChatSidebar.tsx`**
+- Collapsed nav icons: `p-2` → `p-2.5` (40px) + `min-h-[44px] min-w-[44px]` para garantir 44px touch target
+- Footer icons collapsed: mesmo tratamento
 
-- Base: `rounded-xl` → `rounded-lg`
-- Default size: `h-12 px-6 py-3` → `h-10 px-5 py-2`
-- SM: `h-10` → `h-9`
-- LG: `h-14 px-8` → `h-11 px-6`
-- Icon: `h-12 w-12` → `h-10 w-10`
-- Variant `default`: remover `shadow-md hover:shadow-lg btn-hover-lift` → `shadow-sm hover:shadow-md`
-- Variant `cta`: remover `shadow-lg hover:shadow-xl hover:scale-[1.02] btn-hover-lift` → `shadow-sm hover:shadow-md`
-- Variant `outline`: `border-2 border-cta text-cta` → `border border-input text-foreground hover:bg-accent hover:text-accent-foreground` (outline neutro, não magenta)
-- Variant `destructive`: remover `shadow-md hover:shadow-lg`
+### 4. Card consistency audit
 
-### 3. Cards — reduzir elevação
+**Arquivo: `src/pages/app/PatientDetailPage.tsx`**
+- Evolution items: adicionar `bg-card` explícito (já tem `border border-border`)
+- AI context card: já tem `shadow-sm` — OK
 
-**`src/index.css`**: `.card-hover` reduzir de `hover:shadow-lg hover:-translate-y-1` para `hover:shadow-md hover:-translate-y-px`
+**Arquivo: `src/pages/app/HistoryPage.tsx`**
+- Card list: `space-y-3` → `space-y-2` (consistente com PatientsPage)
 
-**`src/pages/app/HomePage.tsx`**: Shortcut cards `hover:shadow-lg hover:-translate-y-0.5` → `hover:shadow-md`
+**Arquivo: `src/components/marketing/MarketingInterface.tsx`**
+- Verificar se cards de histórico usam `shadow-sm border-border bg-card` consistentemente
 
-### 4. Sidebar (`src/components/chat/ChatSidebar.tsx`)
+### 5. Heading weight standardization
 
-Copy clínico:
-- Linha 218: "Planos de Ação" → "Planos Terapêuticos"
-- Linha 349: "Planos de Ação" (collapsed title) → "Planos Terapêuticos"
-- Linha 154: fallback "Usuário" → "Profissional"
+Regra: `font-semibold` em todo o app. Nunca `font-bold` em headings internos (reservado para métricas numéricas).
 
-### 5. HomePage (`src/pages/app/HomePage.tsx`)
+**Arquivos afetados:**
+- `src/pages/app/HomePage.tsx` linha 188: `font-bold` → `font-semibold`
+- `src/components/ui/FirstTimeGuide.tsx` linha 66: `font-bold` → `font-semibold`
 
-- Remover `font-playfair` das linhas 188 e 227 — usar classe padrão `font-display`
-- Hero card: trocar `border-0` por `border border-primary/20` para consistência
+### 6. EvolutionOutput — título contextual
 
-### 6. Input focus ring
+**Arquivo: `src/components/evolution/EvolutionOutput.tsx`**
+- Título "Evolução" → "Evolução Clínica" (mais claro, alinhado com o breadcrumb)
 
-**`src/components/ui/input.tsx`**: Já usa `focus-visible:ring-ring` que aponta para primary. OK, sem mudança.
+### 7. Mobile spacing refinement
+
+**Arquivo: `src/components/app/AppLayout.tsx`**
+- Main padding: `p-4 md:p-6 lg:p-8` — OK, mantém mobile-first
+- Adicionar `pb-20` no mobile para bottom nav clearance
 
 ---
 
@@ -82,10 +83,13 @@ Copy clínico:
 
 | Arquivo | Mudanças |
 |---|---|
-| `src/index.css` | Tokens de cor neutros, CTA, headings, remover decorações |
-| `src/components/ui/button.tsx` | Tamanhos, sombras, border-radius, outline variant |
-| `src/pages/app/HomePage.tsx` | font-playfair → font-display, card hover, hero border |
-| `src/components/chat/ChatSidebar.tsx` | "Planos de Ação" → "Planos Terapêuticos", "Usuário" → "Profissional" |
+| `src/components/ui/FirstTimeGuide.tsx` | rounded, heading size/weight, emoji CTA |
+| `src/components/chat/ChatSidebar.tsx` | Bottom nav mobile, touch targets collapsed |
+| `src/components/app/AppLayout.tsx` | Bottom padding mobile |
+| `src/pages/app/HomePage.tsx` | Heading weight |
+| `src/pages/app/HistoryPage.tsx` | Card spacing |
+| `src/pages/app/PatientDetailPage.tsx` | Card bg consistency |
+| `src/components/evolution/EvolutionOutput.tsx` | Título contextual |
 
-Nenhuma lógica de negócio alterada. Apenas tokens visuais, tamanhos e copy de navegação.
+Nenhuma lógica de negócio alterada. Apenas CSS, layout e hierarquia visual.
 

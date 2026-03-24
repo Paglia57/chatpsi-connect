@@ -384,7 +384,7 @@ const ChatSidebar = () => {
             { icon: BookOpen, path: '/busca-artigos', title: 'Artigos Científicos' },
           ].map(item => (
             <NavLink key={item.path} to={item.path} title={item.title}
-              className={`p-2 rounded-lg transition-colors ${isActive(item.path) ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground hover:bg-sidebar-accent/50'}`}>
+              className={`p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg transition-colors ${isActive(item.path) ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground hover:bg-sidebar-accent/50'}`}>
               <item.icon className="h-4 w-4" />
             </NavLink>
           ))}

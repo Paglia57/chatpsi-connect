@@ -307,15 +307,6 @@ Acessibilidade WCAG AA compliance
     @apply border-primary/20 bg-card shadow-lg ring-1 ring-primary/10 relative overflow-hidden;
   }
   
-  .card-decorated::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, hsl(var(--cta)), hsl(var(--primary)));
-  }
 
   /* Micro-interactions */
   .animate-fade-in {

@@ -346,7 +346,7 @@ const ChatSidebar = () => {
           <Separator className="w-6 my-1" />
           {[
             { icon: MessageCircle, path: '/chat', title: 'Chat Clínico' },
-            { icon: Target, path: '/busca-plano', title: 'Planos de Ação' },
+            { icon: Target, path: '/busca-plano', title: 'Planos Terapêuticos' },
             { icon: BookOpen, path: '/busca-artigos', title: 'Artigos Científicos' },
           ].map(item => (
             <NavLink key={item.path} to={item.path} title={item.title}

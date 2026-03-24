@@ -242,7 +242,7 @@ const HomePage = () => {
       {/* Shortcuts grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
         {shortcuts.map((item) => (
-          <Card key={item.path} className="cursor-pointer hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 group" onClick={() => navigate(item.path)}>
+          <Card key={item.path} className="cursor-pointer hover:shadow-md transition-all duration-200 group" onClick={() => navigate(item.path)}>
             <CardContent className="p-4 space-y-2">
               <div className="h-10 w-10 rounded-lg bg-accent flex items-center justify-center group-hover:bg-primary/10 transition-colors">
                 <item.icon className="h-5 w-5 text-accent-foreground" />

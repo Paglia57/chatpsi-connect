@@ -282,6 +282,13 @@ const ChatSidebar = () => {
   );
 
   if (isMobile) {
+    const bottomNavItems = [
+      { icon: Home, label: 'Início', path: '/app', exact: true },
+      { icon: ClipboardList, label: 'Evolução', path: '/app/evolucao', exact: false },
+      { icon: Users, label: 'Pacientes', path: '/app/pacientes', exact: false },
+      { icon: MessageCircle, label: 'Chat', path: '/chat', exact: true },
+    ];
+
     return (
       <>
         <div className="fixed top-0 left-0 right-0 z-50 h-14 bg-background border-b border-sidebar-border flex items-center px-4">
@@ -298,9 +305,36 @@ const ChatSidebar = () => {
           <div className="flex-1 flex justify-center">
             <img src="/logo.png" alt="ChatPsi" className="h-8" />
           </div>
-          <div className="w-10" /> {/* Spacer for centering */}
+          <div className="w-10" />
         </div>
-        <div className="h-14" /> {/* Push content below fixed header */}
+        <div className="h-14" />
+
+        {/* Bottom navigation */}
+        <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border flex items-center justify-around px-2 py-1 safe-area-bottom">
+          {bottomNavItems.map(item => {
+            const active = item.exact ? isActive(item.path) : isActivePrefix(item.path);
+            return (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                end={item.exact}
+                className={`flex flex-col items-center justify-center min-h-[44px] min-w-[44px] px-2 py-1 rounded-lg transition-colors ${
+                  active ? 'text-primary font-medium' : 'text-muted-foreground'
+                }`}
+              >
+                <item.icon className="h-5 w-5" />
+                <span className="text-[10px] mt-0.5 leading-none">{item.label}</span>
+              </NavLink>
+            );
+          })}
+          <button
+            onClick={() => setMobileOpen(true)}
+            className="flex flex-col items-center justify-center min-h-[44px] min-w-[44px] px-2 py-1 rounded-lg text-muted-foreground transition-colors"
+          >
+            <Menu className="h-5 w-5" />
+            <span className="text-[10px] mt-0.5 leading-none">Mais</span>
+          </button>
+        </nav>
       </>
     );
   }

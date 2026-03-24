@@ -415,7 +415,7 @@ const ChatSidebar = () => {
           {/* Footer icons */}
           <div className="mt-auto space-y-1">
             <NavLink to="/app/perfil" title="Meu Perfil"
-              className="p-2 rounded-lg text-muted-foreground hover:text-foreground transition-colors block">
+              className="p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground transition-colors">
               <CircleUser className="h-4 w-4" />
             </NavLink>
             <Popover>

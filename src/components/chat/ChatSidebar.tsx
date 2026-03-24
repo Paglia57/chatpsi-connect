@@ -390,7 +390,7 @@ const ChatSidebar = () => {
           ))}
           <Separator className="w-6 my-1" />
           <NavLink to="/marketing" title="IA de Marketing"
-            className={`p-2 rounded-lg transition-colors ${isActive('/marketing') ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground hover:bg-sidebar-accent/50'}`}>
+            className={`p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg transition-colors ${isActive('/marketing') ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground hover:bg-sidebar-accent/50'}`}>
             <PenTool className="h-4 w-4" />
           </NavLink>
           {isAdmin && (

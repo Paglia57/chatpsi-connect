@@ -26,10 +26,10 @@ Acessibilidade WCAG AA compliance
     --accent-light: 201 89% 95%;
     
     /* ChatPsi CTA - Dynamic Magenta for actions */
-    --cta: 322 100% 58%; /* #CF007C */
+    --cta: 322 85% 46%;
     --cta-foreground: 0 0% 100%;
-    --cta-hover: 322 100% 50%;
-    --cta-light: 322 100% 95%;
+    --cta-hover: 322 85% 40%;
+    --cta-light: 322 60% 95%;
 
     /* Semantic colors */
     --card: 0 0% 100%;

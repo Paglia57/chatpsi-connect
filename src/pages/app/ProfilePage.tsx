@@ -48,6 +48,8 @@ export default function ProfilePage() {
   const [whatsapp, setWhatsapp] = useState("");
   const [mainApproach, setMainApproach] = useState("");
   const [specialties, setSpecialties] = useState<string[]>([]);
+  const [outraSelected, setOutraSelected] = useState(false);
+  const [outraText, setOutraText] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   useEffect(() => {
@@ -64,7 +66,11 @@ export default function ProfilePage() {
           setCrp(data.crp || "");
           setWhatsapp(data.whatsapp || "");
           setMainApproach(data.main_approach || "");
-          setSpecialties(data.specialties || []);
+          const allSpecs = data.specialties || [];
+          const outraEntry = allSpecs.find((s: string) => s.startsWith('Outra:'));
+          setSpecialties(allSpecs.filter((s: string) => !s.startsWith('Outra:')));
+          setOutraSelected(!!outraEntry);
+          setOutraText(outraEntry?.replace('Outra: ', '') || '');
           setAvatarUrl(data.avatar_url);
         }
         setLoading(false);
@@ -73,6 +79,14 @@ export default function ProfilePage() {
 
   const toggleSpecialty = (s: string) => {
     setSpecialties(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]);
+  };
+
+  const getAllSpecialties = () => {
+    const all = [...specialties];
+    if (outraSelected && outraText.trim()) {
+      all.push(`Outra: ${outraText.trim()}`);
+    }
+    return all;
   };
 
   const handleSave = async () => {

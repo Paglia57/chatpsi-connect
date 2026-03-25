@@ -35,11 +35,27 @@ export default function StepProfile({ onNext, onSkip }: StepProfileProps) {
   const { user, profile } = useAuth();
   const [nickname, setNickname] = useState(profile?.nickname || '');
   const [approach, setApproach] = useState(profile?.main_approach || '');
-  const [selectedSpecialties, setSelectedSpecialties] = useState<string[]>(profile?.specialties || []);
+  const [selectedSpecialties, setSelectedSpecialties] = useState<string[]>(
+    (profile?.specialties || []).filter(s => !s.startsWith('Outra:'))
+  );
+  const [outraSelected, setOutraSelected] = useState(
+    (profile?.specialties || []).some(s => s.startsWith('Outra:'))
+  );
+  const [outraText, setOutraText] = useState(
+    (profile?.specialties || []).find(s => s.startsWith('Outra:'))?.replace('Outra: ', '') || ''
+  );
   const [saving, setSaving] = useState(false);
 
   const toggleSpecialty = (s: string) => {
     setSelectedSpecialties(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]);
+  };
+
+  const getAllSpecialties = () => {
+    const all = [...selectedSpecialties];
+    if (outraSelected && outraText.trim()) {
+      all.push(`Outra: ${outraText.trim()}`);
+    }
+    return all;
   };
 
   const handleContinue = async () => {

@@ -1,81 +1,45 @@
 
 
-# Plano de Hierarquia Visual e Consistência de Interface
+# Plano de Ajustes — CID-11, DSM-5-TR, Gravação de Áudio, Áreas de Atuação e Marketing
 
-## Diagnóstico
+## 1. Atualizar CID-10 → CID-11 e DSM-5 → DSM-5-TR
 
-Após revisão completa, o app já tem boa base: breadcrumbs, skeleton loaders, design tokens, sidebar funcional. Os problemas restantes são de **consistência** e **refinamento**:
+**Arquivos**: `PatientFormDialog.tsx`, `PatientDetailPage.tsx`
 
-1. **FirstTimeGuide**: `rounded-2xl` (deveria ser `rounded-xl`), CTA com emoji `✨` (deveria ser ícone Lucide), `text-2xl` no título (excessivo para guide inline)
-2. **Mobile header**: sem bottom nav — apenas hamburger menu (dificulta navegação entre sessões)
-3. **Card inconsistências**: alguns cards usam `shadow-sm`, outros não. PatientDetail evolutions não usam `bg-card`
-4. **Sidebar collapsed icons**: touch targets `p-2` (32px) — abaixo do mínimo 44px
-5. **EvolutionOutput**: título genérico "Evolução" sem contexto do paciente
-6. **Heading weights**: inconsistente — alguns `font-bold`, outros `font-semibold`
-7. **Spacing**: maioria OK com system, mas HistoryPage usa `space-y-6` no root com `space-y-3` nos cards (inconsistente com PatientsPage que usa `space-y-2`)
+- Label "Hipótese diagnóstica (CID-10)" → "Hipótese diagnóstica (CID-11)"
+- Label "Hipótese diagnóstica (DSM-5)" → "Hipótese diagnóstica (DSM-5-TR)"
+- Placeholder "Ex: F41.1" mantém (CID-11 usa mesmos códigos F)
+- Placeholder "Ex: 300.02" → "Ex: Transtorno de ansiedade generalizada" (DSM-5-TR usa nomes descritivos)
+- Campo `cid_10` e `dsm_5` no código e banco permanecem iguais (apenas labels visuais mudam)
 
----
+## 2. Gravação de áudio no módulo de Evolução e Onboarding
 
-## Mudanças propostas
+**Arquivos**: `EvolutionInput.tsx`, `StepEvolution.tsx`
 
-### 1. FirstTimeGuide — consistência premium
+Atualmente ambos suportam apenas **upload** de arquivo de áudio. Adicionar botão de **gravação direta** usando o hook `useAudioRecording` já existente no projeto.
 
-**Arquivo: `src/components/ui/FirstTimeGuide.tsx`**
-- `rounded-2xl` → `rounded-xl` (consistente com cards do sistema)
-- Título: `text-xl sm:text-2xl font-bold` → `text-lg sm:text-xl font-semibold` (hierarquia: guide < page title)
-- CTA: remover `✨` emoji hardcoded, manter apenas texto
-- CTA: remover `rounded-xl` inline (herda do button component `rounded-lg`)
-- Example buttons: `rounded-xl` → `rounded-lg`
+Na aba "Áudio da Sessão":
+- Quando sem arquivo: mostrar **dois botões** lado a lado: "Gravar áudio" (ícone Mic) e "Enviar arquivo" (ícone Upload)
+- Ao clicar "Gravar áudio": substituir área pelo estado de gravação com timer, botão parar (Stop) e cancelar
+- Ao parar: o arquivo gravado preenche o `audioFile` como se tivesse sido feito upload
+- Manter o drag-and-drop e upload de arquivo como alternativa
+- Mesma lógica nos dois componentes (EvolutionInput e StepEvolution)
 
-### 2. Bottom navigation mobile
+## 3. Campo "Outra" com input de texto nas Áreas de Atuação
 
-**Arquivo: `src/components/chat/ChatSidebar.tsx`**
-- Adicionar bottom nav fixo no mobile com 5 itens: Início, Evolução, Pacientes, Chat, Mais (abre sheet)
-- Touch targets 44px (h-11 w-11 mínimo)
-- Ícones 20px (h-5 w-5) com label 10px abaixo
-- Active state: `text-primary font-medium`, inactive: `text-muted-foreground`
-- Background: `bg-background border-t border-border`
-- "Mais" abre o Sheet existente para acesso completo
+**Arquivos**: `ProfilePage.tsx`, `StepProfile.tsx`
 
-**Arquivo: `src/components/app/AppLayout.tsx`**
-- Adicionar `pb-16` no main quando mobile (espaço para bottom nav)
+- Adicionar opção "Outra" na lista de checkboxes de SPECIALTIES
+- Quando "Outra" estiver selecionada, exibir um `Input` abaixo com placeholder "Digite sua área de atuação"
+- O texto digitado é salvo como item adicional no array `specialties` (ex: `["Ansiedade", "Outra: Neuropsicologia"]`)
+- Ao desmarcar "Outra", limpar o campo e remover do array
 
-### 3. Sidebar collapsed — touch targets
+## 4. Observação "edite antes de salvar" no conteúdo gerado (Marketing)
 
-**Arquivo: `src/components/chat/ChatSidebar.tsx`**
-- Collapsed nav icons: `p-2` → `p-2.5` (40px) + `min-h-[44px] min-w-[44px]` para garantir 44px touch target
-- Footer icons collapsed: mesmo tratamento
+**Arquivo**: `MarketingInterface.tsx`
 
-### 4. Card consistency audit
-
-**Arquivo: `src/pages/app/PatientDetailPage.tsx`**
-- Evolution items: adicionar `bg-card` explícito (já tem `border border-border`)
-- AI context card: já tem `shadow-sm` — OK
-
-**Arquivo: `src/pages/app/HistoryPage.tsx`**
-- Card list: `space-y-3` → `space-y-2` (consistente com PatientsPage)
-
-**Arquivo: `src/components/marketing/MarketingInterface.tsx`**
-- Verificar se cards de histórico usam `shadow-sm border-border bg-card` consistentemente
-
-### 5. Heading weight standardization
-
-Regra: `font-semibold` em todo o app. Nunca `font-bold` em headings internos (reservado para métricas numéricas).
-
-**Arquivos afetados:**
-- `src/pages/app/HomePage.tsx` linha 188: `font-bold` → `font-semibold`
-- `src/components/ui/FirstTimeGuide.tsx` linha 66: `font-bold` → `font-semibold`
-
-### 6. EvolutionOutput — título contextual
-
-**Arquivo: `src/components/evolution/EvolutionOutput.tsx`**
-- Título "Evolução" → "Evolução Clínica" (mais claro, alinhado com o breadcrumb)
-
-### 7. Mobile spacing refinement
-
-**Arquivo: `src/components/app/AppLayout.tsx`**
-- Main padding: `p-4 md:p-6 lg:p-8` — OK, mantém mobile-first
-- Adicionar `pb-20` no mobile para bottom nav clearance
+- Adicionar helper text abaixo do label "Conteúdo gerado (editável)": `<p className="text-xs text-muted-foreground">Edite antes de salvar</p>`
+- O placeholder atual já diz "Edite antes de publicar" — atualizar para "Edite antes de salvar" para consistência com o CTA
 
 ---
 
@@ -83,13 +47,11 @@ Regra: `font-semibold` em todo o app. Nunca `font-bold` em headings internos (re
 
 | Arquivo | Mudanças |
 |---|---|
-| `src/components/ui/FirstTimeGuide.tsx` | rounded, heading size/weight, emoji CTA |
-| `src/components/chat/ChatSidebar.tsx` | Bottom nav mobile, touch targets collapsed |
-| `src/components/app/AppLayout.tsx` | Bottom padding mobile |
-| `src/pages/app/HomePage.tsx` | Heading weight |
-| `src/pages/app/HistoryPage.tsx` | Card spacing |
-| `src/pages/app/PatientDetailPage.tsx` | Card bg consistency |
-| `src/components/evolution/EvolutionOutput.tsx` | Título contextual |
-
-Nenhuma lógica de negócio alterada. Apenas CSS, layout e hierarquia visual.
+| `src/components/patients/PatientFormDialog.tsx` | Labels CID-11, DSM-5-TR |
+| `src/pages/app/PatientDetailPage.tsx` | Labels CID-11, DSM-5-TR (se exibidos) |
+| `src/components/evolution/EvolutionInput.tsx` | Botão gravar áudio com useAudioRecording |
+| `src/components/onboarding/StepEvolution.tsx` | Botão gravar áudio com useAudioRecording |
+| `src/pages/app/ProfilePage.tsx` | Checkbox "Outra" + Input texto |
+| `src/components/onboarding/StepProfile.tsx` | Checkbox "Outra" + Input texto |
+| `src/components/marketing/MarketingInterface.tsx` | Helper "Edite antes de salvar" |
 

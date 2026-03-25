@@ -85,7 +85,7 @@ export default function StepProfile({ onNext, onSkip }: StepProfileProps) {
     }
   };
 
-  const showConfirmation = approach && selectedSpecialties.length > 0;
+  const showConfirmation = approach && getAllSpecialties().length > 0;
 
   return (
     <div className="max-w-lg mx-auto space-y-6 px-4">

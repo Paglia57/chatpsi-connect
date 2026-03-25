@@ -7,7 +7,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { AutoTextarea } from '@/components/ui/auto-textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Sparkles, Search, FileText, CheckCircle, Mic, Upload, X } from 'lucide-react';
+import { Loader2, Sparkles, Search, FileText, CheckCircle, Mic, Upload, X, Square } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/components/auth/AuthProvider';
+import { toast } from 'sonner';
+import { useAudioRecording } from '@/hooks/useAudioRecording';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { toast } from 'sonner';

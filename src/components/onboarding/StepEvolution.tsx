@@ -51,6 +51,7 @@ export default function StepEvolution({ selectedApproach, createdPatient, onNext
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const recording = useAudioRecording();
 
   useEffect(() => {
     if (!isGenerating) return;

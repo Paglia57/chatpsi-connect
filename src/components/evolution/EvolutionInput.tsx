@@ -63,6 +63,7 @@ export default function EvolutionInput({ onGenerate, isLoading, trialReached }: 
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const recording = useAudioRecording();
 
   const ACCEPTED_AUDIO = ".mp3,.m4a,.wav,.ogg,.webm";
 

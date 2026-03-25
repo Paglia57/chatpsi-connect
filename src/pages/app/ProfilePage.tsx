@@ -233,7 +233,25 @@ export default function ProfilePage() {
                   <span className="text-sm text-foreground">{s}</span>
                 </label>
               ))}
+              <label className="flex items-center gap-2 cursor-pointer">
+                <Checkbox
+                  checked={outraSelected}
+                  onCheckedChange={(checked) => {
+                    setOutraSelected(!!checked);
+                    if (!checked) setOutraText('');
+                  }}
+                />
+                <span className="text-sm text-foreground">Outra</span>
+              </label>
             </div>
+            {outraSelected && (
+              <Input
+                value={outraText}
+                onChange={e => setOutraText(e.target.value)}
+                placeholder="Digite sua área de atuação"
+                className="mt-2"
+              />
+            )}
             <p className="text-xs text-muted-foreground">A IA priorizará conteúdos e sugestões dessas áreas</p>
           </div>
 

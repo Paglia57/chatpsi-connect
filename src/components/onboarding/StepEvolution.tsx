@@ -286,23 +286,59 @@ export default function StepEvolution({ selectedApproach, createdPatient, onNext
                   </div>
                   <audio controls src={URL.createObjectURL(audioFile)} className="w-full" />
                 </div>
+              ) : recording.state === 'recording' ? (
+                <div className="border border-primary/30 bg-primary/5 rounded-lg p-6 space-y-4">
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="h-12 w-12 rounded-full bg-destructive/10 flex items-center justify-center animate-pulse">
+                      <Mic className="h-6 w-6 text-destructive" />
+                    </div>
+                    <p className="text-lg font-medium text-foreground font-mono">{recording.formatDuration(recording.duration)}</p>
+                    <p className="text-xs text-muted-foreground">Gravando áudio da sessão...</p>
+                  </div>
+                  <div className="flex gap-3 justify-center">
+                    <Button variant="outline" size="sm" onClick={() => { recording.cancelRecording(); }}>
+                      <X className="h-4 w-4 mr-1" /> Cancelar
+                    </Button>
+                    <Button variant="cta" size="sm" onClick={async () => {
+                      const result = await recording.stopRecording();
+                      if (result) setAudioFile(result.file);
+                    }}>
+                      <Square className="h-4 w-4 mr-1" /> Parar gravação
+                    </Button>
+                  </div>
+                </div>
               ) : (
-                <div
-                  onDragOver={e => { e.preventDefault(); setIsDragging(true); }}
-                  onDragLeave={() => setIsDragging(false)}
-                  onDrop={handleDrop}
-                  onClick={() => fileInputRef.current?.click()}
-                  className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
-                    isDragging ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground"
-                  }`}
-                >
-                  <Upload className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
-                  <p className="text-sm font-medium text-foreground">
-                    Arraste o áudio aqui ou clique para selecionar
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Formatos: .mp3, .m4a, .wav, .ogg, .webm — até 15MB
-                  </p>
+                <div className="space-y-3">
+                  <div className="flex gap-3">
+                    <Button
+                      variant="outline"
+                      className="flex-1 h-20 flex-col gap-2"
+                      onClick={async () => { await recording.startRecording(); }}
+                    >
+                      <Mic className="h-6 w-6 text-primary" />
+                      <span className="text-sm">Gravar áudio</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="flex-1 h-20 flex-col gap-2"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      <Upload className="h-6 w-6 text-muted-foreground" />
+                      <span className="text-sm">Enviar arquivo</span>
+                    </Button>
+                  </div>
+                  <div
+                    onDragOver={e => { e.preventDefault(); setIsDragging(true); }}
+                    onDragLeave={() => setIsDragging(false)}
+                    onDrop={handleDrop}
+                    className={`border-2 border-dashed rounded-lg p-4 text-center transition-colors ${
+                      isDragging ? "border-primary bg-primary/5" : "border-border"
+                    }`}
+                  >
+                    <p className="text-xs text-muted-foreground">
+                      Ou arraste um arquivo de áudio aqui — .mp3, .m4a, .wav, .ogg, .webm (até 15MB)
+                    </p>
+                  </div>
                   <input
                     ref={fileInputRef}
                     type="file"

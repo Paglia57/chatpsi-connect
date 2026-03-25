@@ -101,7 +101,7 @@ export default function ProfilePage() {
           crp: crp || null,
           whatsapp: whatsapp || null,
           main_approach: mainApproach || null,
-          specialties: specialties.length > 0 ? specialties : null,
+          specialties: getAllSpecialties().length > 0 ? getAllSpecialties() : null,
         })
         .eq("user_id", user.id);
       if (error) throw error;

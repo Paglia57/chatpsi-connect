@@ -261,14 +261,14 @@ export default function PatientFormDialog({ open, onOpenChange, editData, onSave
                 <Label>Queixa principal</Label>
                 <Textarea value={form.main_complaint} onChange={e => set("main_complaint", e.target.value)} placeholder="Ex: Ansiedade generalizada, dificuldade de relacionamento" rows={3} />
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Hipótese diagnóstica (CID-10)</Label>
+                  <Label>Hipótese diagnóstica (CID-11)</Label>
                   <Input value={form.cid_10} onChange={e => set("cid_10", e.target.value)} placeholder="Ex: F41.1" />
                 </div>
                 <div className="space-y-2">
-                  <Label>Hipótese diagnóstica (DSM-5)</Label>
-                  <Input value={form.dsm_5} onChange={e => set("dsm_5", e.target.value)} placeholder="Ex: 300.02" />
+                  <Label>Hipótese diagnóstica (DSM-5-TR)</Label>
+                  <Input value={form.dsm_5} onChange={e => set("dsm_5", e.target.value)} placeholder="Ex: Transtorno de ansiedade generalizada" />
                 </div>
               </div>
               <div className="space-y-2">

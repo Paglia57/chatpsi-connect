@@ -48,6 +48,8 @@ export default function ProfilePage() {
   const [whatsapp, setWhatsapp] = useState("");
   const [mainApproach, setMainApproach] = useState("");
   const [specialties, setSpecialties] = useState<string[]>([]);
+  const [outraSelected, setOutraSelected] = useState(false);
+  const [outraText, setOutraText] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   useEffect(() => {
@@ -64,7 +66,11 @@ export default function ProfilePage() {
           setCrp(data.crp || "");
           setWhatsapp(data.whatsapp || "");
           setMainApproach(data.main_approach || "");
-          setSpecialties(data.specialties || []);
+          const allSpecs = data.specialties || [];
+          const outraEntry = allSpecs.find((s: string) => s.startsWith('Outra:'));
+          setSpecialties(allSpecs.filter((s: string) => !s.startsWith('Outra:')));
+          setOutraSelected(!!outraEntry);
+          setOutraText(outraEntry?.replace('Outra: ', '') || '');
           setAvatarUrl(data.avatar_url);
         }
         setLoading(false);
@@ -73,6 +79,14 @@ export default function ProfilePage() {
 
   const toggleSpecialty = (s: string) => {
     setSpecialties(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]);
+  };
+
+  const getAllSpecialties = () => {
+    const all = [...specialties];
+    if (outraSelected && outraText.trim()) {
+      all.push(`Outra: ${outraText.trim()}`);
+    }
+    return all;
   };
 
   const handleSave = async () => {
@@ -87,7 +101,7 @@ export default function ProfilePage() {
           crp: crp || null,
           whatsapp: whatsapp || null,
           main_approach: mainApproach || null,
-          specialties: specialties.length > 0 ? specialties : null,
+          specialties: getAllSpecialties().length > 0 ? getAllSpecialties() : null,
         })
         .eq("user_id", user.id);
       if (error) throw error;
@@ -219,7 +233,25 @@ export default function ProfilePage() {
                   <span className="text-sm text-foreground">{s}</span>
                 </label>
               ))}
+              <label className="flex items-center gap-2 cursor-pointer">
+                <Checkbox
+                  checked={outraSelected}
+                  onCheckedChange={(checked) => {
+                    setOutraSelected(!!checked);
+                    if (!checked) setOutraText('');
+                  }}
+                />
+                <span className="text-sm text-foreground">Outra</span>
+              </label>
             </div>
+            {outraSelected && (
+              <Input
+                value={outraText}
+                onChange={e => setOutraText(e.target.value)}
+                placeholder="Digite sua área de atuação"
+                className="mt-2"
+              />
+            )}
             <p className="text-xs text-muted-foreground">A IA priorizará conteúdos e sugestões dessas áreas</p>
           </div>
 

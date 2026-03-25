@@ -35,15 +35,32 @@ export default function StepProfile({ onNext, onSkip }: StepProfileProps) {
   const { user, profile } = useAuth();
   const [nickname, setNickname] = useState(profile?.nickname || '');
   const [approach, setApproach] = useState(profile?.main_approach || '');
-  const [selectedSpecialties, setSelectedSpecialties] = useState<string[]>(profile?.specialties || []);
+  const [selectedSpecialties, setSelectedSpecialties] = useState<string[]>(
+    (profile?.specialties || []).filter(s => !s.startsWith('Outra:'))
+  );
+  const [outraSelected, setOutraSelected] = useState(
+    (profile?.specialties || []).some(s => s.startsWith('Outra:'))
+  );
+  const [outraText, setOutraText] = useState(
+    (profile?.specialties || []).find(s => s.startsWith('Outra:'))?.replace('Outra: ', '') || ''
+  );
   const [saving, setSaving] = useState(false);
 
   const toggleSpecialty = (s: string) => {
     setSelectedSpecialties(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]);
   };
 
+  const getAllSpecialties = () => {
+    const all = [...selectedSpecialties];
+    if (outraSelected && outraText.trim()) {
+      all.push(`Outra: ${outraText.trim()}`);
+    }
+    return all;
+  };
+
   const handleContinue = async () => {
-    if (selectedSpecialties.length === 0) {
+    const allSpecs = getAllSpecialties();
+    if (allSpecs.length === 0) {
       toast.error('Selecione ao menos uma área de atuação para personalizar a IA');
       return;
     }
@@ -55,12 +72,12 @@ export default function StepProfile({ onNext, onSkip }: StepProfileProps) {
         .update({
           nickname: nickname || null,
           main_approach: approach || null,
-          specialties: selectedSpecialties,
+          specialties: allSpecs,
           onboarding_step: 1,
         })
         .eq('user_id', user.id);
       if (error) throw error;
-      onNext(approach, selectedSpecialties);
+      onNext(approach, allSpecs);
     } catch (err: any) {
       toast.error('Erro ao salvar: ' + (err.message || 'Erro desconhecido'));
     } finally {
@@ -68,7 +85,7 @@ export default function StepProfile({ onNext, onSkip }: StepProfileProps) {
     }
   };
 
-  const showConfirmation = approach && selectedSpecialties.length > 0;
+  const showConfirmation = approach && getAllSpecialties().length > 0;
 
   return (
     <div className="max-w-lg mx-auto space-y-6 px-4">
@@ -116,11 +133,36 @@ export default function StepProfile({ onNext, onSkip }: StepProfileProps) {
                 );
               })}
             </div>
+
+            {/* Outra option */}
+            <label
+              className={`flex items-center gap-2 cursor-pointer px-2.5 py-1.5 rounded-lg border transition-all duration-200 col-span-2 ${
+                outraSelected
+                  ? 'bg-primary/10 border-primary/30 scale-[1.02]'
+                  : 'border-transparent hover:bg-muted/50'
+              }`}
+            >
+              <Checkbox checked={outraSelected} onCheckedChange={(checked) => {
+                setOutraSelected(!!checked);
+                if (!checked) setOutraText('');
+              }} />
+              <span className="text-sm text-foreground">Outra</span>
+            </label>
+            {outraSelected && (
+              <div className="col-span-2">
+                <Input
+                  value={outraText}
+                  onChange={e => setOutraText(e.target.value)}
+                  placeholder="Digite sua área de atuação"
+                  className="mt-1"
+                />
+              </div>
+            )}
           </div>
 
           {showConfirmation && (
             <p className="text-sm text-success animate-fade-in">
-              ✓ A IA vai priorizar conteúdos sobre {selectedSpecialties.join(', ')} com foco em {approach} para você.
+              ✓ A IA vai priorizar conteúdos sobre {getAllSpecialties().join(', ')} com foco em {approach} para você.
             </p>
           )}
         </CardContent>

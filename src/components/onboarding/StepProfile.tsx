@@ -133,11 +133,36 @@ export default function StepProfile({ onNext, onSkip }: StepProfileProps) {
                 );
               })}
             </div>
+
+            {/* Outra option */}
+            <label
+              className={`flex items-center gap-2 cursor-pointer px-2.5 py-1.5 rounded-lg border transition-all duration-200 col-span-2 ${
+                outraSelected
+                  ? 'bg-primary/10 border-primary/30 scale-[1.02]'
+                  : 'border-transparent hover:bg-muted/50'
+              }`}
+            >
+              <Checkbox checked={outraSelected} onCheckedChange={(checked) => {
+                setOutraSelected(!!checked);
+                if (!checked) setOutraText('');
+              }} />
+              <span className="text-sm text-foreground">Outra</span>
+            </label>
+            {outraSelected && (
+              <div className="col-span-2">
+                <Input
+                  value={outraText}
+                  onChange={e => setOutraText(e.target.value)}
+                  placeholder="Digite sua área de atuação"
+                  className="mt-1"
+                />
+              </div>
+            )}
           </div>
 
           {showConfirmation && (
             <p className="text-sm text-success animate-fade-in">
-              ✓ A IA vai priorizar conteúdos sobre {selectedSpecialties.join(', ')} com foco em {approach} para você.
+              ✓ A IA vai priorizar conteúdos sobre {getAllSpecialties().join(', ')} com foco em {approach} para você.
             </p>
           )}
         </CardContent>

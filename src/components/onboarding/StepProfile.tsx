@@ -59,7 +59,8 @@ export default function StepProfile({ onNext, onSkip }: StepProfileProps) {
   };
 
   const handleContinue = async () => {
-    if (selectedSpecialties.length === 0) {
+    const allSpecs = getAllSpecialties();
+    if (allSpecs.length === 0) {
       toast.error('Selecione ao menos uma área de atuação para personalizar a IA');
       return;
     }

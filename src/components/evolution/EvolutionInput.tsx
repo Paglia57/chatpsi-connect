@@ -13,9 +13,6 @@ import PatientSelector, { type SelectedPatient } from "@/components/patients/Pat
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useAudioRecording } from "@/hooks/useAudioRecording";
-import PatientSelector, { type SelectedPatient } from "@/components/patients/PatientSelector";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/components/auth/AuthProvider";
 
 const APPROACHES = [
   "TCC (Terapia Cognitivo-Comportamental)",

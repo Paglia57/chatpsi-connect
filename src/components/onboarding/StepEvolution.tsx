@@ -12,9 +12,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { toast } from 'sonner';
 import { useAudioRecording } from '@/hooks/useAudioRecording';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/components/auth/AuthProvider';
-import { toast } from 'sonner';
 
 const DURATIONS = ["30min", "40min", "50min", "60min"];
 const SESSION_TYPES = ["Presencial", "Online"];

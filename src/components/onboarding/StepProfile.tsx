@@ -72,7 +72,7 @@ export default function StepProfile({ onNext, onSkip }: StepProfileProps) {
         .update({
           nickname: nickname || null,
           main_approach: approach || null,
-          specialties: selectedSpecialties,
+          specialties: allSpecs,
           onboarding_step: 1,
         })
         .eq('user_id', user.id);

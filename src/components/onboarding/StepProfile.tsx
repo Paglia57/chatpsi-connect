@@ -77,7 +77,7 @@ export default function StepProfile({ onNext, onSkip }: StepProfileProps) {
         })
         .eq('user_id', user.id);
       if (error) throw error;
-      onNext(approach, selectedSpecialties);
+      onNext(approach, allSpecs);
     } catch (err: any) {
       toast.error('Erro ao salvar: ' + (err.message || 'Erro desconhecido'));
     } finally {

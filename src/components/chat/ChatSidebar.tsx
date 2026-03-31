@@ -250,12 +250,16 @@ const ChatSidebar = () => {
           </>
         )}
 
-        {/* INDIQUE E GANHE - todos os usuários */}
-        <Separator className="my-3" />
-        <NavLink to="/app/indicacoes" onClick={onNavigate} className={navLinkClass(isActive('/app/indicacoes'))}>
-          <Gift className="h-4 w-4 shrink-0" />
-          <span>Indique e Ganhe</span>
-        </NavLink>
+        {/* INDIQUE E GANHE - todos os usuários (somente se habilitado) */}
+        {referralEnabled && (
+          <>
+            <Separator className="my-3" />
+            <NavLink to="/app/indicacoes" onClick={onNavigate} className={navLinkClass(isActive('/app/indicacoes'))}>
+              <Gift className="h-4 w-4 shrink-0" />
+              <span>Indique e Ganhe</span>
+            </NavLink>
+          </>
+        )}
       </div>
 
       {/* Footer - always visible */}

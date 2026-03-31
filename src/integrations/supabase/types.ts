@@ -463,6 +463,36 @@ export type Database = {
         }
         Relationships: []
       }
+      referral_settings: {
+        Row: {
+          banner_button_text: string
+          banner_description: string
+          banner_title: string
+          enabled: boolean
+          id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          banner_button_text?: string
+          banner_description?: string
+          banner_title?: string
+          enabled?: boolean
+          id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          banner_button_text?: string
+          banner_description?: string
+          banner_title?: string
+          enabled?: boolean
+          id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null

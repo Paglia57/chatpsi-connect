@@ -5,21 +5,35 @@ import { Input } from '@/components/ui/input';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useReferralSettings } from '@/hooks/useReferralSettings';
 import { Gift, CheckCircle, Loader2 } from 'lucide-react';
 
-const RedeemBanner = () => {
+interface RedeemBannerProps {
+  /** Preview mode: skips eligibility checks and uses provided overrides */
+  preview?: boolean;
+  previewTitle?: string;
+  previewDescription?: string;
+  previewButtonText?: string;
+}
+
+const RedeemBanner = ({ preview, previewTitle, previewDescription, previewButtonText }: RedeemBannerProps) => {
   const { user, profile, isAdmin } = useAuth();
   const { toast } = useToast();
-  const [eligible, setEligible] = useState<boolean | null>(null);
+  const settings = useReferralSettings();
+  const [eligible, setEligible] = useState<boolean | null>(preview ? true : null);
   const [code, setCode] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [redeemed, setRedeemed] = useState(false);
 
+  const title = preview ? (previewTitle ?? settings.bannerTitle) : settings.bannerTitle;
+  const description = preview ? (previewDescription ?? settings.bannerDescription) : settings.bannerDescription;
+  const buttonText = preview ? (previewButtonText ?? settings.bannerButtonText) : settings.bannerButtonText;
+
   useEffect(() => {
+    if (preview) return;
     if (!user || !profile) return;
 
     const checkEligibility = async () => {
-      // Check account age < 7 days via profiles table
       const { data: profileData } = await supabase
         .from('profiles')
         .select('created_at')
@@ -45,7 +59,6 @@ const RedeemBanner = () => {
         return;
       }
 
-      // Check if already redeemed
       const { data, error } = await supabase
         .from('referral_redemptions')
         .select('id')
@@ -61,9 +74,12 @@ const RedeemBanner = () => {
     };
 
     checkEligibility();
-  }, [user, profile]);
+  }, [user, profile, preview]);
 
-  if (eligible === null || (eligible === false && !isAdmin)) return null;
+  // If not preview mode, respect the enabled flag
+  if (!preview && !settings.enabled) return null;
+
+  if (!preview && (eligible === null || (eligible === false && !isAdmin))) return null;
 
   if (redeemed) {
     return (
@@ -79,7 +95,7 @@ const RedeemBanner = () => {
   }
 
   const handleRedeem = async () => {
-    if (!code.trim()) return;
+    if (preview || !code.trim()) return;
     setSubmitting(true);
 
     try {
@@ -119,10 +135,10 @@ const RedeemBanner = () => {
       <CardContent className="p-4 space-y-3">
         <div className="flex items-center gap-2">
           <Gift className="h-4 w-4 text-cta" />
-          <span className="text-sm font-semibold text-foreground">Foi indicado por alguém?</span>
+          <span className="text-sm font-semibold text-foreground">{title}</span>
         </div>
         <p className="text-xs text-muted-foreground">
-          Insira o código de quem te indicou e resgate seu prêmio.
+          {description}
         </p>
         <div className="flex gap-2">
           <Input
@@ -131,14 +147,15 @@ const RedeemBanner = () => {
             onChange={(e) => setCode(e.target.value.toUpperCase())}
             className="font-mono uppercase"
             maxLength={8}
+            disabled={preview}
           />
           <Button
             size="sm"
             onClick={handleRedeem}
-            disabled={submitting || !code.trim()}
+            disabled={preview || submitting || !code.trim()}
             className="whitespace-nowrap"
           >
-            {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Resgatar'}
+            {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : buttonText}
           </Button>
         </div>
       </CardContent>

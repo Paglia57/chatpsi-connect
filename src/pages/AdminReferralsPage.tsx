@@ -5,6 +5,10 @@ import AppBreadcrumb from "@/components/ui/AppBreadcrumb";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -13,7 +17,9 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { CheckCircle, XCircle, Trophy, Medal, Award, Loader2 } from 'lucide-react';
+import { CheckCircle, XCircle, Trophy, Medal, Award, Loader2, Settings, Eye } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
+import RedeemBanner from '@/components/referral/RedeemBanner';
 
 interface Redemption {
   id: string;
@@ -32,11 +38,11 @@ interface RankingEntry {
   total_redeemed: number;
 }
 
-// Cache for profile lookups
 const profileCache: Record<string, { name: string; email: string }> = {};
 
 const AdminReferralsContent = () => {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   
   const [pendingRedemptions, setPendingRedemptions] = useState<Redemption[]>([]);
   const [allRedemptions, setAllRedemptions] = useState<Redemption[]>([]);
@@ -45,6 +51,61 @@ const AdminReferralsContent = () => {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+
+  // Settings state
+  const [settingsLoading, setSettingsLoading] = useState(true);
+  const [settingsSaving, setSettingsSaving] = useState(false);
+  const [settingsEnabled, setSettingsEnabled] = useState(true);
+  const [settingsTitle, setSettingsTitle] = useState('Foi indicado por alguém?');
+  const [settingsDescription, setSettingsDescription] = useState('Insira o código de quem te indicou e resgate seu prêmio.');
+  const [settingsButtonText, setSettingsButtonText] = useState('Resgatar');
+
+  const fetchSettings = async () => {
+    setSettingsLoading(true);
+    try {
+      const { data } = await supabase
+        .from('referral_settings' as any)
+        .select('*')
+        .limit(1)
+        .single();
+
+      if (data) {
+        const row = data as any;
+        setSettingsEnabled(row.enabled ?? true);
+        setSettingsTitle(row.banner_title ?? 'Foi indicado por alguém?');
+        setSettingsDescription(row.banner_description ?? 'Insira o código de quem te indicou e resgate seu prêmio.');
+        setSettingsButtonText(row.banner_button_text ?? 'Resgatar');
+      }
+    } catch {
+      // Use defaults
+    } finally {
+      setSettingsLoading(false);
+    }
+  };
+
+  const saveSettings = async () => {
+    setSettingsSaving(true);
+    try {
+      const { error } = await (supabase.from('referral_settings' as any) as any)
+        .update({
+          enabled: settingsEnabled,
+          banner_title: settingsTitle,
+          banner_description: settingsDescription,
+          banner_button_text: settingsButtonText,
+          updated_at: new Date().toISOString(),
+        })
+        .neq('id', '00000000-0000-0000-0000-000000000000'); // update all rows
+
+      if (error) throw error;
+
+      queryClient.invalidateQueries({ queryKey: ['referral-settings'] });
+      toast({ title: 'Configurações salvas!' });
+    } catch (err: any) {
+      toast({ title: 'Erro ao salvar', description: err.message, variant: 'destructive' });
+    } finally {
+      setSettingsSaving(false);
+    }
+  };
 
   const fetchProfiles = async (userIds: string[]) => {
     const uncached = userIds.filter(id => !profileCache[id]);
@@ -69,20 +130,17 @@ const AdminReferralsContent = () => {
   const fetchAll = async () => {
     setLoading(true);
     try {
-      // Fetch pending
       const { data: pending } = await supabase
         .from('referral_redemptions')
         .select('*')
         .eq('status', 'pending')
         .order('created_at', { ascending: true });
 
-      // Fetch all
       const { data: all } = await supabase
         .from('referral_redemptions')
         .select('*')
         .order('created_at', { ascending: false });
 
-      // Fetch ranking
       const { data: rank } = await supabase
         .from('referral_codes')
         .select('user_id, code, total_redeemed')
@@ -93,7 +151,6 @@ const AdminReferralsContent = () => {
       setAllRedemptions(all || []);
       setRanking(rank || []);
 
-      // Collect all user IDs for name resolution
       const userIds = new Set<string>();
       (pending || []).forEach(r => { userIds.add(r.referrer_id); userIds.add(r.redeemed_by); });
       (all || []).forEach(r => { userIds.add(r.referrer_id); userIds.add(r.redeemed_by); if (r.validated_by) userIds.add(r.validated_by); });
@@ -109,7 +166,7 @@ const AdminReferralsContent = () => {
     }
   };
 
-  useEffect(() => { fetchAll(); }, []);
+  useEffect(() => { fetchAll(); fetchSettings(); }, []);
 
   const handleApprove = async (id: string) => {
     setActionLoading(id);
@@ -195,6 +252,10 @@ const AdminReferralsContent = () => {
             </TabsTrigger>
             <TabsTrigger value="history">Histórico</TabsTrigger>
             <TabsTrigger value="ranking">Ranking</TabsTrigger>
+            <TabsTrigger value="settings" className="gap-1.5">
+              <Settings className="h-3.5 w-3.5" />
+              Configurações
+            </TabsTrigger>
           </TabsList>
 
           {/* Tab 1: Queue */}
@@ -339,6 +400,98 @@ const AdminReferralsContent = () => {
                     ))}
                   </TableBody>
                 </Table>
+              </div>
+            )}
+          </TabsContent>
+
+          {/* Tab 4: Settings */}
+          <TabsContent value="settings">
+            {settingsLoading ? (
+              <div className="space-y-4">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+            ) : (
+              <div className="grid gap-6 lg:grid-cols-2">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Configurações do Programa</CardTitle>
+                    <CardDescription>Controle o programa de indicação e personalize os textos do banner.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    {/* Toggle */}
+                    <div className="flex items-center justify-between rounded-lg border p-4">
+                      <div className="space-y-0.5">
+                        <Label className="text-base font-medium">Programa ativo</Label>
+                        <p className="text-sm text-muted-foreground">
+                          {settingsEnabled
+                            ? 'O programa está visível para todos os usuários.'
+                            : 'O programa está oculto. Nenhum usuário verá banners ou notificações.'}
+                        </p>
+                      </div>
+                      <Switch
+                        checked={settingsEnabled}
+                        onCheckedChange={setSettingsEnabled}
+                      />
+                    </div>
+
+                    {/* Text fields */}
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="banner-title">Título do banner</Label>
+                        <Input
+                          id="banner-title"
+                          value={settingsTitle}
+                          onChange={(e) => setSettingsTitle(e.target.value)}
+                          placeholder="Foi indicado por alguém?"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="banner-description">Descrição do banner</Label>
+                        <Input
+                          id="banner-description"
+                          value={settingsDescription}
+                          onChange={(e) => setSettingsDescription(e.target.value)}
+                          placeholder="Insira o código de quem te indicou e resgate seu prêmio."
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="banner-button">Texto do botão</Label>
+                        <Input
+                          id="banner-button"
+                          value={settingsButtonText}
+                          onChange={(e) => setSettingsButtonText(e.target.value)}
+                          placeholder="Resgatar"
+                        />
+                      </div>
+                    </div>
+
+                    <Button onClick={saveSettings} disabled={settingsSaving} className="w-full">
+                      {settingsSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                      Salvar configurações
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                {/* Preview */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Eye className="h-4 w-4" />
+                      Preview do banner
+                    </CardTitle>
+                    <CardDescription>Visualize como o banner aparecerá para os usuários.</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <RedeemBanner
+                      preview
+                      previewTitle={settingsTitle}
+                      previewDescription={settingsDescription}
+                      previewButtonText={settingsButtonText}
+                    />
+                  </CardContent>
+                </Card>
               </div>
             )}
           </TabsContent>

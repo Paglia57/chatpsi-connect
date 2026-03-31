@@ -23,6 +23,7 @@ const ChatSidebar = () => {
   const { open } = useSidebar();
   const { user, profile, isAdmin, signOut } = useAuth();
   const { isMobile } = useResponsive();
+  const { enabled: referralEnabled } = useReferralSettings();
   const location = useLocation();
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);

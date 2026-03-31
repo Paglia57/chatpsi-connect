@@ -412,11 +412,15 @@ const ChatSidebar = () => {
               </NavLink>
             </>
           )}
-          <Separator className="w-6 my-1" />
-          <NavLink to="/app/indicacoes" title="Indique e Ganhe"
-            className={`p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg transition-colors ${isActive('/app/indicacoes') ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground hover:bg-sidebar-accent/50'}`}>
-            <Gift className="h-4 w-4" />
-          </NavLink>
+          {referralEnabled && (
+            <>
+              <Separator className="w-6 my-1" />
+              <NavLink to="/app/indicacoes" title="Indique e Ganhe"
+                className={`p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg transition-colors ${isActive('/app/indicacoes') ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground hover:bg-sidebar-accent/50'}`}>
+                <Gift className="h-4 w-4" />
+              </NavLink>
+            </>
+          )}
 
           {/* Footer icons */}
           <div className="mt-auto space-y-1">

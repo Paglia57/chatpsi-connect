@@ -17,6 +17,7 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
 import { useResponsive } from '@/hooks/useResponsive';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useReferralSettings } from '@/hooks/useReferralSettings';
 
 const ChatSidebar = () => {
   const { open } = useSidebar();

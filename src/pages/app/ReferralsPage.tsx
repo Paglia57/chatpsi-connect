@@ -7,12 +7,14 @@ import { Input } from '@/components/ui/input';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Copy, Share2, Gift, Users, Loader2 } from 'lucide-react';
+import { useReferralSettings } from '@/hooks/useReferralSettings';
+import { Copy, Share2, Gift, Users, Loader2, AlertCircle } from 'lucide-react';
 import RedeemBanner from '@/components/referral/RedeemBanner';
 
 const ReferralsPage = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { enabled, loading: settingsLoading } = useReferralSettings();
   const [code, setCode] = useState<string | null>(null);
   const [totalRedeemed, setTotalRedeemed] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -69,7 +71,7 @@ const ReferralsPage = () => {
     }
   };
 
-  if (loading) {
+  if (loading || settingsLoading) {
     return (
       <div className="max-w-2xl mx-auto space-y-6">
         <Skeleton className="h-5 w-40" />
@@ -78,6 +80,21 @@ const ReferralsPage = () => {
           <Skeleton className="h-4 w-full" />
         </div>
         <Skeleton className="h-48 w-full rounded-lg" />
+      </div>
+    );
+  }
+
+  if (!enabled) {
+    return (
+      <div className="max-w-2xl mx-auto space-y-6 animate-fade-in">
+        <AppBreadcrumb items={[{ label: "Indique e Ganhe" }]} />
+        <Card>
+          <CardContent className="py-12 text-center text-muted-foreground">
+            <AlertCircle className="h-12 w-12 mx-auto mb-3 text-muted-foreground/50" />
+            <p className="font-medium">Programa de indicações temporariamente desativado</p>
+            <p className="text-sm mt-1">Voltaremos em breve com novidades. Fique ligado!</p>
+          </CardContent>
+        </Card>
       </div>
     );
   }

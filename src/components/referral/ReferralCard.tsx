@@ -4,11 +4,13 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useReferralSettings } from '@/hooks/useReferralSettings';
 import { Copy, Share2, Gift, Users, Loader2 } from 'lucide-react';
 
 const ReferralCard = () => {
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
   const { toast } = useToast();
+  const { enabled, loading: settingsLoading } = useReferralSettings();
   const [code, setCode] = useState<string | null>(null);
   const [totalRedeemed, setTotalRedeemed] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -39,12 +41,15 @@ const ReferralCard = () => {
     fetchCode();
   }, [user]);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-4">
-        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-      </div>
-    );
+  if (!enabled || loading || settingsLoading) {
+    if (loading || settingsLoading) {
+      return (
+        <div className="flex items-center justify-center py-4">
+          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+        </div>
+      );
+    }
+    return null;
   }
 
   if (!code) return null;

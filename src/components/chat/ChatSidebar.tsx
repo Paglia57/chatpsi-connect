@@ -17,11 +17,13 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
 import { useResponsive } from '@/hooks/useResponsive';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useReferralSettings } from '@/hooks/useReferralSettings';
 
 const ChatSidebar = () => {
   const { open } = useSidebar();
   const { user, profile, isAdmin, signOut } = useAuth();
   const { isMobile } = useResponsive();
+  const { enabled: referralEnabled } = useReferralSettings();
   const location = useLocation();
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -248,12 +250,16 @@ const ChatSidebar = () => {
           </>
         )}
 
-        {/* INDIQUE E GANHE - todos os usuários */}
-        <Separator className="my-3" />
-        <NavLink to="/app/indicacoes" onClick={onNavigate} className={navLinkClass(isActive('/app/indicacoes'))}>
-          <Gift className="h-4 w-4 shrink-0" />
-          <span>Indique e Ganhe</span>
-        </NavLink>
+        {/* INDIQUE E GANHE - todos os usuários (somente se habilitado) */}
+        {referralEnabled && (
+          <>
+            <Separator className="my-3" />
+            <NavLink to="/app/indicacoes" onClick={onNavigate} className={navLinkClass(isActive('/app/indicacoes'))}>
+              <Gift className="h-4 w-4 shrink-0" />
+              <span>Indique e Ganhe</span>
+            </NavLink>
+          </>
+        )}
       </div>
 
       {/* Footer - always visible */}
@@ -406,11 +412,15 @@ const ChatSidebar = () => {
               </NavLink>
             </>
           )}
-          <Separator className="w-6 my-1" />
-          <NavLink to="/app/indicacoes" title="Indique e Ganhe"
-            className={`p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg transition-colors ${isActive('/app/indicacoes') ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground hover:bg-sidebar-accent/50'}`}>
-            <Gift className="h-4 w-4" />
-          </NavLink>
+          {referralEnabled && (
+            <>
+              <Separator className="w-6 my-1" />
+              <NavLink to="/app/indicacoes" title="Indique e Ganhe"
+                className={`p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg transition-colors ${isActive('/app/indicacoes') ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground hover:bg-sidebar-accent/50'}`}>
+                <Gift className="h-4 w-4" />
+              </NavLink>
+            </>
+          )}
 
           {/* Footer icons */}
           <div className="mt-auto space-y-1">

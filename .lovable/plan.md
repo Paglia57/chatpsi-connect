@@ -1,57 +1,79 @@
 
 
-# Plano de Ajustes — CID-11, DSM-5-TR, Gravação de Áudio, Áreas de Atuação e Marketing
+# Plano — Configurações Admin do Programa de Indicação
 
-## 1. Atualizar CID-10 → CID-11 e DSM-5 → DSM-5-TR
+## Resumo
 
-**Arquivos**: `PatientFormDialog.tsx`, `PatientDetailPage.tsx`
+Criar uma tabela `referral_settings` com uma única linha que controla: ativo/inativo, textos do banner. Os componentes de referral leem essa config e se ocultam quando desativado. O painel admin ganha uma nova aba "Configurações" com toggle, campos de texto e preview ao vivo.
 
-- Label "Hipótese diagnóstica (CID-10)" → "Hipótese diagnóstica (CID-11)"
-- Label "Hipótese diagnóstica (DSM-5)" → "Hipótese diagnóstica (DSM-5-TR)"
-- Placeholder "Ex: F41.1" mantém (CID-11 usa mesmos códigos F)
-- Placeholder "Ex: 300.02" → "Ex: Transtorno de ansiedade generalizada" (DSM-5-TR usa nomes descritivos)
-- Campo `cid_10` e `dsm_5` no código e banco permanecem iguais (apenas labels visuais mudam)
+## 1. Nova tabela `referral_settings`
 
-## 2. Gravação de áudio no módulo de Evolução e Onboarding
+```sql
+CREATE TABLE public.referral_settings (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  enabled boolean NOT NULL DEFAULT true,
+  banner_title text NOT NULL DEFAULT 'Foi indicado por alguém?',
+  banner_description text NOT NULL DEFAULT 'Insira o código de quem te indicou e resgate seu prêmio.',
+  banner_button_text text NOT NULL DEFAULT 'Resgatar',
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  updated_by uuid
+);
 
-**Arquivos**: `EvolutionInput.tsx`, `StepEvolution.tsx`
+-- Seed com valores padrão
+INSERT INTO referral_settings (id) VALUES (gen_random_uuid());
 
-Atualmente ambos suportam apenas **upload** de arquivo de áudio. Adicionar botão de **gravação direta** usando o hook `useAudioRecording` já existente no projeto.
+-- RLS
+ALTER TABLE public.referral_settings ENABLE ROW LEVEL SECURITY;
 
-Na aba "Áudio da Sessão":
-- Quando sem arquivo: mostrar **dois botões** lado a lado: "Gravar áudio" (ícone Mic) e "Enviar arquivo" (ícone Upload)
-- Ao clicar "Gravar áudio": substituir área pelo estado de gravação com timer, botão parar (Stop) e cancelar
-- Ao parar: o arquivo gravado preenche o `audioFile` como se tivesse sido feito upload
-- Manter o drag-and-drop e upload de arquivo como alternativa
-- Mesma lógica nos dois componentes (EvolutionInput e StepEvolution)
+-- Todos authenticated podem ler (necessário para exibir o banner)
+CREATE POLICY "Anyone can read referral settings"
+  ON public.referral_settings FOR SELECT TO authenticated
+  USING (true);
 
-## 3. Campo "Outra" com input de texto nas Áreas de Atuação
+-- Apenas admins podem atualizar
+CREATE POLICY "Admins can update referral settings"
+  ON public.referral_settings FOR UPDATE TO authenticated
+  USING (public.is_admin())
+  WITH CHECK (public.is_admin());
+```
 
-**Arquivos**: `ProfilePage.tsx`, `StepProfile.tsx`
+## 2. Hook `useReferralSettings`
 
-- Adicionar opção "Outra" na lista de checkboxes de SPECIALTIES
-- Quando "Outra" estiver selecionada, exibir um `Input` abaixo com placeholder "Digite sua área de atuação"
-- O texto digitado é salvo como item adicional no array `specialties` (ex: `["Ansiedade", "Outra: Neuropsicologia"]`)
-- Ao desmarcar "Outra", limpar o campo e remover do array
+Novo arquivo `src/hooks/useReferralSettings.ts`:
+- Busca a única linha de `referral_settings` via `supabase.from('referral_settings').select('*').single()`
+- Usa `useQuery` do React Query com staleTime longo (5 min) para cache
+- Retorna `{ enabled, bannerTitle, bannerDescription, bannerButtonText, loading }`
 
-## 4. Observação "edite antes de salvar" no conteúdo gerado (Marketing)
+## 3. Componentes de referral — respeitar `enabled`
 
-**Arquivo**: `MarketingInterface.tsx`
+**`RedeemBanner.tsx`**: Consumir `useReferralSettings`. Se `enabled === false`, retornar `null`. Usar os textos dinâmicos (`bannerTitle`, `bannerDescription`, `bannerButtonText`) em vez dos hardcoded.
 
-- Adicionar helper text abaixo do label "Conteúdo gerado (editável)": `<p className="text-xs text-muted-foreground">Edite antes de salvar</p>`
-- O placeholder atual já diz "Edite antes de publicar" — atualizar para "Edite antes de salvar" para consistência com o CTA
+**`ReferralCard.tsx`**: Consumir `useReferralSettings`. Se `enabled === false`, retornar `null`.
 
----
+**`ReferralNotificationPoller.tsx`**: Consumir `useReferralSettings`. Se `enabled === false`, não fazer polling.
+
+**`ReferralsPage.tsx`**: Consumir `useReferralSettings`. Se `enabled === false`, mostrar mensagem "Programa de indicações temporariamente desativado".
+
+**`ChatSidebar.tsx`**: Consumir `useReferralSettings`. Se `enabled === false`, ocultar o item "Indique e Ganhe" da sidebar (tanto expandida quanto collapsed).
+
+## 4. Painel admin — nova aba "Configurações"
+
+**`AdminReferralsPage.tsx`**: Adicionar 4a tab "Configurações" nas `Tabs` existentes:
+- Toggle Switch para ligar/desligar o programa
+- Campos Input para título, descrição e texto do botão
+- Preview ao vivo do banner (renderiza `RedeemBanner` em modo preview com os textos digitados, sem lógica de eligibilidade)
+- Botão "Salvar" que faz `supabase.from('referral_settings').update(...)` e invalida o cache do React Query
 
 ## Arquivos a modificar
 
 | Arquivo | Mudanças |
 |---|---|
-| `src/components/patients/PatientFormDialog.tsx` | Labels CID-11, DSM-5-TR |
-| `src/pages/app/PatientDetailPage.tsx` | Labels CID-11, DSM-5-TR (se exibidos) |
-| `src/components/evolution/EvolutionInput.tsx` | Botão gravar áudio com useAudioRecording |
-| `src/components/onboarding/StepEvolution.tsx` | Botão gravar áudio com useAudioRecording |
-| `src/pages/app/ProfilePage.tsx` | Checkbox "Outra" + Input texto |
-| `src/components/onboarding/StepProfile.tsx` | Checkbox "Outra" + Input texto |
-| `src/components/marketing/MarketingInterface.tsx` | Helper "Edite antes de salvar" |
+| Migration SQL | Criar tabela `referral_settings` + seed + RLS |
+| `src/hooks/useReferralSettings.ts` | Novo hook |
+| `src/components/referral/RedeemBanner.tsx` | Ler settings, textos dinâmicos, prop `preview` |
+| `src/components/referral/ReferralCard.tsx` | Ler `enabled`, ocultar se false |
+| `src/components/referral/ReferralNotificationPoller.tsx` | Ler `enabled`, parar polling se false |
+| `src/pages/app/ReferralsPage.tsx` | Ler `enabled`, empty state se false |
+| `src/components/chat/ChatSidebar.tsx` | Ler `enabled`, ocultar menu item |
+| `src/pages/AdminReferralsPage.tsx` | Nova aba Configurações com toggle, inputs e preview |
 

@@ -103,7 +103,14 @@ serve(async (req) => {
       documento: documento ?? null,
     };
 
-    const webhookUrl = Deno.env.get('WEBHOOK_ENDPOINT_URL') || 'https://n8n.seconsult.com.br/webhook-test/chatprincipal';
+    const webhookUrl = Deno.env.get('WEBHOOK_ENDPOINT_URL');
+    if (!webhookUrl) {
+      console.error('WEBHOOK_ENDPOINT_URL not configured');
+      return new Response(
+        JSON.stringify({ error: 'Configuração inválida: URL do webhook não definida' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
     const webhookSecret = Deno.env.get('WEBHOOK_SECRET');
 
     const headers: Record<string, string> = {

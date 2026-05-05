@@ -38,13 +38,7 @@ serve(async (req) => {
       );
     }
 
-    // Prevent script injection
-    if (/<script|javascript:|onerror=/i.test(input_text)) {
-      return new Response(
-        JSON.stringify({ error: 'Caracteres inválidos detectados' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    // Output is rendered safely by React (auto-escaping); no input-side regex filter needed.
 
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL')!,

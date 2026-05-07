@@ -95,6 +95,60 @@ TOM E LINGUAGEM (CRÍTICO):
 - Mantenha tom consultivo e descritivo, NUNCA prescritivo.
 - Os alertas (campos "alertas") podem usar linguagem informativa sobre cálculo (ex: "Faturamento abaixo de R$ 5.000 — os custos fixos do PJ tornam a PF mais vantajosa nos cálculos") sem prescrever ação.
 
+UNIDADES E FORMATOS (CRÍTICO):
+- cargaTributariaPercent: número DECIMAL entre 0 e 1 (ex: 9,29% = 0.0929). NUNCA retorne 9.29.
+- aliquotaEfetiva: idem, decimal (ex: 6% = 0.06).
+- fatorR: idem, decimal (ex: 28% = 0.28).
+- Todos os outros campos numéricos são em REAIS (R$), com 2 casas decimais quando aplicável.
+
+EXEMPLOS NUMÉRICOS RESOLVIDOS (use estes valores como gabarito de calibração):
+
+Caso A — faturamento R$ 4.000, atuação PF, prioridade ECONOMIA, sem refinamento:
+  PF 11%:
+    inssMensal = 178.31 (fixo)
+    despesasDedutiveisMensais = 0
+    deducaoIRAplicada = 607.20 (desconto simplificado, maior que 0)
+    usouDescontoSimplificado = true
+    baseIRPF = 4000 - 178.31 - 607.20 = 3214.49
+    IR pela tabela: faixa "até R$ 3.751,05" → 15%, dedução 394.16
+      → 3214.49 × 0.15 - 394.16 = 482.17 - 394.16 = 88.01
+    Redutor reforma (renda mensal 4000 ≤ 5000) → 312.89
+    irpfMensal = max(0, 88.01 - 312.89) = 0
+    totalDescontosMensais = 178.31 + 0 = 178.31
+    liquidoMensal = 4000 - 178.31 = 3821.69
+    cargaTributariaPercent = 178.31 / 4000 = 0.0446 (decimal! ≈ 4,46%)
+
+  PF 20%:
+    inssMensal = 0.20 × max(min(4000, 8475.55), 1621) = 0.20 × 4000 = 800.00
+    deducaoIRAplicada = 607.20
+    baseIRPF = 4000 - 800 - 607.20 = 2592.80
+    IR pela tabela: faixa "até R$ 2.826,65" → 7,5%, dedução 182.16
+      → 2592.80 × 0.075 - 182.16 = 194.46 - 182.16 = 12.30
+    Redutor reforma → 312.89
+    irpfMensal = max(0, 12.30 - 312.89) = 0
+    totalDescontosMensais = 800 + 0 = 800
+    liquidoMensal = 4000 - 800 = 3200.00
+    cargaTributariaPercent = 800 / 4000 = 0.20 (≈ 20%)
+
+  PJ Simples:
+    proLabore = max(1621, 4000 × 0.28) = max(1621, 1120) = 1621
+    rbt12 = 4000 × 12 = 48000
+    Anexo III faixa 1 (até 180000): alíquota 6%, dedução 0
+    aliquotaEfetiva = (48000 × 0.06 - 0) / 48000 = 0.06
+    dasMensal = 4000 × 0.06 = 240.00
+    inssProLabore = 0.11 × 1621 = 178.31
+    irrfProLabore: base = 1621 - 178.31 = 1442.69 → faixa "até 2428.80" isento → 0
+    custoContador = 200
+    totalDescontosMensais = 240 + 178.31 + 0 + 200 = 618.31
+    liquidoMensal = 4000 - 618.31 = 3381.69 (NÃO subtrair pró-labore: ele volta pro sócio)
+    cargaTributariaPercent = 618.31 / 4000 = 0.1546 (≈ 15,46%)
+
+  Vencedor: PF 11% (líquido 3821.69 > PJ 3381.69 > PF 20% 3200.00)
+
+REGRA OBRIGATÓRIA: aplique SEMPRE o redutor da reforma 2026 no IRPF. Para renda mensal até R$ 5.000, o redutor de R$ 312,89 ZERA praticamente qualquer IR mensal pequeno. Se o IR pela tabela tradicional for ≤ R$ 312,89 e a renda mensal ≤ R$ 5.000, o irpfMensal final É ZERO.
+
+REGRA OBRIGATÓRIA: liquidoMensal do PJ = faturamento − dasMensal − inssProLabore − irrfProLabore − custoContador. Não inclua o pró-labore como desconto. Não inclua o contador duas vezes.
+
 FORMATO DE RESPOSTA:
 Responda APENAS com JSON válido conforme o schema. Sem texto fora do JSON. Sem markdown. Apenas o objeto JSON puro.
 Para textos consultivos (titulo, subtitulo, alertas, observacao), use linguagem clara, direta e em português brasileiro. Trate o psicólogo como "você".`;

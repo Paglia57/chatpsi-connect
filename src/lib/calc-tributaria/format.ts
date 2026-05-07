@@ -39,7 +39,11 @@ export function formatBRLCompact(valor: number): string {
 
 export function formatPercent(fracao: number, casas = 2): string {
   if (!isFinite(fracao)) return '0%';
-  return percent.format(fracao).replace(/(,\d{2,})/, (m) => {
+  // Defensive: a IA pode retornar o valor já em percentual (ex: 9.29 em vez
+  // de 0.0929). Como a carga tributária real nunca passa de 100% (1.0),
+  // qualquer valor > 1 é tratado como já-em-percentual e dividido por 100.
+  const valorDecimal = fracao > 1 ? fracao / 100 : fracao;
+  return percent.format(valorDecimal).replace(/(,\d{2,})/, (m) => {
     const inteiro = m.slice(0, casas + 1);
     return inteiro;
   });

@@ -18,7 +18,7 @@ interface CenariosComparativoProps {
 const TITULOS: Record<TipoCenario, { titulo: string; subtitulo: string }> = {
   PF_11: { titulo: 'PF · INSS 11%', subtitulo: 'Plano Simplificado' },
   PF_20: { titulo: 'PF · INSS 20%', subtitulo: 'Plano Normal (teto)' },
-  PJ_SIMPLES: { titulo: 'PJ · Simples Nacional', subtitulo: 'Anexo III ou V' },
+  PJ_SIMPLES: { titulo: 'PJ · Simples Nacional', subtitulo: 'Anexo III' },
 };
 
 export default function CenariosComparativo({
@@ -119,9 +119,19 @@ function CenarioCard({
                 valor={`− ${formatBRL(cenario.dasMensal)}`}
               />
               <Row
-                label="Pró-labore (líquido)"
-                valor={`− ${formatBRL(cenario.inssProLabore + cenario.irrfProLabore)}`}
+                label="Pró-labore (bruto)"
+                valor={formatBRL(cenario.proLabore)}
               />
+              <Row
+                label="INSS s/ pró-labore"
+                valor={`− ${formatBRL(cenario.inssProLabore)}`}
+              />
+              {cenario.irrfProLabore > 0 && (
+                <Row
+                  label="IR s/ pró-labore"
+                  valor={`− ${formatBRL(cenario.irrfProLabore)}`}
+                />
+              )}
               <Row
                 label="Contador"
                 valor={`− ${formatBRL(cenario.custoContador)}`}

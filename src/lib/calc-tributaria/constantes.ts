@@ -57,6 +57,13 @@ export const SIMPLES_ANEXO_V: FaixaSimples[] = [
 export const FATOR_R_LIMITE = 0.28;
 export const LIMITE_SIMPLES_ANUAL = 4800000;
 
+// Alíquota de INSS sobre pró-labore — contribuinte individual, plano simplificado.
+export const ALIQUOTA_INSS_PROLABORE = 0.11;
+
+// Faturamento mensal a partir do qual 28% já fica acima do salário mínimo.
+// Abaixo desse ponto, o pró-labore é forçado para o salário mínimo.
+export const PONTO_VIRADA_PROLABORE = SALARIO_MINIMO_2026 / FATOR_R_LIMITE; // ≈ 5789.29
+
 // Tabela INSS empregado/pró-labore (progressiva, 2026).
 export interface FaixaInssEmpregado {
   ate: number;

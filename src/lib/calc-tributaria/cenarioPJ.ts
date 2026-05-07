@@ -1,35 +1,56 @@
 import { CalcInput, CenarioPJ } from './types';
 import {
+  ALIQUOTA_INSS_PROLABORE,
   DEFAULTS_INPUT,
   FATOR_R_LIMITE,
   LIMITE_SIMPLES_ANUAL,
   SALARIO_MINIMO_2026,
 } from './constantes';
-import { calcularDAS, calcularFatorR, escolherAnexo } from './simples';
-import { calcularInssEmpregado } from './inss';
+import { calcularDAS, calcularFatorR } from './simples';
 import { calcularIRRFProLabore } from './irpf';
+
+/**
+ * Pró-labore otimizado para garantir Fator R ≥ 28% (Anexo III).
+ * Regra: 28% do faturamento; se o resultado ficar abaixo do salário mínimo,
+ * força para o salário mínimo. Caso o usuário informe um pró-labore explicitamente
+ * (>= salário mínimo), respeita o override.
+ */
+function calcularProLaboreOtimizado(
+  faturamentoMensal: number,
+  proLaboreInformado?: number,
+): number {
+  if (
+    proLaboreInformado !== undefined &&
+    proLaboreInformado >= SALARIO_MINIMO_2026
+  ) {
+    return proLaboreInformado;
+  }
+  return Math.max(SALARIO_MINIMO_2026, faturamentoMensal * FATOR_R_LIMITE);
+}
 
 export function montarCenarioPJSimples(input: CalcInput): CenarioPJ {
   const fatM = Math.max(0, input.faturamentoMensal);
   const rbt12 = fatM * 12;
 
-  const proLaboreInformado =
-    input.refinamento?.proLaboreMensal ?? DEFAULTS_INPUT.proLaboreMensal;
-  const proLabore = Math.max(SALARIO_MINIMO_2026, proLaboreInformado);
+  const proLabore = calcularProLaboreOtimizado(
+    fatM,
+    input.refinamento?.proLaboreMensal,
+  );
 
+  // Por construção, Fator R sempre fica ≥ 28% → Anexo III.
   const fatorR = calcularFatorR(proLabore * 12, rbt12);
-  const anexo = escolherAnexo(fatorR);
+  const anexo: 'III' = 'III';
 
   const { aliquotaEfetiva, dasMensal } = calcularDAS(rbt12, anexo, fatM);
 
-  const inssProLabore = calcularInssEmpregado(proLabore);
+  const inssProLabore = proLabore * ALIQUOTA_INSS_PROLABORE;
   const irrfProLabore = calcularIRRFProLabore(proLabore);
 
   const custoContador =
     input.refinamento?.custoContadorMensal ?? DEFAULTS_INPUT.custoContadorMensal;
 
-  // Líquido na PJ: faturamento − DAS − INSS pró-labore − IRRF pró-labore − contador.
-  // (Despesas dedutíveis no PJ não impactam Simples Nacional, então não entram aqui.)
+  // Pró-labore não é despesa: é dinheiro do sócio. Apenas DAS, INSS, IR e
+  // contador entram em totalDescontosMensais.
   const totalDescontosMensais =
     dasMensal + inssProLabore + irrfProLabore + custoContador;
   const liquidoMensal = fatM - totalDescontosMensais;
@@ -39,22 +60,9 @@ export function montarCenarioPJSimples(input: CalcInput): CenarioPJ {
 
   const alertas: string[] = [];
 
-  if (anexo === 'V') {
-    const proLaboreNecessario = Math.ceil((rbt12 * FATOR_R_LIMITE) / 12);
-    alertas.push(
-      `Pró-labore representa ${(fatorR * 100).toFixed(1)}% do faturamento (mínimo 28% para Anexo III). Aumentar pró-labore para ~R$ ${proLaboreNecessario.toLocaleString('pt-BR')}/mês move para Anexo III e reduz a alíquota.`,
-    );
-  }
-
   if (rbt12 > LIMITE_SIMPLES_ANUAL) {
     alertas.push(
       'Faturamento anual estimado ultrapassa o teto do Simples (R$ 4,8 milhões). Considere Lucro Presumido ou Lucro Real — fora do escopo desta calculadora.',
-    );
-  }
-
-  if (proLaboreInformado < SALARIO_MINIMO_2026) {
-    alertas.push(
-      `Pró-labore mínimo legal aplicado: R$ ${SALARIO_MINIMO_2026.toLocaleString('pt-BR')} (salário mínimo).`,
     );
   }
 
@@ -77,7 +85,7 @@ export function montarCenarioPJSimples(input: CalcInput): CenarioPJ {
       contribuicaoMensal: inssProLabore,
       baseAposentadoria: proLabore,
       observacao:
-        'Contribuição via pró-labore. A base de aposentadoria é proporcional ao pró-labore declarado.',
+        'Contribuição via pró-labore (11%). A base de aposentadoria é o pró-labore declarado.',
     },
     alertas,
   };

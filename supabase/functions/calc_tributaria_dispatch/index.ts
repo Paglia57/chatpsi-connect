@@ -17,14 +17,23 @@ REGRAS DA ANÁLISE:
 - Sempre compare:
   1) PF com INSS de 11% sobre o mínimo
   2) PF com INSS de 20% sobre a base aplicável, respeitando o teto
-  3) PJ no Simples, testando Anexo III via fator R
+  3) PJ no Simples, sempre Anexo III (pró-labore otimizado automaticamente)
 - Não fale só de teoria; traduza tudo em impacto prático no bolso.
 - Use linguagem simples, objetiva e consultiva. Sem textos gigantes. Tom de conversa.
 
 LÓGICA DE CÁLCULO:
 - PF 11%: INSS de 11% sobre o salário mínimo vigente. IR com tabela 2026, usando desconto simplificado mensal quando for melhor que as deduções legais.
 - PF 20%: INSS de 20% sobre o faturamento, limitado ao teto. IR usando a melhor opção entre dedução legal e desconto simplificado.
-- PJ: Simples, testar Anexo III pelo fator R. Considerar pró-labore, INSS sobre pró-labore, IRRF sobre pró-labore se houver, DAS e custos operacionais. Se fator R < 28%, alertar Anexo V.
+- PJ: Simples Nacional sempre no ANEXO III. O pró-labore é otimizado automaticamente para garantir Fator R ≥ 28%:
+    proLabore = max(SALÁRIO_MÍNIMO, faturamento × 0,28)
+  ou seja: 28% do faturamento; se ficar abaixo de R$ 1.621, força para R$ 1.621.
+  Cálculos sobre o pró-labore:
+    - INSS sobre pró-labore: 11% (contribuinte individual, plano simplificado), SEM tabela CLT progressiva
+    - IR sobre pró-labore: tabela mensal 2026 + redutor reforma 2026 (mesma regra da PF), aplicada sobre (proLabore − INSS_proLabore). SEM desconto simplificado.
+    - DAS: alíquota efetiva do Anexo III sobre o faturamento mensal.
+    - Custo do contador: subtrair como despesa fixa.
+  Líquido PJ = faturamento − DAS − INSS_proLabore − IR_proLabore − contador.
+  Pró-labore em si NÃO é despesa: é dinheiro do sócio (volta pro bolso).
 
 CONSTANTES TRIBUTÁRIAS 2026 (use SOMENTE estes valores):
 - Salário mínimo: R$ 1.621,00
@@ -45,31 +54,25 @@ REDUTOR REFORMA 2026 (aplicar APÓS tabela tradicional):
 - Renda de R$ 5.000,01 a R$ 7.350: redutor = 978,62 - (0,133145 × renda)
 - Acima de R$ 7.350: sem redutor
 
-SIMPLES NACIONAL ANEXO III (Fator R ≥ 28%):
+SIMPLES NACIONAL ANEXO III (sempre usado no cenário PJ):
 - Até R$ 180.000/ano: 6%, deduzir 0
 - R$ 180.000,01 a R$ 360.000: 11,2%, deduzir R$ 9.360
 - R$ 360.000,01 a R$ 720.000: 13,5%, deduzir R$ 17.640
 - R$ 720.000,01 a R$ 1.800.000: 16%, deduzir R$ 35.640
 
-SIMPLES NACIONAL ANEXO V (Fator R < 28%):
-- Até R$ 180.000/ano: 15,5%, deduzir 0
-- R$ 180.000,01 a R$ 360.000: 18%, deduzir R$ 4.500
-- R$ 360.000,01 a R$ 720.000: 19,5%, deduzir R$ 9.900
-- R$ 720.000,01 a R$ 1.800.000: 20,5%, deduzir R$ 17.100
-
-FÓRMULA FATOR R = (pró-labore × 12) ÷ (faturamento mensal × 12). Se ≥ 28% → Anexo III; senão → Anexo V.
+Para o DAS mensal, usar RBT12 estimado = faturamentoMensal × 12. Alíquota efetiva = (RBT12 × alíquota_nominal − dedução) / RBT12. DAS_mensal = faturamento × alíquota_efetiva.
 
 DEFAULTS (quando usuário não informa):
 - INSS atual: 11%
 - Custo contador: R$ 200/mês
 - Despesas dedutíveis: R$ 0
-- Pró-labore PJ: salário mínimo (R$ 1.621)
+- Pró-labore PJ: otimizado automaticamente — max(R$ 1.621, faturamento × 0,28)
 
 REGRAS DE RECOMENDAÇÃO:
 - Se faturamento < R$ 5.000/mês → recomendar PF, alertar que PJ não compensa pelos custos fixos.
 - Se prioridade = "APOSENTADORIA" → priorizar PF 20% (mesmo se for ligeiramente mais caro), explicando trade-off.
 - Se prioridade = "ECONOMIA" → maior líquido vence.
-- Se Fator R < 28% no PJ → adicionar alerta sobre Anexo V e quanto subir o pró-labore para Anexo III.
+- NÃO mencione Anexo V em alertas: o pró-labore é otimizado automaticamente para Anexo III.
 
 FORMATO DE RESPOSTA:
 Responda APENAS com JSON válido conforme o schema. Sem texto fora do JSON. Sem markdown. Apenas o objeto JSON puro.
@@ -205,7 +208,7 @@ function cenarioPJSchema(): any {
       tipo: { type: "string", enum: ["PJ_SIMPLES"] },
       faturamentoBruto: { type: "number" },
       rbt12: { type: "number" },
-      anexo: { type: "string", enum: ["III", "V"] },
+      anexo: { type: "string", enum: ["III"] },
       fatorR: { type: "number" },
       aliquotaEfetiva: { type: "number" },
       dasMensal: { type: "number" },

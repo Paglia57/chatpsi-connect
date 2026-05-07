@@ -1,9 +1,8 @@
 import {
-  DESCONTO_SIMPLIFICADO_IR_MENSAL,
+  ALIQUOTA_INSS_PROLABORE,
   REDUTOR_REFORMA_2026,
   TABELA_IR_MENSAL_2026,
 } from './constantes';
-import { calcularInssEmpregado } from './inss';
 
 /**
  * IRPF mensal aplicando tabela tradicional 2026 + redutor da reforma 2026.
@@ -29,17 +28,13 @@ export function calcularIRPFMensal(
 }
 
 /**
- * IRRF sobre pró-labore (tabela CLT). Aplica desconto simplificado quando
- * vantajoso, alinhado à prática tributária para rendimentos do trabalho.
+ * IRRF sobre pró-labore.
+ * INSS contribuinte individual (11%) deduzido da base, depois tabela mensal
+ * 2026 + redutor da reforma. Sem desconto simplificado.
  */
 export function calcularIRRFProLabore(proLabore: number): number {
   if (proLabore <= 0) return 0;
-  const inss = calcularInssEmpregado(proLabore);
+  const inss = proLabore * ALIQUOTA_INSS_PROLABORE;
   const baseLiquida = Math.max(0, proLabore - inss);
-  // Aplica desconto simplificado se for melhor que apenas INSS na base.
-  const baseComDescontoSimplificado = Math.max(
-    0,
-    baseLiquida - DESCONTO_SIMPLIFICADO_IR_MENSAL,
-  );
-  return calcularIRPFMensal(baseComDescontoSimplificado, proLabore);
+  return calcularIRPFMensal(baseLiquida, proLabore);
 }

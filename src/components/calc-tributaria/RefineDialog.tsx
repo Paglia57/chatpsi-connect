@@ -173,9 +173,9 @@ export default function RefineDialog({
               >
                 <RadioGroupItem id="inss-20" value="20" />
                 <div>
-                  <div className="text-sm font-medium">20% sobre o teto</div>
+                  <div className="text-sm font-medium">20% sobre o faturamento</div>
                   <div className="text-xs text-muted-foreground">
-                    R$ 1.695,11/mês (Plano Normal — aposentadoria proporcional)
+                    Plano Normal — proporcional ao seu faturamento, limitado ao teto (R$ 1.695,11/mês). Aposentadoria proporcional à base contribuída.
                   </div>
                 </div>
               </Label>

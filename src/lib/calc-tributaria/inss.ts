@@ -1,12 +1,27 @@
 import {
   INSS_PF_11,
-  INSS_PF_20,
+  SALARIO_MINIMO_2026,
   TABELA_INSS_EMPREGADO_2026,
   TETO_INSS_2026,
 } from './constantes';
 
-export function calcularInssPF(modalidade: 11 | 20): number {
-  return modalidade === 20 ? INSS_PF_20 : INSS_PF_11;
+/**
+ * INSS do autônomo.
+ * - Modalidade 11% (Plano Simplificado): valor fixo de 11% sobre o salário mínimo.
+ * - Modalidade 20% (Plano Normal): 20% sobre a base de contribuição declarada,
+ *   limitada inferiormente ao salário mínimo e superiormente ao teto do INSS.
+ *   Para fins consultivos, usamos o faturamento mensal como base.
+ */
+export function calcularInssPF(
+  modalidade: 11 | 20,
+  faturamentoMensal: number,
+): number {
+  if (modalidade === 11) return INSS_PF_11;
+  const base = Math.min(
+    Math.max(faturamentoMensal, SALARIO_MINIMO_2026),
+    TETO_INSS_2026,
+  );
+  return base * 0.20;
 }
 
 /**

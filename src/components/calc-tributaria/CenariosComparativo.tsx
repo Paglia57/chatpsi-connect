@@ -130,7 +130,7 @@ function CenarioCard({
 
         <div className="pt-2 border-t border-border">
           <Row
-            label="Carga tributária"
+            label="Descontos"
             valor={formatPercent(cenario.cargaTributariaPercent)}
             destaque
           />

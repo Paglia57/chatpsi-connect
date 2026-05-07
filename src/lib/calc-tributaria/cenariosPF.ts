@@ -1,9 +1,13 @@
 import { CalcInput, CenarioPF } from './types';
-import { INSS_PF_11, INSS_PF_20, SALARIO_MINIMO_2026, TETO_INSS_2026 } from './constantes';
+import { INSS_PF_11, SALARIO_MINIMO_2026, TETO_INSS_2026 } from './constantes';
 import { calcularInssPF } from './inss';
 import { calcularIRPFMensal } from './irpf';
 
-function montarPrevidencia(modalidade: 11 | 20) {
+function montarPrevidencia(
+  modalidade: 11 | 20,
+  faturamentoMensal: number,
+  inssMensal: number,
+) {
   if (modalidade === 11) {
     return {
       contribuicaoMensal: INSS_PF_11,
@@ -12,11 +16,15 @@ function montarPrevidencia(modalidade: 11 | 20) {
         'Plano Simplificado: contribui sobre o salário mínimo. Aposentadoria limitada a 1 salário mínimo.',
     };
   }
+  const base = Math.min(
+    Math.max(faturamentoMensal, SALARIO_MINIMO_2026),
+    TETO_INSS_2026,
+  );
   return {
-    contribuicaoMensal: INSS_PF_20,
-    baseAposentadoria: TETO_INSS_2026,
+    contribuicaoMensal: inssMensal,
+    baseAposentadoria: base,
     observacao:
-      'Plano Normal: contribui sobre o teto. Permite aposentadoria proporcional sobre toda a base contribuída.',
+      'Plano Normal: 20% sobre o faturamento (limitado ao teto). Aposentadoria proporcional à base contribuída.',
   };
 }
 
@@ -25,7 +33,7 @@ function montarCenarioPF(
   modalidade: 11 | 20,
 ): CenarioPF {
   const fatM = Math.max(0, input.faturamentoMensal);
-  const inssMensal = calcularInssPF(modalidade);
+  const inssMensal = calcularInssPF(modalidade, fatM);
   const despesasAnuais = Math.max(
     0,
     input.refinamento?.despesasDedutiveisAnuais ?? 0,
@@ -55,7 +63,7 @@ function montarCenarioPF(
     custosFixos: 0,
     liquidoMensal,
     cargaTributariaPercent,
-    previdencia: montarPrevidencia(modalidade),
+    previdencia: montarPrevidencia(modalidade, fatM, inssMensal),
     alertas,
   };
 }

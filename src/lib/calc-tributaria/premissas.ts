@@ -2,7 +2,6 @@ import { CalcInput, Cenarios, Premissa } from './types';
 import {
   DEFAULTS_INPUT,
   INSS_PF_11,
-  INSS_PF_20,
   SALARIO_MINIMO_2026,
   TETO_INSS_2026,
 } from './constantes';
@@ -36,8 +35,8 @@ export function montarPremissas(
   });
 
   premissas.push({
-    label: 'INSS PF 20% (sobre teto)',
-    valor: `${formatBRL(INSS_PF_20)} / mês`,
+    label: 'INSS PF 20% (sobre faturamento, limitado ao teto)',
+    valor: `${formatBRL(cenarios.pf20.inssMensal)} / mês`,
   });
 
   const proLaboreInformado =

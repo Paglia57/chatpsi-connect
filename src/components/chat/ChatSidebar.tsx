@@ -10,8 +10,9 @@ import { Badge } from '@/components/ui/badge';
 import {
   Home, ClipboardList, Plus, History, Users, MessageCircle, Target, BookOpen,
   PenTool, Settings, Gift, CircleUser, HelpCircle, LogOut, Menu, ChevronDown,
-  ChevronRight, Star, MessageSquare, RotateCcw
+  ChevronRight, Star, MessageSquare, RotateCcw, Calculator
 } from 'lucide-react';
+import BetaChip from '@/components/ui/BetaChip';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
@@ -223,6 +224,14 @@ const ChatSidebar = () => {
           <BookOpen className="h-4 w-4 shrink-0" />
           <span>Artigos Científicos</span>
         </NavLink>
+        <NavLink to="/app/calculadora-tributaria" onClick={onNavigate} className={navLinkClass(isActive('/app/calculadora-tributaria'))} data-tour="nav-calc-trib">
+          <Calculator className="h-4 w-4 shrink-0" />
+          <span className="flex-1">Calculadora Tributária</span>
+          <BetaChip
+            variant="compact"
+            className="!bg-primary/10 !text-primary !border-primary/20 !px-1.5 !py-0 !text-[9px] !shadow-none hover:!bg-primary/20"
+          />
+        </NavLink>
 
         <Separator className="my-3" />
 
@@ -388,6 +397,7 @@ const ChatSidebar = () => {
             { icon: MessageCircle, path: '/chat', title: 'Chat Clínico' },
             { icon: Target, path: '/busca-plano', title: 'Planos Terapêuticos' },
             { icon: BookOpen, path: '/busca-artigos', title: 'Artigos Científicos' },
+            { icon: Calculator, path: '/app/calculadora-tributaria', title: 'Calculadora Tributária (Beta)' },
           ].map(item => (
             <NavLink key={item.path} to={item.path} title={item.title}
               className={`p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg transition-colors ${isActive(item.path) ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground hover:bg-sidebar-accent/50'}`}>

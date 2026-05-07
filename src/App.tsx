@@ -23,6 +23,7 @@ import PatientsPage from "./pages/app/PatientsPage";
 import PatientDetailPage from "./pages/app/PatientDetailPage";
 import ReferralsPage from "./pages/app/ReferralsPage";
 import HomePage from "./pages/app/HomePage";
+import CalcTributariaPage from "./pages/app/CalcTributariaPage";
 
 const queryClient = new QueryClient();
 
@@ -48,6 +49,7 @@ const App = () => (
                 <Route path="historico" element={<HistoryPage />} />
                 <Route path="perfil" element={<ProfilePage />} />
                 <Route path="indicacoes" element={<ReferralsPage />} />
+                <Route path="calculadora-tributaria" element={<CalcTributariaPage />} />
               </Route>
               <Route path="/chat" element={<ChatPage />} />
               <Route path="/busca-plano" element={<BuscaPlanoPage />} />

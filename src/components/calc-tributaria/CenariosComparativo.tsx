@@ -103,12 +103,14 @@ function CenarioCard({
             <>
               <Row label="INSS" valor={`− ${formatBRL(cenario.inssMensal)}`} />
               <Row label="IRPF" valor={`− ${formatBRL(cenario.irpfMensal)}`} />
-              {cenario.despesasDedutiveisMensais > 0 && (
-                <Row
-                  label="Despesas dedutíveis"
-                  valor={`− ${formatBRL(cenario.despesasDedutiveisMensais)}`}
-                />
-              )}
+              <Row
+                label={
+                  cenario.usouDescontoSimplificado
+                    ? 'Desconto simplificado IR'
+                    : 'Despesas dedutíveis'
+                }
+                valor={`(${formatBRL(cenario.deducaoIRAplicada)})`}
+              />
             </>
           ) : (
             <>
@@ -128,11 +130,15 @@ function CenarioCard({
           )}
         </div>
 
-        <div className="pt-2 border-t border-border">
+        <div className="pt-2 border-t border-border space-y-1">
           <Row
-            label="Descontos"
-            valor={formatPercent(cenario.cargaTributariaPercent)}
+            label="Total pago"
+            valor={`− ${formatBRL(cenario.totalDescontosMensais)}`}
             destaque
+          />
+          <Row
+            label="% sobre faturamento"
+            valor={formatPercent(cenario.cargaTributariaPercent)}
           />
         </div>
 

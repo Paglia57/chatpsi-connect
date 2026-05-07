@@ -30,13 +30,12 @@ export function montarCenarioPJSimples(input: CalcInput): CenarioPJ {
 
   // Líquido na PJ: faturamento − DAS − INSS pró-labore − IRRF pró-labore − contador.
   // (Despesas dedutíveis no PJ não impactam Simples Nacional, então não entram aqui.)
-  const liquidoMensal =
-    fatM - dasMensal - inssProLabore - irrfProLabore - custoContador;
+  const totalDescontosMensais =
+    dasMensal + inssProLabore + irrfProLabore + custoContador;
+  const liquidoMensal = fatM - totalDescontosMensais;
 
   const cargaTributariaPercent =
-    fatM > 0
-      ? (dasMensal + inssProLabore + irrfProLabore + custoContador) / fatM
-      : 0;
+    fatM > 0 ? totalDescontosMensais / fatM : 0;
 
   const alertas: string[] = [];
 
@@ -71,6 +70,7 @@ export function montarCenarioPJSimples(input: CalcInput): CenarioPJ {
     inssProLabore,
     irrfProLabore,
     custoContador,
+    totalDescontosMensais,
     liquidoMensal,
     cargaTributariaPercent,
     previdencia: {

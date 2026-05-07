@@ -1,5 +1,10 @@
 import { CalcInput, CenarioPF } from './types';
-import { INSS_PF_11, SALARIO_MINIMO_2026, TETO_INSS_2026 } from './constantes';
+import {
+  DESCONTO_SIMPLIFICADO_IR_MENSAL,
+  INSS_PF_11,
+  SALARIO_MINIMO_2026,
+  TETO_INSS_2026,
+} from './constantes';
 import { calcularInssPF } from './inss';
 import { calcularIRPFMensal } from './irpf';
 
@@ -40,11 +45,19 @@ function montarCenarioPF(
   );
   const despesasMensais = despesasAnuais / 12;
 
-  const baseIRPF = Math.max(0, fatM - inssMensal - despesasMensais);
+  // Aplica a melhor opção: dedução por despesas reais OU desconto simplificado.
+  const deducaoIRAplicada = Math.max(
+    despesasMensais,
+    DESCONTO_SIMPLIFICADO_IR_MENSAL,
+  );
+  const usouDescontoSimplificado = deducaoIRAplicada > despesasMensais;
+
+  const baseIRPF = Math.max(0, fatM - inssMensal - deducaoIRAplicada);
   const irpfMensal = calcularIRPFMensal(baseIRPF, fatM);
 
   const liquidoMensal = fatM - inssMensal - irpfMensal;
-  const cargaTributariaPercent = fatM > 0 ? (inssMensal + irpfMensal) / fatM : 0;
+  const totalDescontosMensais = inssMensal + irpfMensal;
+  const cargaTributariaPercent = fatM > 0 ? totalDescontosMensais / fatM : 0;
 
   const alertas: string[] = [];
   if (despesasMensais > fatM * 0.8 && fatM > 0) {
@@ -60,6 +73,9 @@ function montarCenarioPF(
     baseIRPF,
     irpfMensal,
     despesasDedutiveisMensais: despesasMensais,
+    deducaoIRAplicada,
+    usouDescontoSimplificado,
+    totalDescontosMensais,
     custosFixos: 0,
     liquidoMensal,
     cargaTributariaPercent,

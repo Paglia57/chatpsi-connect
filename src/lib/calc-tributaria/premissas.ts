@@ -1,6 +1,7 @@
 import { CalcInput, Cenarios, Premissa } from './types';
 import {
   DEFAULTS_INPUT,
+  DESCONTO_SIMPLIFICADO_IR_MENSAL,
   INSS_PF_11,
   SALARIO_MINIMO_2026,
   TETO_INSS_2026,
@@ -58,12 +59,19 @@ export function montarPremissas(
     )} / mês ${input.refinamento?.custoContadorMensal ? '(informado)' : '(default)'}`,
   });
 
+  const despesasInformadas =
+    input.refinamento?.despesasDedutiveisAnuais ??
+    DEFAULTS_INPUT.despesasDedutiveisAnuais;
   premissas.push({
     label: 'Despesas dedutíveis (PF, anuais)',
-    valor: formatBRL(
-      input.refinamento?.despesasDedutiveisAnuais ??
-        DEFAULTS_INPUT.despesasDedutiveisAnuais,
-    ),
+    valor: formatBRL(despesasInformadas),
+  });
+
+  premissas.push({
+    label: 'Dedução IR aplicada (PF)',
+    valor: cenarios.pf11.usouDescontoSimplificado
+      ? `${formatBRL(DESCONTO_SIMPLIFICADO_IR_MENSAL)} / mês — desconto simplificado (melhor que despesas reais)`
+      : `${formatBRL(cenarios.pf11.deducaoIRAplicada)} / mês — despesas reais`,
   });
 
   premissas.push({

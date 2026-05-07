@@ -30,6 +30,9 @@ export interface CenarioPF {
   baseIRPF: number;
   irpfMensal: number;
   despesasDedutiveisMensais: number;
+  deducaoIRAplicada: number;
+  usouDescontoSimplificado: boolean;
+  totalDescontosMensais: number;
   custosFixos: number;
   liquidoMensal: number;
   cargaTributariaPercent: number;
@@ -49,6 +52,7 @@ export interface CenarioPJ {
   inssProLabore: number;
   irrfProLabore: number;
   custoContador: number;
+  totalDescontosMensais: number;
   liquidoMensal: number;
   cargaTributariaPercent: number;
   previdencia: PrevidenciaInfo;

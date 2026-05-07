@@ -24,14 +24,29 @@ REGRAS DA ANÁLISE:
 LÓGICA DE CÁLCULO:
 - PF 11%: INSS de 11% sobre o salário mínimo vigente. IR com tabela 2026, usando desconto simplificado mensal quando for melhor que as deduções legais.
 - PF 20%: INSS de 20% sobre o faturamento, limitado ao teto. IR usando a melhor opção entre dedução legal e desconto simplificado.
-- PJ: Simples Nacional sempre no ANEXO III. O pró-labore é otimizado automaticamente para garantir Fator R ≥ 28%:
-    proLabore = max(SALÁRIO_MÍNIMO, faturamento × 0,28)
-  ou seja: 28% do faturamento; se ficar abaixo de R$ 1.621, força para R$ 1.621.
-  Cálculos sobre o pró-labore:
-    - INSS sobre pró-labore: 11% (contribuinte individual, plano simplificado), SEM tabela CLT progressiva
-    - IR sobre pró-labore: tabela mensal 2026 + redutor reforma 2026 (mesma regra da PF), aplicada sobre (proLabore − INSS_proLabore). SEM desconto simplificado.
-    - DAS: alíquota efetiva do Anexo III sobre o faturamento mensal.
-    - Custo do contador: subtrair como despesa fixa.
+- PJ: Simples Nacional sempre no ANEXO III. Calcule o pró-labore EXATAMENTE assim:
+
+    PASSO 1: candidato = faturamentoMensal × 0,28
+    PASSO 2: proLabore = MAX(1621, candidato)
+
+  Exemplos OBRIGATÓRIOS (siga ESTES valores, NÃO recalcule):
+    - faturamento R$ 4.000  → candidato R$ 1.120     → proLabore R$ 1.621 (forçado ao mínimo)
+    - faturamento R$ 5.000  → candidato R$ 1.400     → proLabore R$ 1.621 (forçado ao mínimo)
+    - faturamento R$ 5.789  → candidato R$ 1.620,92  → proLabore R$ 1.621 (forçado ao mínimo)
+    - faturamento R$ 6.000  → candidato R$ 1.680     → proLabore R$ 1.680
+    - faturamento R$ 10.000 → candidato R$ 2.800     → proLabore R$ 2.800
+    - faturamento R$ 20.000 → candidato R$ 5.600     → proLabore R$ 5.600
+
+  REGRA CRÍTICA: o pró-labore NUNCA pode ficar abaixo de R$ 1.621 (salário mínimo legal).
+  Se 28% × faturamento < 1.621, USE 1.621.
+
+  Cálculos sobre o pró-labore (após determinar o valor pelo PASSO 2):
+    - INSS sobre pró-labore: 11% × proLabore (NÃO use tabela CLT progressiva)
+    - IR sobre pró-labore: aplicar tabela mensal 2026 sobre (proLabore − INSS_proLabore),
+      depois subtrair redutor reforma 2026. SEM desconto simplificado.
+    - DAS: alíquota efetiva do Anexo III × faturamentoMensal.
+    - Custo contador: despesa fixa.
+
   Líquido PJ = faturamento − DAS − INSS_proLabore − IR_proLabore − contador.
   Pró-labore em si NÃO é despesa: é dinheiro do sócio (volta pro bolso).
 

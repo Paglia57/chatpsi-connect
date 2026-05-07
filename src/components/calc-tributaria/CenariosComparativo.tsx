@@ -80,7 +80,7 @@ function CenarioCard({
           {isRecomendado && (
             <Badge className="bg-primary text-primary-foreground gap-1">
               <CheckCircle2 className="h-3 w-3" />
-              Recomendado
+              Mais vantajoso
             </Badge>
           )}
         </div>

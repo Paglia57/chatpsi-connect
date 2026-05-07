@@ -31,7 +31,7 @@ export default function HeroResultCard({ recomendacao }: HeroResultCardProps) {
           )}
           <div className="space-y-1">
             <p className="text-xs font-semibold uppercase tracking-wider text-primary">
-              {isIndefinido ? 'Pronto para começar' : 'Nossa recomendação'}
+              {isIndefinido ? 'Pronto para começar' : 'Baseado nos nossos cálculos'}
             </p>
             <h2 className="text-2xl md:text-3xl font-bold leading-tight text-foreground">
               {recomendacao.titulo}
@@ -39,6 +39,11 @@ export default function HeroResultCard({ recomendacao }: HeroResultCardProps) {
             <p className="text-sm md:text-base text-muted-foreground">
               {recomendacao.subtitulo}
             </p>
+            {!isIndefinido && (
+              <p className="text-xs text-muted-foreground italic pt-1">
+                Não é uma recomendação contábil — somos uma calculadora. Antes de decidir, consulte um contador.
+              </p>
+            )}
           </div>
         </div>
 

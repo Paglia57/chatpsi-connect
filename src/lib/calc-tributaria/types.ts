@@ -93,6 +93,7 @@ export interface PontoVirada {
     pjSimples: number;
   }>;
   markerUsuario: number;
+  explicacao?: string;
 }
 
 export interface CalcOutput {

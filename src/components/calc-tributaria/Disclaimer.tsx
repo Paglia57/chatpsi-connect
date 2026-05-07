@@ -6,13 +6,15 @@ export default function Disclaimer() {
       <Info className="h-4 w-4 shrink-0 mt-0.5" />
       <p>
         <strong className="text-foreground">Aviso importante.</strong> Esta
-        análise é uma estimativa baseada nas regras tributárias vigentes em
-        2026, calculada automaticamente a partir dos dados que você informou.
+        análise foi gerada por inteligência artificial com base nas regras
+        tributárias vigentes em 2026 e nos dados que você informou.{' '}
+        <strong className="text-foreground">
+          Não é uma recomendação profissional.
+        </strong>{' '}
         Os valores reais podem variar conforme sua situação específica,
         deduções aplicáveis, mudanças na legislação e particularidades do seu
-        CNAE. Esta ferramenta não substitui o trabalho de um contador. Antes
-        de decidir entre PF e PJ — ou de migrar entre regimes — consulte um
-        profissional de contabilidade.
+        CNAE. Antes de decidir entre PF e PJ — ou de migrar entre regimes —
+        consulte um profissional de contabilidade.
       </p>
     </div>
   );

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/auth/AuthProvider";
 
-type TrialTable = "evolutions" | "marketing_texts" | "plano_chat_history" | "artigos_chat_history";
+type TrialTable = "evolutions" | "marketing_texts" | "plano_chat_history" | "artigos_chat_history" | "calc_tributaria_history";
 
 export function useTrialLimit(table: TrialTable, limit: number) {
   const { user, profile } = useAuth();

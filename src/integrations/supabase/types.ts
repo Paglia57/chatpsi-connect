@@ -106,6 +106,30 @@ export type Database = {
           },
         ]
       }
+      calc_tributaria_history: {
+        Row: {
+          created_at: string | null
+          id: string
+          input: Json
+          output: Json
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          input: Json
+          output: Json
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          input?: Json
+          output?: Json
+          user_id?: string
+        }
+        Relationships: []
+      }
       marketing_texts: {
         Row: {
           created_at: string | null

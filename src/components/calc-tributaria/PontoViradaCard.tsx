@@ -30,9 +30,10 @@ export default function PontoViradaCard({ pontoVirada }: PontoViradaCardProps) {
           Ponto de virada
         </CardTitle>
         <p className="text-sm text-muted-foreground">
-          {faturamentoVirada
-            ? `A partir de ${formatBRL(faturamentoVirada)}/mês a recomendação muda de PF para PJ.`
-            : 'No intervalo analisado, a recomendação não muda entre PF e PJ.'}
+          {pontoVirada.explicacao ??
+            (faturamentoVirada
+              ? `A partir de ${formatBRL(faturamentoVirada)}/mês a recomendação muda de PF para PJ.`
+              : 'No intervalo analisado, a recomendação não muda entre PF e PJ.')}
         </p>
       </CardHeader>
 

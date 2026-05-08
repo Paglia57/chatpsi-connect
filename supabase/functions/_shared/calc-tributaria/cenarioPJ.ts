@@ -1,21 +1,17 @@
-import { CalcInput, CenarioPJ } from './types';
+// Espelho de src/lib/calc-tributaria/cenarioPJ.ts — manter em sincronia.
+
+import { CalcInput, CenarioPJ } from './types.ts';
 import {
   ALIQUOTA_INSS_PROLABORE,
   DEFAULTS_INPUT,
   FATOR_R_LIMITE,
   LIMITE_SIMPLES_ANUAL,
   SALARIO_MINIMO_2026,
-} from './constantes';
-import { calcularDAS, calcularFatorR } from './simples';
-import { calcularIRRFProLabore } from './irpf';
-import { formatBRL, formatPercent } from './format';
+} from './constantes.ts';
+import { calcularDAS, calcularFatorR } from './simples.ts';
+import { calcularIRRFProLabore } from './irpf.ts';
+import { formatBRL, formatPercent } from './format.ts';
 
-/**
- * Pró-labore otimizado para garantir Fator R ≥ 28% (Anexo III).
- * Regra: 28% do faturamento; se o resultado ficar abaixo do salário mínimo,
- * força para o salário mínimo. Caso o usuário informe um pró-labore explicitamente
- * (>= salário mínimo), respeita o override.
- */
 function calcularProLaboreOtimizado(
   faturamentoMensal: number,
   proLaboreInformado?: number,
@@ -38,9 +34,6 @@ export function montarCenarioPJSimples(input: CalcInput): CenarioPJ {
     input.refinamento?.proLaboreMensal,
   );
 
-  // Por construção, Fator R sempre fica ≥ 28% quando o usuário não informa
-  // pró-labore manual; quando informa um valor < 28%, emitimos alerta abaixo
-  // mas mantemos Anexo III para não surpreender o usuário com Anexo V.
   const fatorR = calcularFatorR(proLabore * 12, rbt12);
   const anexo = 'III' as const;
 
@@ -52,8 +45,6 @@ export function montarCenarioPJSimples(input: CalcInput): CenarioPJ {
   const custoContador =
     input.refinamento?.custoContadorMensal ?? DEFAULTS_INPUT.custoContadorMensal;
 
-  // Pró-labore não é despesa: é dinheiro do sócio. Apenas DAS, INSS, IR e
-  // contador entram em totalDescontosMensais.
   const totalDescontosMensais =
     dasMensal + inssProLabore + irrfProLabore + custoContador;
   const liquidoMensal = fatM - totalDescontosMensais;

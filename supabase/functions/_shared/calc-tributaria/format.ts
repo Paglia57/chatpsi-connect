@@ -1,3 +1,5 @@
+// Espelho de src/lib/calc-tributaria/format.ts — manter em sincronia.
+
 const brl = new Intl.NumberFormat('pt-BR', {
   style: 'currency',
   currency: 'BRL',
@@ -39,9 +41,6 @@ export function formatBRLCompact(valor: number): string {
 
 export function formatPercent(fracao: number, casas = 2): string {
   if (!isFinite(fracao)) return '0%';
-  // Carga tributária real nunca passa de 100% (1.0). Normaliza iterativamente
-  // qualquer valor > 1 (defesa contra dados antigos do localStorage/histórico
-  // ou regressões em fontes externas).
   let valorDecimal = fracao;
   let guard = 0;
   while (valorDecimal > 1 && guard < 4) {

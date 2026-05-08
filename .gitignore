@@ -26,3 +26,6 @@ dist-ssr
 # Supabase CLI local cache
 supabase/.temp/
 supabase/.branches/
+
+# Saída temporária de scripts de verificação
+.tmp-verify/

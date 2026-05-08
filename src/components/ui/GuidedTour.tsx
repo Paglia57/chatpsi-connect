@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Joyride, { CallBackProps, ACTIONS, EVENTS, STATUS, Step, TooltipRenderProps } from 'react-joyride';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useReferralSettings } from '@/hooks/useReferralSettings';
 
 interface TourStep extends Step {
   data?: { route?: string };
@@ -235,36 +236,48 @@ const CustomTooltip: React.FC<TooltipRenderProps> = ({
 const GuidedTour: React.FC<GuidedTourProps> = ({ run, onFinish }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const referralSettings = useReferralSettings();
   const [stepIndex, setStepIndex] = useState(0);
   const [isNavigating, setIsNavigating] = useState(false);
   const [internalRun, setInternalRun] = useState(false);
 
+  const effectiveSteps = useMemo<TourStep[]>(() => {
+    if (referralSettings.loading) return tourSteps;
+    if (referralSettings.enabled) return tourSteps;
+    return tourSteps.filter(s => s.target !== '[data-tour="page-indicacoes"]');
+  }, [referralSettings.loading, referralSettings.enabled]);
+
   const waitForTarget = useCallback((stepIdx: number, cb: () => void) => {
-    const target = tourSteps[stepIdx]?.target;
+    const target = effectiveSteps[stepIdx]?.target;
     if (!target || typeof target !== 'string') { cb(); return; }
     let attempts = 0;
     const check = () => {
       if (document.querySelector(target)) { cb(); return; }
       attempts++;
-      if (attempts < 20) setTimeout(check, 100);
+      if (attempts < 20) {
+        setTimeout(check, 100);
+      } else {
+        console.warn(`[GuidedTour] target "${target}" não encontrado após 2s — avançando mesmo assim`);
+        cb();
+      }
     };
     check();
-  }, []);
+  }, [effectiveSteps]);
 
   useEffect(() => {
-    if (run) {
-      const firstRoute = tourSteps[0]?.data?.route;
+    if (run && !referralSettings.loading) {
+      const firstRoute = effectiveSteps[0]?.data?.route;
       if (firstRoute && location.pathname !== firstRoute) {
         navigate(firstRoute);
       }
       setStepIndex(0);
       const timer = setTimeout(() => waitForTarget(0, () => setInternalRun(true)), 300);
       return () => clearTimeout(timer);
-    } else {
+    } else if (!run) {
       setInternalRun(false);
       setStepIndex(0);
     }
-  }, [run]);
+  }, [run, referralSettings.loading]);
 
   const handleCallback = useCallback((data: CallBackProps) => {
     const { action, index, type, status } = data;
@@ -279,7 +292,7 @@ const GuidedTour: React.FC<GuidedTourProps> = ({ run, onFinish }) => {
     if (type === EVENTS.STEP_AFTER) {
       const nextIndex = action === ACTIONS.PREV ? index - 1 : index + 1;
 
-      if (nextIndex >= tourSteps.length) {
+      if (nextIndex >= effectiveSteps.length) {
         setInternalRun(false);
         navigate('/app');
         onFinish();
@@ -287,7 +300,7 @@ const GuidedTour: React.FC<GuidedTourProps> = ({ run, onFinish }) => {
       }
       if (nextIndex < 0) return;
 
-      const nextStep = tourSteps[nextIndex];
+      const nextStep = effectiveSteps[nextIndex];
       const targetRoute = nextStep.data?.route;
 
       if (targetRoute && location.pathname !== targetRoute) {
@@ -305,11 +318,11 @@ const GuidedTour: React.FC<GuidedTourProps> = ({ run, onFinish }) => {
         setStepIndex(nextIndex);
       }
     }
-  }, [navigate, location.pathname, onFinish]);
+  }, [navigate, location.pathname, onFinish, effectiveSteps, waitForTarget]);
 
   return (
     <Joyride
-      steps={tourSteps}
+      steps={effectiveSteps}
       run={internalRun && !isNavigating}
       stepIndex={stepIndex}
       continuous

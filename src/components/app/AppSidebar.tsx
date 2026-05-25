@@ -1,5 +1,5 @@
-import { Plus, ClipboardList, User, LogOut, Users } from "lucide-react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { Plus, ClipboardList, User, LogOut, Users, ShieldCheck } from "lucide-react";
+import { NavLink, useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -90,6 +90,14 @@ export function AppSidebar() {
       </SidebarContent>
       <SidebarFooter>
         <Separator className="bg-sidebar-border" />
+        <Link
+          to="/politica-de-privacidade"
+          className="mx-3 mt-2 flex items-center gap-2 rounded-md px-2 py-1.5 text-xs text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          title="Política de Privacidade e contato do Encarregado (DPO)"
+        >
+          <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
+          {!collapsed && <span>Privacidade & DPO</span>}
+        </Link>
         <div className="p-3 flex items-center gap-3">
           <Avatar className="h-9 w-9 shrink-0">
             <AvatarImage src={profile.avatar_url || undefined} />

@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import {
   Home, ClipboardList, Plus, History, Users, MessageCircle, Target, BookOpen,
   PenTool, Settings, Gift, CircleUser, HelpCircle, LogOut, Menu, ChevronDown,
-  ChevronRight, Star, MessageSquare, RotateCcw, Calculator
+  ChevronRight, Star, MessageSquare, RotateCcw, Calculator, ShieldCheck
 } from 'lucide-react';
 import BetaChip from '@/components/ui/BetaChip';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
@@ -276,6 +276,10 @@ const ChatSidebar = () => {
         <NavLink to="/app/perfil" onClick={onNavigate} className={`${footerBtnClass} flex items-center`}>
           <CircleUser className="h-4 w-4 mr-3 shrink-0" />
           Meu Perfil
+        </NavLink>
+        <NavLink to="/politica-de-privacidade" onClick={onNavigate} className={`${footerBtnClass} flex items-center`}>
+          <ShieldCheck className="h-4 w-4 mr-3 shrink-0" />
+          Privacidade & DPO
         </NavLink>
         <Popover>
           <PopoverTrigger asChild>

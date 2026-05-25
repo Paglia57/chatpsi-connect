@@ -18,6 +18,7 @@ const APPROACHES = [
   "TCC (Terapia Cognitivo-Comportamental)",
   "Psicanálise",
   "Humanista",
+  "Fenomenologia Existencial e Humanista",
   "Comportamental",
   "Sistêmica",
   "Gestalt",
@@ -259,6 +260,59 @@ export default function ProfilePage() {
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
             Salvar perfil
           </Button>
+        </CardContent>
+      </Card>
+
+      <Card className="border-border bg-card shadow-sm">
+        <CardHeader>
+          <CardTitle className="font-display text-lg">Privacidade e direitos do titular</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            O ChatPsi trata dados sensíveis de saúde mental e está em conformidade com a LGPD (Lei 13.709/2018).
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" size="sm" asChild>
+              <a href="/politica-de-privacidade" target="_blank" rel="noopener noreferrer">
+                Política de Privacidade
+              </a>
+            </Button>
+            <Button variant="outline" size="sm" asChild>
+              <a href="/termos-de-uso" target="_blank" rel="noopener noreferrer">
+                Termos de Uso
+              </a>
+            </Button>
+            <Button variant="outline" size="sm" asChild>
+              <a href="/cookies" target="_blank" rel="noopener noreferrer">
+                Preferências de cookies
+              </a>
+            </Button>
+          </div>
+          <div className="rounded-lg border border-border bg-muted/30 p-3 text-sm space-y-3">
+            <div>
+              <p className="font-medium text-foreground">Controlador</p>
+              <p className="text-muted-foreground mt-1">SECONSULT TECNOLOGIA E SAÚDE LTDA</p>
+              <p className="text-xs text-muted-foreground">CNPJ: 40.044.401/0001-68</p>
+              <p className="text-xs text-muted-foreground">Endereço: Rua Sete de Setembro, 543 — Apt 121, Centro, Sorocaba/SP, CEP 18035-001</p>
+            </div>
+            <div className="border-t border-border pt-3">
+              <p className="font-medium text-foreground">Encarregado (DPO)</p>
+              <p className="text-muted-foreground mt-1">&lt;NOME COMPLETO DO ENCARREGADO&gt;</p>
+              <p className="text-muted-foreground">
+                <a className="underline underline-offset-2 hover:text-foreground" href="mailto:seconsult.clinica@gmail.com">
+                  seconsult.clinica@gmail.com
+                </a>{" "}
+                ·{" "}
+                <a className="underline underline-offset-2 hover:text-foreground" href="https://wa.me/5511942457454" target="_blank" rel="noopener noreferrer">
+                  WhatsApp (secundário) 11 94245-7454
+                </a>
+              </p>
+              <p className="text-xs text-muted-foreground mt-2">
+                Canal preferencial: e-mail. Para exercer seus direitos (Art. 18 LGPD), entre em
+                contato pelo Encarregado. SLA de resposta: até 15 dias corridos (Art. 19, II LGPD).
+              </p>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>

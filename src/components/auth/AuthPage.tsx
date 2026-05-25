@@ -1,13 +1,17 @@
 import React, { useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from './AuthProvider';
 import { useToast } from '@/hooks/use-toast';
 import { FileText, MessageCircle, BookOpen, Users } from 'lucide-react';
 import ForgotPasswordModal from './ForgotPasswordModal';
+
+const POLICY_VERSION = '0.1';
+const POLICY_ACCEPTED_KEY = 'chatpsi_policy_accepted';
 
 const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -16,6 +20,7 @@ const AuthPage = () => {
   const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const { user, signIn, signUp } = useAuth();
   const { toast } = useToast();
 
@@ -25,6 +30,14 @@ const AuthPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isLogin && !acceptedTerms) {
+      toast({
+        title: "Aceite necessário",
+        description: "É preciso aceitar a Política de Privacidade e os Termos de Uso para criar a conta.",
+        variant: "destructive"
+      });
+      return;
+    }
     setLoading(true);
     try {
       const { error } = isLogin
@@ -37,6 +50,15 @@ const AuthPage = () => {
           variant: "destructive"
         });
       } else if (!isLogin) {
+        try {
+          window.localStorage.setItem(POLICY_ACCEPTED_KEY, JSON.stringify({
+            version: POLICY_VERSION,
+            timestamp: new Date().toISOString(),
+            email,
+          }));
+        } catch {
+          // localStorage indisponível — não bloqueia signup
+        }
         toast({
           title: "Conta criada com sucesso!",
           description: "Verifique seu email para confirmar sua conta."
@@ -54,7 +76,7 @@ const AuthPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-hero flex items-center justify-center p-4">
+    <div className="min-h-screen bg-hero flex items-center justify-center p-4 pb-12 relative">
       <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-10 xl:gap-12 items-center">
         {/* Hero Section */}
         <div className="text-center lg:text-left space-y-5 text-white flex flex-col justify-center">
@@ -130,7 +152,30 @@ const AuthPage = () => {
                 <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} required placeholder="Digite sua senha" disabled={loading} minLength={6} className="h-12 rounded-xl border-2 focus:border-primary transition-colors" />
               </div>
 
-              <Button type="submit" className="w-full h-14 bg-primary hover:bg-primary-hover text-primary-foreground font-semibold rounded-xl text-lg btn-hover-lift shadow-lg" disabled={loading}>
+              {!isLogin && (
+                <div className="flex items-start gap-2 rounded-lg border border-border bg-muted/30 p-3">
+                  <Checkbox
+                    id="accept-terms"
+                    checked={acceptedTerms}
+                    onCheckedChange={(checked) => setAcceptedTerms(checked === true)}
+                    disabled={loading}
+                    className="mt-0.5"
+                  />
+                  <Label htmlFor="accept-terms" className="text-xs leading-relaxed text-muted-foreground cursor-pointer">
+                    Li e aceito a{" "}
+                    <Link to="/politica-de-privacidade" target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-2 hover:no-underline">
+                      Política de Privacidade
+                    </Link>
+                    {" "}e os{" "}
+                    <Link to="/termos-de-uso" target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-2 hover:no-underline">
+                      Termos de Uso
+                    </Link>
+                    {" "}(versão {POLICY_VERSION}). Estou ciente de que o ChatPsi trata dados sensíveis de saúde e pode transferir dados para provedores de IA nos Estados Unidos.
+                  </Label>
+                </div>
+              )}
+
+              <Button type="submit" className="w-full h-14 bg-primary hover:bg-primary-hover text-primary-foreground font-semibold rounded-xl text-lg btn-hover-lift shadow-lg" disabled={loading || (!isLogin && !acceptedTerms)}>
                 {loading ? (
                   <div className="flex items-center gap-3">
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
@@ -166,6 +211,28 @@ const AuthPage = () => {
       </div>
 
       <ForgotPasswordModal open={showForgotPassword} onOpenChange={setShowForgotPassword} />
+
+      <div className="absolute bottom-3 left-0 right-0 text-center px-4 space-y-1">
+        <p className="text-xs text-white/70">
+          <Link to="/politica-de-privacidade" className="underline underline-offset-2 hover:text-white">
+            Política de Privacidade
+          </Link>
+          {" · "}
+          <Link to="/termos-de-uso" className="underline underline-offset-2 hover:text-white">
+            Termos de Uso
+          </Link>
+          {" · "}
+          <Link to="/cookies" className="underline underline-offset-2 hover:text-white">
+            Cookies
+          </Link>
+        </p>
+        <p className="text-xs text-white/60">
+          Controlador: SECONSULT TECNOLOGIA E SAÚDE LTDA · Encarregado (DPO):{" "}
+          <a className="underline underline-offset-2 hover:text-white" href="mailto:seconsult.clinica@gmail.com">
+            seconsult.clinica@gmail.com
+          </a>
+        </p>
+      </div>
     </div>
   );
 };

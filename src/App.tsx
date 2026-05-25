@@ -24,6 +24,10 @@ import PatientDetailPage from "./pages/app/PatientDetailPage";
 import ReferralsPage from "./pages/app/ReferralsPage";
 import HomePage from "./pages/app/HomePage";
 import CalcTributariaPage from "./pages/app/CalcTributariaPage";
+import PrivacyPolicyPage from "./pages/legal/PrivacyPolicyPage";
+import TermsPage from "./pages/legal/TermsPage";
+import CookiePreferencesPage from "./pages/legal/CookiePreferencesPage";
+import CookieBanner from "@/components/cookies/CookieBanner";
 
 const queryClient = new QueryClient();
 
@@ -34,11 +38,15 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <CookieBanner />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<AuthPage />} />
             <Route path="/auth/callback" element={<AuthCallbackPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route path="/politica-de-privacidade" element={<PrivacyPolicyPage />} />
+            <Route path="/termos-de-uso" element={<TermsPage />} />
+            <Route path="/cookies" element={<CookiePreferencesPage />} />
             {/* All authenticated routes under AppLayout with persistent sidebar */}
             <Route element={<AppLayout />}>
               <Route path="/app">

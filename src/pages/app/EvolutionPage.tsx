@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import EvolutionInput from "@/components/evolution/EvolutionInput";
 import EvolutionOutput from "@/components/evolution/EvolutionOutput";
 import EvolutionImprovementChat from "@/components/evolution/EvolutionImprovementChat";
@@ -20,7 +20,25 @@ export default function EvolutionPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const lastParamsRef = useRef<any>(null);
+  const improveChatRef = useRef<HTMLDivElement>(null);
+  const hasAutoScrolledRef = useRef(false);
   const trial = useTrialLimit("evolutions", 2);
+
+  useEffect(() => {
+    if (!evolutionContent) {
+      hasAutoScrolledRef.current = false;
+      return;
+    }
+    if (isGenerating || hasAutoScrolledRef.current) return;
+    hasAutoScrolledRef.current = true;
+    requestAnimationFrame(() => {
+      improveChatRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }, [evolutionContent, isGenerating]);
+
+  const scrollToImprove = () => {
+    improveChatRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   const handleGenerate = async (data: {
     approach: string;
@@ -236,13 +254,16 @@ export default function EvolutionPage() {
           onRegenerate={handleRegenerate}
           onSave={handleSave}
           isSaving={isSaving}
+          onRequestImprove={scrollToImprove}
         />
       )}
       {evolutionContent && !isGenerating && (
-        <EvolutionImprovementChat
-          evolutionContent={evolutionContent}
-          onContentUpdate={setEvolutionContent}
-        />
+        <div ref={improveChatRef} className="scroll-mt-4">
+          <EvolutionImprovementChat
+            evolutionContent={evolutionContent}
+            onContentUpdate={setEvolutionContent}
+          />
+        </div>
       )}
     </div>
   );

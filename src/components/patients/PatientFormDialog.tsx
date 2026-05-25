@@ -14,6 +14,7 @@ const APPROACHES = [
   "TCC (Terapia Cognitivo-Comportamental)",
   "Psicanálise",
   "Humanista",
+  "Fenomenologia Existencial e Humanista",
   "Comportamental",
   "Sistêmica",
   "Gestalt",

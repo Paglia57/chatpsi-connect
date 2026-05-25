@@ -218,7 +218,7 @@ const ChatSidebar = () => {
         </NavLink>
         <NavLink to="/busca-plano" onClick={onNavigate} className={navLinkClass(isActive('/busca-plano'))} data-tour="nav-plano">
           <Target className="h-4 w-4 shrink-0" />
-          <span>Planos Terapêuticos</span>
+          <span>Planos de Ação</span>
         </NavLink>
         <NavLink to="/busca-artigos" onClick={onNavigate} className={navLinkClass(isActive('/busca-artigos'))} data-tour="nav-artigos">
           <BookOpen className="h-4 w-4 shrink-0" />
@@ -395,7 +395,7 @@ const ChatSidebar = () => {
           <Separator className="w-6 my-1" />
           {[
             { icon: MessageCircle, path: '/chat', title: 'Chat Clínico' },
-            { icon: Target, path: '/busca-plano', title: 'Planos Terapêuticos' },
+            { icon: Target, path: '/busca-plano', title: 'Planos de Ação' },
             { icon: BookOpen, path: '/busca-artigos', title: 'Artigos Científicos' },
             { icon: Calculator, path: '/app/calculadora-tributaria', title: 'Calculadora Tributária (Beta)' },
           ].map(item => (

@@ -110,7 +110,7 @@ const BuscaPlanoInterface = () => {
       trial.refetch();
       toast({
         title: "Resposta recebida",
-        description: "Plano terapêutico processado com sucesso!",
+        description: "Plano de ação processado com sucesso!",
         variant: "default"
       });
     } catch (error: any) {
@@ -188,19 +188,19 @@ const BuscaPlanoInterface = () => {
                   <FirstTimeGuide
                     guideKey="plano"
                     icon={<Target className="h-8 w-8 text-amber-600" />}
-                    title="Planos Terapêuticos"
-                    description="Descreva o quadro clínico do paciente e receba planos terapêuticos estruturados com objetivos e intervenções baseadas em evidências."
+                    title="Planos de Ação"
+                    description="Descreva o quadro clínico do paciente e receba planos de ação estruturados com objetivos e intervenções baseadas em evidências."
                     tips={[
                       "Descreva o quadro clínico, idade e contexto do paciente",
                       "Peça intervenções específicas por abordagem terapêutica",
                       "Use os planos como base e adapte à sua prática clínica",
                     ]}
                     examples={[
-                      "Plano terapêutico para depressão em adolescentes",
+                      "Plano de ação para depressão em adolescentes",
                       "Intervenções para ansiedade generalizada",
                       "Estratégias para TDAH em adultos",
                     ]}
-                    ctaText="Buscar plano terapêutico"
+                    ctaText="Buscar plano de ação"
                     onDismiss={async () => {
                       if (user && !tourActive) {
                         const current = (profile?.seen_guides as any) || {};
@@ -226,16 +226,16 @@ const BuscaPlanoInterface = () => {
                   <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-4 sm:mb-5">
                     <Sparkles className="h-8 w-8 sm:h-10 sm:w-10 text-amber-600" />
                   </div>
-                   <h3 className="text-base sm:text-lg font-medium mb-2">Planos Terapêuticos</h3>
+                   <h3 className="text-base sm:text-lg font-medium mb-2">Planos de Ação</h3>
                   <p className="text-sm sm:text-base text-muted-foreground mb-6 max-w-md mx-auto text-overflow-anywhere">
-                    Planos terapêuticos estruturados com objetivos, intervenções e prazos. Descreva o quadro clínico para começar.
+                    Planos de ação estruturados com objetivos, intervenções e prazos. Descreva o quadro clínico para começar.
                   </p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 max-w-lg mx-auto">
                     {[
-                      "Plano terapêutico para depressão em adolescentes",
+                      "Plano de ação para depressão em adolescentes",
                       "Intervenções para ansiedade generalizada",
                       "Estratégias para TDAH em adultos",
-                      "Plano terapêutico para luto complicado",
+                      "Plano de ação para luto complicado",
                     ].map((suggestion) => (
                       <Button key={suggestion} variant="outline" className="h-auto py-2.5 px-3 text-left text-sm justify-start gap-2 bg-amber-500/5 border-amber-500/20 hover:bg-amber-500/10 hover:border-amber-500/30 text-foreground" onClick={() => { setNewMessage(suggestion); setTimeout(() => { const form = document.querySelector('form'); form?.requestSubmit(); }, 50); }}>
                         <Lightbulb className="h-3.5 w-3.5 text-amber-600 flex-shrink-0" />

@@ -52,6 +52,7 @@ ADAPTAÇÃO POR ABORDAGEM:
 - TCC: Use termos como pensamentos automáticos, distorções cognitivas, registro de pensamentos, reestruturação cognitiva, exposição, dessensibilização, tarefas entre sessões.
 - Psicanálise: Use termos como transferência, contratransferência, associação livre, resistência, mecanismos de defesa, conteúdo latente/manifesto, complexos, pulsões.
 - Humanista: Use termos como congruência, empatia, aceitação incondicional, tendência atualizante, autoconceito, experiência organísmica.
+- Fenomenologia Existencial e Humanista: Use termos como ser-no-mundo, existência autêntica, angústia existencial, liberdade e responsabilidade, intencionalidade da consciência, experiência vivida (Erlebnis), encontro autêntico, presença, sentido, projeto existencial.
 - Comportamental: Use termos como reforço, extinção, modelagem, análise funcional, contingências, esquema de reforçamento.
 - Sistêmica: Use termos como sistema familiar, padrões interacionais, triangulação, fronteiras, homeostase, circularidade.
 - Gestalt: Use termos como awareness, contato, figura/fundo, ciclo de contato, interrupções do contato, experimento.

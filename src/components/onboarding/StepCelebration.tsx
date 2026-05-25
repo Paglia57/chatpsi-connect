@@ -16,7 +16,7 @@ interface StepCelebrationProps {
 const features = [
   { icon: MessageCircle, title: 'Chat Clínico', desc: 'Discuta casos e consulte protocolos', route: '/chat' },
   { icon: BookOpen, title: 'Artigos Científicos', desc: 'Busque evidências para suas intervenções', route: '/busca-artigos' },
-  { icon: Target, title: 'Planos Terapêuticos', desc: 'Estruture objetivos e intervenções com IA', route: '/busca-plano' },
+  { icon: Target, title: 'Planos de Ação', desc: 'Estruture objetivos e intervenções com IA', route: '/busca-plano' },
   { icon: Megaphone, title: 'IA de Marketing', desc: 'Crie conteúdo para redes sociais', route: '/marketing' },
 ];
 

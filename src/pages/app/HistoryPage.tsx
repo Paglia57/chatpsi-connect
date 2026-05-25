@@ -17,6 +17,7 @@ import { Search, Trash2, ClipboardList, ClipboardCopy, Pencil, X, Download, Chev
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
 import { parseEvolutionContent, getContentPreview, exportEvolutionPdf } from "@/lib/evolutionParser";
+import EvolutionImprovementChat from "@/components/evolution/EvolutionImprovementChat";
 
 interface Evolution {
   id: string;
@@ -426,6 +427,21 @@ export default function HistoryPage() {
                   </>
                 )}
               </div>
+              {!isEditing && selectedEvolution.output_content && (
+                <div className="pt-2">
+                  <EvolutionImprovementChat
+                    evolutionContent={selectedEvolution.output_content}
+                    onContentUpdate={(c) => {
+                      setSelectedEvolution(prev => prev ? { ...prev, output_content: c } : prev);
+                      setEvolutions(prev => prev.map(e =>
+                        e.id === selectedEvolution.id ? { ...e, output_content: c } : e
+                      ));
+                    }}
+                    onApplied={fetchEvolutions}
+                    evolutionId={selectedEvolution.id}
+                  />
+                </div>
+              )}
             </div>
           )}
         </DialogContent>

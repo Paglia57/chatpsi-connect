@@ -5,7 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
-import { ClipboardCopy, Pencil, Save, RefreshCw, Download, Check, Loader2 } from "lucide-react";
+import { ClipboardCopy, Pencil, Save, RefreshCw, Download, Check, Loader2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { parseEvolutionContent, exportEvolutionPdf } from "@/lib/evolutionParser";
 
@@ -15,9 +15,10 @@ interface EvolutionOutputProps {
   onRegenerate: () => void;
   onSave: (content: string) => void;
   isSaving: boolean;
+  onRequestImprove?: () => void;
 }
 
-export default function EvolutionOutput({ content, isLoading, onRegenerate, onSave, isSaving }: EvolutionOutputProps) {
+export default function EvolutionOutput({ content, isLoading, onRegenerate, onSave, isSaving, onRequestImprove }: EvolutionOutputProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState("");
   const [copied, setCopied] = useState(false);
@@ -113,6 +114,12 @@ export default function EvolutionOutput({ content, isLoading, onRegenerate, onSa
             {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
             {isSaving ? "Salvando..." : "Salvar no prontuário"}
           </Button>
+          {onRequestImprove && !isEditing && (
+            <Button variant="secondary" size="sm" onClick={onRequestImprove}>
+              <Sparkles className="h-4 w-4" />
+              Refinar com IA
+            </Button>
+          )}
           <Button variant="outline" size="sm" onClick={onRegenerate} disabled={isLoading}>
             <RefreshCw className="h-4 w-4" />
             Regenerar evolução

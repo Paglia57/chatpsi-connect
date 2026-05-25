@@ -58,6 +58,7 @@ export type Database = {
           output_content: string | null
           patient_id: string | null
           patient_initials: string
+          revision_history: Json
           session_duration: string | null
           session_number: number | null
           session_type: string | null
@@ -74,6 +75,7 @@ export type Database = {
           output_content?: string | null
           patient_id?: string | null
           patient_initials: string
+          revision_history?: Json
           session_duration?: string | null
           session_number?: number | null
           session_type?: string | null
@@ -90,6 +92,7 @@ export type Database = {
           output_content?: string | null
           patient_id?: string | null
           patient_initials?: string
+          revision_history?: Json
           session_duration?: string | null
           session_number?: number | null
           session_type?: string | null

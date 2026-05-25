@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Pencil, Sparkles, Brain, ArrowLeft, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import PatientFormDialog, { type PatientData } from "@/components/patients/PatientFormDialog";
+import EvolutionImprovementChat from "@/components/evolution/EvolutionImprovementChat";
 
 interface Patient {
   id: string;
@@ -268,7 +269,7 @@ export default function PatientDetailPage() {
 
       {/* Evolution detail dialog */}
       <Dialog open={!!selectedEvo} onOpenChange={open => { if (!open) setSelectedEvo(null); }}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="font-display">
               Evolução clínica — {selectedEvo && new Date(selectedEvo.created_at).toLocaleDateString("pt-BR")}
@@ -277,6 +278,18 @@ export default function PatientDetailPage() {
           <div className="whitespace-pre-wrap text-sm text-foreground leading-relaxed">
             {selectedEvo?.output_content}
           </div>
+          {selectedEvo?.output_content && (
+            <div className="pt-2">
+              <EvolutionImprovementChat
+                evolutionContent={selectedEvo.output_content}
+                onContentUpdate={(c) =>
+                  setSelectedEvo(prev => (prev ? { ...prev, output_content: c } : prev))
+                }
+                onApplied={fetchData}
+                evolutionId={selectedEvo.id}
+              />
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 

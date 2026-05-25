@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import EvolutionInput from "@/components/evolution/EvolutionInput";
 import EvolutionOutput from "@/components/evolution/EvolutionOutput";
+import EvolutionImprovementChat from "@/components/evolution/EvolutionImprovementChat";
 import AppBreadcrumb from "@/components/ui/AppBreadcrumb";
 import FirstTimeGuide from "@/components/ui/FirstTimeGuide";
 import TrialLimitBanner from "@/components/ui/TrialLimitBanner";
@@ -235,6 +236,12 @@ export default function EvolutionPage() {
           onRegenerate={handleRegenerate}
           onSave={handleSave}
           isSaving={isSaving}
+        />
+      )}
+      {evolutionContent && !isGenerating && (
+        <EvolutionImprovementChat
+          evolutionContent={evolutionContent}
+          onContentUpdate={setEvolutionContent}
         />
       )}
     </div>

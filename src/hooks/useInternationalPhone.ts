@@ -93,8 +93,8 @@ export const useInternationalPhone = (
     return errors;
   };
 
-  // Obter número completo
-  const fullNumber = country + ddd + number;
+  // Obter número completo. Sem número digitado => vazio (evita propagar só o código do país).
+  const fullNumber = number ? country + ddd + number : '';
 
   // Validar
   const errors = validateBrazil();

@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ChatPsi — Plano de Onboarding & Ativação</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#112748;--navy-deep:#0A1A35;--navy-soft:#1B355C;
+    --cream:#F5F1E8;--cream-dim:rgba(245,241,232,.64);--cream-faint:rgba(245,241,232,.40);
+    --gold:#C9A961;--gold-deep:#9c7d3f;
+    --line:rgba(245,241,232,.12);--line-strong:rgba(201,169,97,.35);
+    --serif:"Bodoni Moda",serif;--sans:"Plus Jakarta Sans",sans-serif;--mono:"JetBrains Mono",monospace;--heavy:"Anton",sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:var(--navy);color:var(--cream);font-family:var(--sans);font-weight:400;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+  body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(900px 500px at 85% -5%, rgba(201,169,97,.10), transparent 60%),radial-gradient(700px 600px at -10% 100%, rgba(27,53,92,.55), transparent 55%)}
+  .wrap{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:0 28px}
+
+  /* TOPBAR */
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:26px 0;border-bottom:1px solid var(--line);flex-wrap:wrap;gap:14px}
+  .client-mark{display:flex;align-items:center;gap:12px}
+  .client-glyph{width:38px;height:38px;border-radius:11px;flex:none;background:linear-gradient(145deg,var(--gold),var(--gold-deep));display:grid;place-items:center;font-family:var(--serif);font-style:italic;font-weight:700;color:var(--navy-deep);font-size:20px;box-shadow:0 6px 18px rgba(201,169,97,.25)}
+  .client-name{font-family:var(--sans);font-weight:800;font-size:21px;letter-spacing:-.02em}
+  .client-name .psi{font-family:var(--serif);font-style:italic;font-weight:700;color:var(--gold)}
+  .topbar .doc-tag{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--cream-dim)}
+
+  /* HERO */
+  .hero{padding:78px 0 54px}
+  .kicker{font-family:var(--mono);font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:var(--gold);margin-bottom:26px;opacity:0;animation:rise .8s .1s forwards}
+  h1.hero-title{font-family:var(--heavy);font-weight:400;font-size:clamp(44px,9vw,104px);line-height:.9;letter-spacing:.005em;text-transform:uppercase;color:var(--cream);display:inline-block}
+  h1.hero-title .sweep{background:linear-gradient(100deg,var(--cream) 0%,var(--cream) 40%,var(--gold) 50%,var(--cream) 60%,var(--cream) 100%);background-size:280% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:sweep 4.5s 1.1s ease-in-out infinite}
+  .hero-sub{font-family:var(--serif);font-style:italic;font-weight:500;font-size:clamp(19px,2.8vw,29px);line-height:1.3;color:var(--cream);max-width:730px;margin-top:30px;opacity:0;animation:rise .8s .4s forwards}
+  .hero-sub b{font-style:normal;font-family:var(--sans);font-weight:800;color:var(--gold)}
+  .hero-meta{display:flex;flex-wrap:wrap;gap:26px;margin-top:42px;font-family:var(--mono);font-size:12.5px;color:var(--cream-dim);letter-spacing:.02em;opacity:0;animation:rise .8s .6s forwards}
+  .hero-meta span b{color:var(--cream);font-weight:500}
+
+  /* PRINCIPLES */
+  .princ{margin-top:6px;background:rgba(201,169,97,.06);border:1px solid var(--line-strong);border-radius:16px;padding:28px 30px}
+  .princ .pt{font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:16px}
+  .princ ul{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:14px 28px}
+  @media(max-width:680px){.princ ul{grid-template-columns:1fr}}
+  .princ li{font-size:14px;color:var(--cream-dim);line-height:1.5;padding-left:18px;position:relative}
+  .princ li::before{content:"→";position:absolute;left:0;color:var(--gold)}
+  .princ li b{color:var(--cream);font-weight:700}
+
+  /* PART HEADER */
+  .part{padding:60px 0 8px;border-top:1px solid var(--line)}
+  .part-tag{font-family:var(--mono);font-size:12px;letter-spacing:.26em;text-transform:uppercase;color:var(--gold);margin-bottom:14px}
+  .part h2{font-family:var(--serif);font-style:italic;font-weight:700;font-size:clamp(30px,5vw,50px);line-height:1.02;letter-spacing:-.01em}
+  .part .pintro{font-size:16.5px;color:var(--cream-dim);max-width:760px;margin-top:16px}
+  .part .pintro b{color:var(--cream);font-weight:700}
+
+  /* DAY CARD */
+  .day{margin-top:22px;background:var(--navy-deep);border:1px solid var(--line);border-radius:18px;overflow:hidden;transition:border-color .3s}
+  .day:hover{border-color:var(--line-strong)}
+  .day-head{display:flex;align-items:center;gap:16px;padding:22px 26px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+  .day-badge{font-family:var(--sans);font-weight:800;font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:var(--navy-deep);background:var(--gold);padding:5px 12px;border-radius:8px;flex:none}
+  .day-title{font-family:var(--sans);font-weight:800;font-size:18px;letter-spacing:-.01em;flex:1;min-width:200px}
+  .fmt{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:4px 10px;border-radius:20px;border:1px solid var(--line);white-space:nowrap}
+  .fmt.video{color:var(--gold);border-color:var(--line-strong)}
+  .fmt.msg{color:var(--cream-dim)}
+  .day-why{padding:14px 26px;font-size:13px;color:var(--cream-faint);font-style:italic;font-family:var(--serif);border-bottom:1px solid var(--line)}
+  .day-why b{font-style:normal;font-family:var(--sans);color:var(--cream-dim);font-weight:700}
+
+  .day-body{display:grid;grid-template-columns:1fr 1fr;gap:0}
+  .day-body.solo{grid-template-columns:1fr}
+  @media(max-width:760px){.day-body{grid-template-columns:1fr}}
+  .col-msg{padding:24px 26px}
+  .col-vid{padding:24px 26px;border-left:1px solid var(--line)}
+  @media(max-width:760px){.col-vid{border-left:none;border-top:1px solid var(--line)}}
+  .col-label{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+  .col-label .ic{width:7px;height:7px;border-radius:50%;background:var(--gold)}
+
+  /* WHATSAPP BUBBLE (casa palette, no green) */
+  .bubble{background:var(--navy-soft);border:1px solid var(--line);border-radius:4px 16px 16px 16px;padding:15px 17px;font-size:14px;line-height:1.55;color:var(--cream);position:relative;max-width:94%}
+  .bubble .line{display:block}
+  .bubble .line + .line{margin-top:7px}
+  .bubble b{font-weight:800;color:var(--gold)}
+  .bubble .tick{font-family:var(--mono);font-size:9px;color:var(--cream-faint);text-align:right;margin-top:8px;letter-spacing:.06em}
+
+  /* VIDEO SCRIPT */
+  .scenes{display:flex;flex-direction:column;gap:0}
+  .scene{display:grid;grid-template-columns:64px 1fr;gap:14px;padding:11px 0;border-bottom:1px solid var(--line);align-items:start}
+  .scene:last-child{border-bottom:none}
+  .scene .t{font-family:var(--mono);font-size:11px;color:var(--gold);font-weight:500;padding-top:1px}
+  .scene .d{font-size:13px;color:var(--cream-dim);line-height:1.45}
+  .scene .d b{color:var(--cream);font-weight:700}
+  .scene .d em{color:var(--cream);font-style:italic;font-family:var(--serif)}
+
+  /* ESPORADICAS */
+  .esp-cat{margin-top:32px}
+  .esp-cat-head{display:flex;align-items:baseline;gap:12px;margin-bottom:16px}
+  .esp-letter{font-family:var(--serif);font-style:italic;font-weight:700;font-size:30px;color:var(--gold);line-height:1}
+  .esp-cat-title{font-family:var(--serif);font-style:italic;font-weight:700;font-size:22px}
+  .esp-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:760px){.esp-grid{grid-template-columns:1fr}}
+  .esp{background:var(--navy-deep);border:1px solid var(--line);border-radius:14px;padding:20px 21px;transition:transform .3s cubic-bezier(.2,.7,.2,1),border-color .3s}
+  .esp:hover{transform:translateY(-4px);border-color:var(--line-strong)}
+  .esp-top{display:flex;align-items:center;gap:10px;margin-bottom:13px;flex-wrap:wrap}
+  .esp-id{font-family:var(--mono);font-size:12px;color:var(--gold);font-weight:700}
+  .esp-name{font-family:var(--sans);font-weight:800;font-size:14px;letter-spacing:-.01em;flex:1;min-width:120px}
+  .esp .bubble{font-size:13.5px;max-width:100%}
+  .esp .vidnote{margin-top:11px;font-family:var(--mono);font-size:10.5px;color:var(--cream-faint);line-height:1.5;border-left:2px solid var(--line-strong);padding-left:11px}
+  .esp .vidnote b{color:var(--gold);font-weight:500}
+  .esp.trigger{border-left:2px solid var(--gold)}
+  .esp .trig{font-family:var(--mono);font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--gold);margin-bottom:10px}
+
+  /* CALENDAR */
+  .cal{margin-top:8px;border:1px solid var(--line);border-radius:16px;overflow:hidden}
+  .cal-row{display:grid;grid-template-columns:.7fr 1.6fr .8fr 1.4fr;border-bottom:1px solid var(--line)}
+  .cal-row:last-child{border-bottom:none}
+  .cal-row.head{background:var(--navy-deep)}
+  .cal-row.head .cc{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold)}
+  .cc{padding:13px 18px;font-size:13.5px;color:var(--cream-dim)}
+  .cc.d{color:var(--cream);font-weight:700;font-family:var(--mono);font-size:12px}
+  .cc.f{font-family:var(--mono);font-size:11px}
+  .cc.f.v{color:var(--gold)}
+
+  /* NOTES */
+  .notes{margin-top:8px;display:flex;flex-direction:column}
+  .note{display:grid;grid-template-columns:26px 1fr;gap:14px;padding:14px 0;border-bottom:1px solid var(--line);font-size:14px;color:var(--cream-dim);line-height:1.5}
+  .note:last-child{border-bottom:none}
+  .note .nk{color:var(--gold);font-size:13px}
+  .note b{color:var(--cream);font-weight:700}
+
+  /* FOOTER */
+  .cv-seal{background:transparent;border-top:1px solid rgba(245,241,232,.12);color:var(--cream-dim);font-family:"JetBrains Mono",monospace;font-size:12px;letter-spacing:.04em;text-align:center;padding:34px 20px 60px;margin-top:42px;opacity:.9}
+  .cv-mark{font-style:normal;font-weight:500;white-space:nowrap}
+  .cv-cause{font-family:"Plus Jakarta Sans",sans-serif;font-weight:800;letter-spacing:-.035em;color:#F5F1E8}
+  .cv-dot{font-family:"Plus Jakarta Sans",sans-serif;font-weight:800;color:#C9A961}
+  .cv-vendas{font-family:"Bodoni Moda",serif;font-weight:700;font-style:italic;color:#F5F1E8}
+  .cv-rapido{font-family:"JetBrains Mono",monospace;font-weight:500;color:#C9A961;font-size:.7em;margin-left:.4em}
+  .cv-seal .line2{display:block;margin-top:10px;font-size:10.5px;color:var(--cream-faint);letter-spacing:.14em;text-transform:uppercase}
+
+  @keyframes rise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes sweep{0%,100%{background-position:120% 0}50%{background-position:-20% 0}}
+  .reveal{opacity:0;transform:translateY(22px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.7,.2,1)}
+  .reveal.in{opacity:1;transform:none}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.reveal{opacity:1;transform:none}}
+  .sec-head{display:flex;align-items:baseline;gap:16px;margin:54px 0 8px}
+  .sec-head h2{font-family:var(--serif);font-style:italic;font-weight:700;font-size:clamp(24px,3.6vw,34px)}
+  .sec-tag{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="topbar">
+    <div class="client-mark"><div class="client-glyph">P</div><div class="client-name">Chat<span class="psi">Psi</span></div></div>
+    <div class="doc-tag">Plano de conteúdo · interno</div>
+  </header>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="kicker">Onboarding & ativação no WhatsApp</div>
+    <h1 class="hero-title"><span class="sweep">7 DIAS PRA<br>VICIAR</span></h1>
+    <p class="hero-sub">Uma sequência de boas-vindas + um banco de mensagens — <b>ensinando e incentivando o psicólogo a usar.</b> Cada item nasce do que os dados mostraram que mais resolve a vida dele.</p>
+    <div class="hero-meta">
+      <span><b>7</b> dias de boas-vindas</span>
+      <span><b>4</b> vídeos · <b>3</b> mensagens</span>
+      <span><b>12</b> esporádicas no banco</span>
+      <span>roteiros prontos pra gravar</span>
+    </div>
+  </div>
+
+  <!-- PRINCIPLES -->
+  <div class="princ reveal">
+    <div class="pt">Por que está montado assim</div>
+    <ul>
+      <li><b>Começa pelo que vicia.</b> Documentar a sessão é a função-âncora nos dados — é o Dia 1, e por áudio.</li>
+      <li><b>Resultado antes de feature.</b> Fala do que ele ganha (tempo, prontuário pronto), não do recurso.</li>
+      <li><b>Número antes de adjetivo.</b> "Evolução pronta em 30 segundos", não "evolução incrível".</li>
+      <li><b>Sem urgência falsa, sem grito.</b> Tom de quem ajuda, não de quem vende.</li>
+      <li><b>Vídeo OU só mensagem.</b> Nem tudo precisa de vídeo — misturar evita cansar.</li>
+      <li><b>Todo vídeo mostra a tela real</b> com caso fictício (nunca paciente real — LGPD).</li>
+    </ul>
+  </div>
+
+  <!-- ============ PARTE 1 ============ -->
+  <div class="part">
+    <div class="part-tag">Parte 1</div>
+    <h2>Sequência de 7 dias</h2>
+    <p class="pintro">Um toque por dia. Leva o psicólogo do "não sei o que isso faz" até "já não consigo trabalhar sem". Cada cartão traz a <b>mensagem pronta pra enviar</b> e, quando houver, o <b>roteiro do vídeo cena a cena</b>.</p>
+  </div>
+
+  <!-- DIA 1 -->
+  <div class="day reveal">
+    <div class="day-head"><span class="day-badge">Dia 1</span><span class="day-title">A evolução da sessão pronta por áudio</span><span class="fmt video">🎬 Vídeo ~30s</span></div>
+    <div class="day-why"><b>Por que primeiro:</b> é a intenção nº 1 nos dois canais. Se o psicólogo sentir isso no dia 1, ele fica.</div>
+    <div class="day-body">
+      <div class="col-msg">
+        <div class="col-label"><span class="ic"></span>Mensagem pra enviar</div>
+        <div class="bubble">
+          <span class="line">Oi, [nome]! Seja bem-vindo(a) ao ChatPsi 👋</span>
+          <span class="line">Vou te mostrar em 7 dias como ele pode te poupar horas por semana.</span>
+          <span class="line">Hoje, o principal: <b>acabou a sessão? Me manda um áudio contando como foi.</b> Eu te devolvo a evolução pronta pra colar no prontuário.</span>
+          <span class="line">Olha como é 👇</span>
+          <span class="tick">enviar com o vídeo ✓✓</span>
+        </div>
+      </div>
+      <div class="col-vid">
+        <div class="col-label"><span class="ic"></span>Roteiro do vídeo</div>
+        <div class="scenes">
+          <div class="scene"><div class="t">0–4s</div><div class="d">Tela do WhatsApp do ChatPsi. Legenda: <em>"Terminou a sessão?"</em></div></div>
+          <div class="scene"><div class="t">4–14s</div><div class="d">Dedo segura o botão de áudio e fala (com legenda): <em>"Atendi a paciente hoje, primeira sessão, relatou ansiedade no trabalho e dificuldade pra dormir…"</em></div></div>
+          <div class="scene"><div class="t">14–24s</div><div class="d">A resposta do ChatPsi surgindo, já formatada: "Registro de Sessão — Queixa: ansiedade… Intervenção:…". Legenda: <b>"Pronto. Evolução estruturada."</b></div></div>
+          <div class="scene"><div class="t">24–30s</div><div class="d">Texto na tela: <em>"Sua sessão vira prontuário em 30 segundos."</em></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DIA 2 -->
+  <div class="day reveal">
+    <div class="day-head"><span class="day-badge">Dia 2</span><span class="day-title">Plano de ação / tratamento</span><span class="fmt video">🎬 Vídeo ~30s</span></div>
+    <div class="day-why"><b>Por que aqui:</b> 2ª intenção mais usada e a de maior retorno — ~79% voltam a pedir.</div>
+    <div class="day-body">
+      <div class="col-msg">
+        <div class="col-label"><span class="ic"></span>Mensagem pra enviar</div>
+        <div class="bubble">
+          <span class="line">Dia 2 — seguindo 🧭</span>
+          <span class="line">Travou em como conduzir um caso? Me descreve o paciente e o objetivo, e eu monto um <b>plano de tratamento com as sessões organizadas</b>.</span>
+          <span class="line">Funciona pra TCC, e também pra outras abordagens — é só pedir.</span>
+          <span class="tick">enviar com o vídeo ✓✓</span>
+        </div>
+      </div>
+      <div class="col-vid">
+        <div class="col-label"><span class="ic"></span>Roteiro do vídeo</div>
+        <div class="scenes">
+          <div class="scene"><div class="t">0–5s</div><div class="d">Legenda: <em>"Não sabe por onde começar com um paciente novo?"</em></div></div>
+          <div class="scene"><div class="t">5–15s</div><div class="d">Psicólogo escreve/fala: <em>"Paciente de 25 anos com ansiedade generalizada, quero um plano em TCC com número de sessões."</em></div></div>
+          <div class="scene"><div class="t">15–26s</div><div class="d">Resposta em lista: "Sessão 1 — Psicoeducação; Sessão 2 — Gatilhos; Sessão 3 — Reestruturação cognitiva…"</div></div>
+          <div class="scene"><div class="t">26–30s</div><div class="d">Texto: <em>"Um plano inteiro, em segundos. Você ajusta o que quiser."</em></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DIA 3 -->
+  <div class="day reveal">
+    <div class="day-head"><span class="day-badge">Dia 3</span><span class="day-title">Dúvida clínica na hora</span><span class="fmt msg">💬 Só mensagem</span></div>
+    <div class="day-why"><b>Por que aqui:</b> uso frequente e de baixa fricção — ótimo pra criar o hábito de abrir o chat.</div>
+    <div class="day-body solo">
+      <div class="col-msg">
+        <div class="col-label"><span class="ic"></span>Mensagem pra enviar</div>
+        <div class="bubble">
+          <span class="line">Dia 3 🧠</span>
+          <span class="line">Surgiu uma dúvida no meio de um caso e não quer parar pra procurar em livro?</span>
+          <span class="line">Pergunta aqui do mesmo jeito que você perguntaria pra um colega:</span>
+          <span class="line">• "Qual a diferença entre TAG e depressão mista?"</span>
+          <span class="line">• "Como aplicar reestruturação cognitiva na prática?"</span>
+          <span class="line">• "Roteiro pra uma primeira sessão de 50 minutos?"</span>
+          <span class="line">Pode mandar a dúvida agora. Eu respondo na hora. 👇</span>
+          <span class="tick">enviada ✓✓</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DIA 4 -->
+  <div class="day reveal">
+    <div class="day-head"><span class="day-badge">Dia 4</span><span class="day-title">Material terapêutico — a demanda escondida</span><span class="fmt video">🎬 Vídeo ~35s</span></div>
+    <div class="day-why"><b>Por que aqui:</b> muito pedido (12–19%), mas pouca gente sabe que pode pedir. O vídeo "abre o olho".</div>
+    <div class="day-body">
+      <div class="col-msg">
+        <div class="col-label"><span class="ic"></span>Mensagem pra enviar</div>
+        <div class="bubble">
+          <span class="line">Dia 4 📋</span>
+          <span class="line">Essa muita gente não sabe: eu monto <b>material pronto pra usar com o paciente</b>.</span>
+          <span class="line">Ficha de registro de pensamentos, exercício de autoestima, escala de ansiedade, folheto de psicoeducação… é só pedir o tema.</span>
+          <span class="line">Olha 👇</span>
+          <span class="tick">enviar com o vídeo ✓✓</span>
+        </div>
+      </div>
+      <div class="col-vid">
+        <div class="col-label"><span class="ic"></span>Roteiro do vídeo</div>
+        <div class="scenes">
+          <div class="scene"><div class="t">0–5s</div><div class="d">Legenda: <em>"Precisa de uma ficha pra mandar pro paciente?"</em></div></div>
+          <div class="scene"><div class="t">5–16s</div><div class="d">Psicólogo escreve: <em>"Me faz uma ficha de registro de pensamentos, emoções e comportamentos pra TCC."</em></div></div>
+          <div class="scene"><div class="t">16–28s</div><div class="d">Material estruturado surgindo, com colunas e instruções. Legenda: <b>"Pronto pra copiar, imprimir ou mandar."</b></div></div>
+          <div class="scene"><div class="t">28–35s</div><div class="d">Texto: <em>"Fichas, exercícios e escalas — sob medida pro seu paciente."</em></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DIA 5 -->
+  <div class="day reveal">
+    <div class="day-head"><span class="day-badge">Dia 5</span><span class="day-title">Documentos clínicos — com o limite ético</span><span class="fmt video">🎬 Vídeo ~30s</span></div>
+    <div class="day-why"><b>Por que aqui:</b> 5–10% do uso, sem atalho próprio. Mostrar o guardrail ético gera confiança no produto.</div>
+    <div class="day-body">
+      <div class="col-msg">
+        <div class="col-label"><span class="ic"></span>Mensagem pra enviar</div>
+        <div class="bubble">
+          <span class="line">Dia 5 📄</span>
+          <span class="line">Burocracia toma seu tempo? Eu ajudo com <b>declaração de comparecimento, encaminhamento, parecer e prontuário</b> — no formato certo.</span>
+          <span class="line">E pode ficar tranquilo(a): eu respeito os limites da profissão. Atestado médico, por exemplo, eu não faço — porque não é função do psicólogo.</span>
+          <span class="tick">enviar com o vídeo ✓✓</span>
+        </div>
+      </div>
+      <div class="col-vid">
+        <div class="col-label"><span class="ic"></span>Roteiro do vídeo</div>
+        <div class="scenes">
+          <div class="scene"><div class="t">0–6s</div><div class="d">Legenda: <em>"Documento clínico no formato certo, sem dor de cabeça."</em></div></div>
+          <div class="scene"><div class="t">6–18s</div><div class="d">Psicólogo pede: <em>"Preciso de uma declaração de comparecimento pra sessão de hoje."</em></div></div>
+          <div class="scene"><div class="t">18–26s</div><div class="d">Declaração formatada surge. Legenda: <b>"Estruturado e profissional."</b></div></div>
+          <div class="scene"><div class="t">26–30s</div><div class="d">Texto: <em>"Documentos prontos. Sempre dentro da ética."</em></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DIA 6 -->
+  <div class="day reveal">
+    <div class="day-head"><span class="day-badge">Dia 6</span><span class="day-title">Conteúdo pras redes — atrair pacientes</span><span class="fmt msg">💬 Só mensagem</span></div>
+    <div class="day-why"><b>Por que aqui:</b> marketing é uso baixo, não é prioridade do produto — mas é um bônus que surpreende e amplia o valor percebido.</div>
+    <div class="day-body solo">
+      <div class="col-msg">
+        <div class="col-label"><span class="ic"></span>Mensagem pra enviar</div>
+        <div class="bubble">
+          <span class="line">Dia 6 📱</span>
+          <span class="line">Sabia que eu também te ajudo a aparecer? Posso escrever <b>post, legenda, roteiro de Reels e ideias de Stories</b> pro seu Instagram — na sua voz.</span>
+          <span class="line">Quer testar agora? Me manda um tema, tipo: <em>"post sobre ansiedade no trabalho"</em> — e eu já te devolvo pronto.</span>
+          <span class="tick">enviada ✓✓</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DIA 7 -->
+  <div class="day reveal">
+    <div class="day-head"><span class="day-badge">Dia 7</span><span class="day-title">Recapitulação + virar hábito</span><span class="fmt msg">💬 Só mensagem</span></div>
+    <div class="day-why"><b>Por que aqui:</b> fechamento que transforma "testei" em "uso sempre".</div>
+    <div class="day-body solo">
+      <div class="col-msg">
+        <div class="col-label"><span class="ic"></span>Mensagem pra enviar</div>
+        <div class="bubble">
+          <span class="line">Dia 7 ✅ chegamos ao fim da primeira semana.</span>
+          <span class="line">Em resumo, eu fico aqui o dia todo pra:</span>
+          <span class="line">📝 transformar sua sessão em evolução (manda áudio!)</span>
+          <span class="line">🗂️ montar planos de tratamento</span>
+          <span class="line">🧠 tirar dúvidas clínicas</span>
+          <span class="line">📋 criar fichas e materiais</span>
+          <span class="line">📄 escrever documentos</span>
+          <span class="line">📱 fazer conteúdo pras redes</span>
+          <span class="line">Não precisa decorar nada. Fala comigo do jeito que você pensa — eu entendo.</span>
+          <span class="line">O que você quer resolver primeiro hoje?</span>
+          <span class="tick">enviada ✓✓</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ PARTE 2 ============ -->
+  <div class="part">
+    <div class="part-tag">Parte 2</div>
+    <h2>Mensagens esporádicas</h2>
+    <p class="pintro">Use 1 a cada 1–2 semanas depois da primeira semana. Misture as categorias — uma dica, depois um incentivo, depois uma novidade. A de <b>resgate</b> é disparada por inatividade, não por calendário.</p>
+  </div>
+
+  <!-- CAT A -->
+  <div class="esp-cat">
+    <div class="esp-cat-head"><span class="esp-letter">A</span><span class="esp-cat-title">Dicas de uso</span></div>
+    <div class="esp-grid">
+      <div class="esp reveal"><div class="esp-top"><span class="esp-id">A1</span><span class="esp-name">Áudio é mais rápido</span><span class="fmt msg">💬</span></div>
+        <div class="bubble">Dica rápida: você não precisa digitar. <b>Manda áudio.</b> Conta a sessão como se estivesse desabafando com um colega — eu organizo tudo depois. Quem usa por áudio economiza muito mais tempo.</div></div>
+      <div class="esp reveal"><div class="esp-top"><span class="esp-id">A2</span><span class="esp-name">Pode pedir pra ajustar</span><span class="fmt msg">💬</span></div>
+        <div class="bubble">Recebeu uma evolução ou plano e queria diferente? É só falar: <em>"deixa mais curto"</em>, <em>"foca na conduta"</em>, <em>"refaz em tópicos"</em>. Eu reescrevo quantas vezes precisar.</div></div>
+      <div class="esp reveal"><div class="esp-top"><span class="esp-id">A3</span><span class="esp-name">Junta tudo numa conversa só</span><span class="fmt msg">💬</span></div>
+        <div class="bubble">Você pode tratar um paciente do início ao fim numa conversa: dita a sessão → peço o plano → peço a ficha pra ele → escrevo a evolução. Tudo no mesmo fio.</div></div>
+      <div class="esp reveal"><div class="esp-top"><span class="esp-id">A4</span><span class="esp-name">Diga a abordagem</span><span class="fmt video">🎬 ~20s</span></div>
+        <div class="bubble">Trabalha com psicanálise, ABA, fenomenologia? É só dizer — eu adapto plano e linguagem à sua abordagem.</div>
+        <div class="vidnote"><b>Vídeo:</b> psicólogo escreve "plano em abordagem fenomenológico-existencial pra um caso de luto" e a resposta vem no tom certo.</div></div>
+    </div>
+  </div>
+
+  <!-- CAT B -->
+  <div class="esp-cat">
+    <div class="esp-cat-head"><span class="esp-letter">B</span><span class="esp-cat-title">Incentivo / criar hábito</span></div>
+    <div class="esp-grid">
+      <div class="esp reveal"><div class="esp-top"><span class="esp-id">B1</span><span class="esp-name">Pôr o prontuário em dia</span><span class="fmt msg">💬</span></div>
+        <div class="bubble">Sexta chegando. Ficou alguma evolução atrasada da semana? Me manda os áudios das sessões e a gente põe o prontuário em dia em minutos — antes do fim de semana.</div></div>
+      <div class="esp reveal"><div class="esp-top"><span class="esp-id">B2</span><span class="esp-name">Aquele paciente difícil</span><span class="fmt msg">💬</span></div>
+        <div class="bubble">Tem um caso que está te deixando travado(a)? Me conta o que está acontecendo. Às vezes só organizar o caso em voz alta (ou em áudio, comigo) já abre o próximo passo.</div></div>
+      <div class="esp trigger reveal"><div class="esp-top"><span class="esp-id">B3</span><span class="esp-name">Resgate de quem sumiu</span><span class="fmt msg">💬</span></div>
+        <div class="trig">⚡ gatilho: inatividade de 2–3 semanas</div>
+        <div class="bubble">Faz um tempinho que a gente não conversa, [nome]. Se quiser, me manda a próxima sessão por áudio — em 30 segundos você tem a evolução pronta. Tô aqui quando precisar.</div></div>
+      <div class="esp reveal"><div class="esp-top"><span class="esp-id">B4</span><span class="esp-name">Antes da 1ª sessão da semana</span><span class="fmt msg">💬</span></div>
+        <div class="bubble">Começando a semana? Se tiver paciente novo hoje, me pede um roteiro de primeira sessão. Você entra mais seguro(a) e com o caminho desenhado.</div></div>
+    </div>
+  </div>
+
+  <!-- CAT C -->
+  <div class="esp-cat">
+    <div class="esp-cat-head"><span class="esp-letter">C</span><span class="esp-cat-title">Novidades / demanda escondida</span></div>
+    <div class="esp-grid">
+      <div class="esp reveal"><div class="esp-top"><span class="esp-id">C1</span><span class="esp-name">Escalas e inventários</span><span class="fmt msg">💬</span></div>
+        <div class="bubble">Você sabia que eu te ajudo com escalas? Posso explicar a SNAP-IV, montar a tríade cognitiva, estruturar um inventário pra impressão. Pergunta sobre a que você usa.</div></div>
+      <div class="esp reveal"><div class="esp-top"><span class="esp-id">C2</span><span class="esp-name">Material pra imprimir</span><span class="fmt video">🎬 ~25s</span></div>
+        <div class="bubble">Precisa de exercício pra mandar de "tarefa de casa" pro paciente? Eu monto.</div>
+        <div class="vidnote"><b>Vídeo:</b> pedido "exercício de autoestima e imagem corporal pra adolescente" → material pronto na tela.</div></div>
+      <div class="esp reveal"><div class="esp-top"><span class="esp-id">C3</span><span class="esp-name">Psicoeducação pronta</span><span class="fmt msg">💬</span></div>
+        <div class="bubble">Vai explicar um diagnóstico pro paciente ou pra família? Me pede um texto de psicoeducação — sobre TDAH, ansiedade, o que for — em linguagem simples, pronto pra entregar.</div></div>
+      <div class="esp reveal"><div class="esp-top"><span class="esp-id">C4</span><span class="esp-name">Conteúdo pras redes (lembrete leve)</span><span class="fmt msg">💬</span></div>
+        <div class="bubble">Faz tempo que não posta no Instagram? Me dá um tema em 5 segundos e eu te devolvo um post pronto. Sua presença online sem tomar seu tempo de atendimento.</div></div>
+    </div>
+  </div>
+
+  <!-- ============ CALENDÁRIO ============ -->
+  <div class="sec-head"><span class="sec-tag">·</span><h2>Calendário sugerido</h2></div>
+  <div class="cal reveal">
+    <div class="cal-row head"><div class="cc">Quando</div><div class="cc">Item</div><div class="cc">Formato</div><div class="cc">Foco</div></div>
+    <div class="cal-row"><div class="cc d">Dia 1</div><div class="cc">Evolução por áudio</div><div class="cc f v">🎬 vídeo</div><div class="cc">o "aha" principal</div></div>
+    <div class="cal-row"><div class="cc d">Dia 2</div><div class="cc">Plano de ação</div><div class="cc f v">🎬 vídeo</div><div class="cc">conduzir o caso</div></div>
+    <div class="cal-row"><div class="cc d">Dia 3</div><div class="cc">Dúvida clínica</div><div class="cc f">💬 mensagem</div><div class="cc">colega de plantão</div></div>
+    <div class="cal-row"><div class="cc d">Dia 4</div><div class="cc">Material terapêutico</div><div class="cc f v">🎬 vídeo</div><div class="cc">demanda escondida</div></div>
+    <div class="cal-row"><div class="cc d">Dia 5</div><div class="cc">Documentos clínicos</div><div class="cc f v">🎬 vídeo</div><div class="cc">tempo + confiança</div></div>
+    <div class="cal-row"><div class="cc d">Dia 6</div><div class="cc">Conteúdo pras redes</div><div class="cc f">💬 mensagem</div><div class="cc">bônus / atrair</div></div>
+    <div class="cal-row"><div class="cc d">Dia 7</div><div class="cc">Recap + hábito</div><div class="cc f">💬 mensagem</div><div class="cc">fechar e fixar</div></div>
+    <div class="cal-row"><div class="cc d">Sem. 2+</div><div class="cc">Esporádicas A / B / C</div><div class="cc f">misto</div><div class="cc">manter e aprofundar</div></div>
+  </div>
+
+  <!-- ============ NOTAS ============ -->
+  <div class="sec-head"><span class="sec-tag">·</span><h2>Notas de produção</h2></div>
+  <div class="notes reveal">
+    <div class="note"><div class="nk">→</div><div><b>4 vídeos, 3 mensagens na primeira semana</b> — proposital. Vídeo nos dias de "mostrar como funciona"; mensagem nos dias de "convidar a fazer".</div></div>
+    <div class="note"><div class="nk">→</div><div><b>Todo vídeo mostra a tela real</b>, com caso fictício. Nunca paciente real — é dado clínico, LGPD vale aqui também.</div></div>
+    <div class="note"><div class="nk">→</div><div><b>Personalize o [nome]</b> sempre que possível; a abertura pessoal aumenta a taxa de resposta.</div></div>
+    <div class="note"><div class="nk">→</div><div><b>Um call-to-action por mensagem.</b> Sempre termine convidando a fazer algo agora ("me manda um áudio", "qual tema?").</div></div>
+    <div class="note"><div class="nk">→</div><div><b>O limite ético é diferencial, não fraqueza.</b> Mantenha-o visível (Dia 5) — gera confiança no produto.</div></div>
+    <div class="note"><div class="nk">→</div><div>Os roteiros são ponto de partida — <b>ajuste à sua voz de marca</b> antes de gravar.</div></div>
+  </div>
+
+</div>
+
+<footer class="cv-seal">
+  <span>feito por <b class="cv-mark"><span class="cv-cause">cause</span><span class="cv-dot">.</span><span class="cv-vendas">vendas</span><span class="cv-rapido">(rápido)</span></b></span>
+  <span class="line2">Plano de conteúdo baseado nos relatórios de uso · roteiros são ponto de partida, ajustar à voz de marca</span>
+</footer>
+
+<script>
+  const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}})},{threshold:.08});
+  document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+</script>
+</body>
+</html>

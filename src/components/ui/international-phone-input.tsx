@@ -36,17 +36,19 @@ export const InternationalPhoneInput = ({
   const lastValueRef = useRef(value);
   const isInitialMountRef = useRef(true);
 
-  // Parse valor inicial apenas na montagem
+  // Parse valor inicial apenas na montagem.
   useEffect(() => {
-    if (isInitialMountRef.current && value) {
+    if (value) {
       isParsingRef.current = true;
       parsePhone(value);
       lastValueRef.current = value;
-      isInitialMountRef.current = false;
       setTimeout(() => {
         isParsingRef.current = false;
       }, 0);
     }
+    // Sempre encerra o estado de "montagem inicial", mesmo com o campo vazio —
+    // do contrário onChange nunca dispararia para um número digitado do zero.
+    isInitialMountRef.current = false;
   }, []);
 
   // Notificar mudanças para o componente pai (apenas mudanças reais do usuário)

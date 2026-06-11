@@ -27,5 +27,8 @@ dist-ssr
 supabase/.temp/
 supabase/.branches/
 
+# Config local de ferramentas (Serena MCP)
+.serena/
+
 # Saída temporária de scripts de verificação
 .tmp-verify/

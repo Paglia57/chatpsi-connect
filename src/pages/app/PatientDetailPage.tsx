@@ -61,7 +61,7 @@ export default function PatientDetailPage() {
     setLoading(true);
     const [pRes, eRes] = await Promise.all([
       supabase.from("patients").select("*").eq("id", id).eq("user_id", user.id).single(),
-      supabase.from("evolutions").select("id, output_content, created_at, session_number").eq("patient_id", id).order("created_at", { ascending: false }),
+      supabase.from("evolutions").select("id, output_content, created_at, session_number").eq("patient_id", id).is("deleted_at", null).order("created_at", { ascending: false }),
     ]);
     if (pRes.data) setPatient(pRes.data as Patient);
     if (eRes.data) setEvolutions(eRes.data);

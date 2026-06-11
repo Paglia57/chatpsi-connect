@@ -140,6 +140,7 @@ export default function HistoryPage() {
       .from("evolutions")
       .select("id, patient_initials, approach, output_content, created_at, session_number, session_duration, session_type")
       .eq("user_id", user.id)
+      .is("deleted_at", null)
       .order("created_at", { ascending: false });
     if (!error && data) setEvolutions(data);
     setLoading(false);
@@ -148,7 +149,12 @@ export default function HistoryPage() {
   useEffect(() => { fetchEvolutions(); }, [user]);
 
   const handleDelete = async (id: string) => {
-    const { error } = await supabase.from("evolutions").delete().eq("id", id);
+    // Exclusão lógica (prontuário é documento clínico): marca deleted_at/deleted_by;
+    // a evolução some da web e do WhatsApp, mas o registro é preservado para auditoria.
+    const { error } = await supabase
+      .from("evolutions")
+      .update({ deleted_at: new Date().toISOString(), deleted_by: user?.id ?? null })
+      .eq("id", id);
      if (error) {
       toast.error("Não foi possível excluir a evolução. Tente novamente.");
     } else {
@@ -367,7 +373,7 @@ export default function HistoryPage() {
                         setSaving(true);
                         const { error } = await supabase
                           .from("evolutions")
-                          .update({ output_content: editedContent })
+                          .update({ output_content: editedContent, edited_at: new Date().toISOString() })
                           .eq("id", selectedEvolution.id);
                         setSaving(false);
                         if (error) {

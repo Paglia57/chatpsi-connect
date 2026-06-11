@@ -12,6 +12,7 @@ export interface WaSession {
   thread_id: string | null;
   locked_patient_id: string | null;
   mode: string | null;
+  sub_state: string | null;
   flow_step: string | null;
   flow_data: Record<string, unknown> | null;
   last_intent: string | null;
@@ -31,7 +32,7 @@ export interface Patient {
 export async function getSession(supabase: any, phone: string): Promise<WaSession | null> {
   const { data } = await supabase
     .from('wa_sessions')
-    .select('phone, kind, thread_id, locked_patient_id, mode, flow_step, flow_data, last_intent, updated_at')
+    .select('phone, kind, thread_id, locked_patient_id, mode, sub_state, flow_step, flow_data, last_intent, updated_at')
     .eq('phone', phone)
     .maybeSingle();
   return data ?? null;
@@ -47,6 +48,21 @@ export async function patchSession(
     .from('wa_sessions')
     .upsert({ phone, updated_at: new Date().toISOString(), ...patch }, { onConflict: 'phone' });
   if (error) console.error('Error patching wa_sessions:', error.message);
+}
+
+/**
+ * Idempotência do webhook: tenta registrar o message.id. Retorna true se é a PRIMEIRA vez
+ * (deve processar); false se já foi processado (reentrega da Meta — ignorar). Em erro que não
+ * seja conflito de unicidade, retorna true para não perder a mensagem.
+ */
+export async function markMessageProcessed(supabase: any, messageId: string): Promise<boolean> {
+  const { error } = await supabase.from('wa_processed_messages').insert({ message_id: messageId });
+  if (!error) return true;
+  if ((error.code && String(error.code) === '23505') || /duplicate key/i.test(error.message ?? '')) {
+    return false; // já processado
+  }
+  console.error('Error marking processed message:', error.message);
+  return true; // erro inesperado: processa mesmo assim (não perder mensagem)
 }
 
 export async function logWaMessage(
@@ -156,7 +172,7 @@ export interface EvolutionRow {
   session_number: number | null;
 }
 
-/** Últimas evoluções do paciente (para injetar histórico no contexto). */
+/** Últimas evoluções do paciente (para injetar histórico no contexto). Exclui as excluídas logicamente. */
 export async function recentEvolutions(
   supabase: any,
   userId: string,
@@ -168,10 +184,143 @@ export async function recentEvolutions(
     .select('output_content, created_at, session_number')
     .eq('user_id', userId)
     .eq('patient_id', patientId)
+    .is('deleted_at', null)
     .order('created_at', { ascending: false })
     .limit(limit);
   if (error) console.error('Error reading evolutions:', error.message);
   return data ?? [];
+}
+
+export interface EvolutionListItem {
+  id: string;
+  output_content: string | null;
+  created_at: string | null;
+  session_number: number | null;
+}
+
+/** Lista evoluções do paciente para a sub-máquina (traz id; exclui as excluídas logicamente). */
+export async function listEvolutionsForPatient(
+  supabase: any,
+  userId: string,
+  patientId: string,
+  limit = 5,
+): Promise<EvolutionListItem[]> {
+  const { data, error } = await supabase
+    .from('evolutions')
+    .select('id, output_content, created_at, session_number')
+    .eq('user_id', userId)
+    .eq('patient_id', patientId)
+    .is('deleted_at', null)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  if (error) console.error('Error listing evolutions:', error.message);
+  return data ?? [];
+}
+
+export interface EvolutionFull extends EvolutionListItem {
+  patient_id: string | null;
+  patient_initials: string | null;
+  input_type: string | null;
+  approach: string | null;
+  revision_history: unknown;
+}
+
+/** Lê uma evolução pelo id, isolada por psicólogo e não excluída. */
+export async function getEvolutionById(
+  supabase: any,
+  userId: string,
+  id: string,
+): Promise<EvolutionFull | null> {
+  const { data } = await supabase
+    .from('evolutions')
+    .select('id, patient_id, patient_initials, input_type, approach, output_content, created_at, session_number, revision_history')
+    .eq('user_id', userId)
+    .eq('id', id)
+    .is('deleted_at', null)
+    .maybeSingle();
+  return data ?? null;
+}
+
+/** Registra uma ação na trilha de auditoria do canal (spec §8). */
+export async function insertWaAudit(
+  supabase: any,
+  entry: {
+    user_id: string;
+    action: string;
+    entity_id?: string | null;
+    phone?: string | null;
+    metadata?: Record<string, unknown>;
+  },
+): Promise<void> {
+  const { error } = await supabase.from('wa_audit').insert({
+    user_id: entry.user_id,
+    action: entry.action,
+    entity: 'evolution',
+    entity_id: entry.entity_id ?? null,
+    phone: entry.phone ?? null,
+    metadata: entry.metadata ?? {},
+  });
+  if (error) console.error('Error inserting wa_audit:', error.message);
+}
+
+/**
+ * Exclusão lógica de evolução (spec §8): marca deleted_at/deleted_by (isolada por user_id) e
+ * grava a trilha de auditoria. Retorna true se afetou a linha.
+ */
+export async function softDeleteEvolution(
+  supabase: any,
+  userId: string,
+  id: string,
+  phone: string,
+): Promise<boolean> {
+  const { data, error } = await supabase
+    .from('evolutions')
+    .update({ deleted_at: new Date().toISOString(), deleted_by: userId })
+    .eq('user_id', userId)
+    .eq('id', id)
+    .is('deleted_at', null)
+    .select('id')
+    .maybeSingle();
+  if (error) {
+    console.error('Error soft-deleting evolution:', error.message);
+    return false;
+  }
+  if (!data) return false;
+  await insertWaAudit(supabase, { user_id: userId, action: 'evolution_soft_delete', entity_id: id, phone });
+  return true;
+}
+
+/**
+ * Atualiza o texto de uma evolução existente (spec §8): preserva a origem, marca edited_at e
+ * empilha a versão anterior em revision_history (mesmo formato da web). Isolada por user_id.
+ */
+export async function updateEvolutionContent(
+  supabase: any,
+  userId: string,
+  id: string,
+  newContent: string,
+  improvementPrompt: string,
+  phone: string,
+): Promise<boolean> {
+  const current = await getEvolutionById(supabase, userId, id);
+  if (!current) return false;
+  const history = Array.isArray(current.revision_history) ? current.revision_history : [];
+  history.push({
+    version_replaced: current.output_content ?? '',
+    improvement_prompt: improvementPrompt,
+    timestamp: new Date().toISOString(),
+  });
+  const { error } = await supabase
+    .from('evolutions')
+    .update({ output_content: newContent, edited_at: new Date().toISOString(), revision_history: history })
+    .eq('user_id', userId)
+    .eq('id', id);
+  if (error) {
+    console.error('Error updating evolution content:', error.message);
+    return false;
+  }
+  await insertWaAudit(supabase, { user_id: userId, action: 'evolution_edit', entity_id: id, phone });
+  return true;
 }
 
 export async function insertEvolution(

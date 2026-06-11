@@ -47,68 +47,6 @@ export type Database = {
         }
         Relationships: []
       }
-      evolutions: {
-        Row: {
-          approach: string | null
-          audio_url: string | null
-          created_at: string
-          id: string
-          input_content: string | null
-          input_type: string
-          output_content: string | null
-          patient_id: string | null
-          patient_initials: string
-          revision_history: Json
-          session_duration: string | null
-          session_number: number | null
-          session_type: string | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          approach?: string | null
-          audio_url?: string | null
-          created_at?: string
-          id?: string
-          input_content?: string | null
-          input_type: string
-          output_content?: string | null
-          patient_id?: string | null
-          patient_initials: string
-          revision_history?: Json
-          session_duration?: string | null
-          session_number?: number | null
-          session_type?: string | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          approach?: string | null
-          audio_url?: string | null
-          created_at?: string
-          id?: string
-          input_content?: string | null
-          input_type?: string
-          output_content?: string | null
-          patient_id?: string | null
-          patient_initials?: string
-          revision_history?: Json
-          session_duration?: string | null
-          session_number?: number | null
-          session_type?: string | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "evolutions_patient_id_fkey"
-            columns: ["patient_id"]
-            isOneToOne: false
-            referencedRelation: "patients"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       calc_tributaria_history: {
         Row: {
           created_at: string | null
@@ -132,6 +70,77 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      evolutions: {
+        Row: {
+          approach: string | null
+          audio_url: string | null
+          created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
+          edited_at: string | null
+          id: string
+          input_content: string | null
+          input_type: string
+          output_content: string | null
+          patient_id: string | null
+          patient_initials: string
+          revision_history: Json
+          session_duration: string | null
+          session_number: number | null
+          session_type: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          approach?: string | null
+          audio_url?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          edited_at?: string | null
+          id?: string
+          input_content?: string | null
+          input_type: string
+          output_content?: string | null
+          patient_id?: string | null
+          patient_initials: string
+          revision_history?: Json
+          session_duration?: string | null
+          session_number?: number | null
+          session_type?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          approach?: string | null
+          audio_url?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          edited_at?: string | null
+          id?: string
+          input_content?: string | null
+          input_type?: string
+          output_content?: string | null
+          patient_id?: string | null
+          patient_initials?: string
+          revision_history?: Json
+          session_duration?: string | null
+          session_number?: number | null
+          session_type?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evolutions_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       marketing_texts: {
         Row: {
@@ -565,6 +574,126 @@ export type Database = {
         }
         Relationships: []
       }
+      wa_audit: {
+        Row: {
+          action: string
+          created_at: string
+          entity: string
+          entity_id: string | null
+          id: string
+          metadata: Json | null
+          phone: string | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          entity?: string
+          entity_id?: string | null
+          id?: string
+          metadata?: Json | null
+          phone?: string | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          entity?: string
+          entity_id?: string | null
+          id?: string
+          metadata?: Json | null
+          phone?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      wa_leads: {
+        Row: {
+          created_at: string | null
+          name: string | null
+          phone: string
+        }
+        Insert: {
+          created_at?: string | null
+          name?: string | null
+          phone: string
+        }
+        Update: {
+          created_at?: string | null
+          name?: string | null
+          phone?: string
+        }
+        Relationships: []
+      }
+      wa_messages: {
+        Row: {
+          content: string | null
+          created_at: string | null
+          id: string
+          phone: string | null
+          role: string | null
+          usage: Json | null
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string | null
+          id?: string
+          phone?: string | null
+          role?: string | null
+          usage?: Json | null
+        }
+        Update: {
+          content?: string | null
+          created_at?: string | null
+          id?: string
+          phone?: string | null
+          role?: string | null
+          usage?: Json | null
+        }
+        Relationships: []
+      }
+      wa_sessions: {
+        Row: {
+          created_at: string | null
+          flow_data: Json | null
+          flow_step: string | null
+          kind: string | null
+          last_intent: string | null
+          locked_patient_id: string | null
+          mode: string | null
+          phone: string
+          sub_state: string | null
+          thread_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          flow_data?: Json | null
+          flow_step?: string | null
+          kind?: string | null
+          last_intent?: string | null
+          locked_patient_id?: string | null
+          mode?: string | null
+          phone: string
+          sub_state?: string | null
+          thread_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          flow_data?: Json | null
+          flow_step?: string | null
+          kind?: string | null
+          last_intent?: string | null
+          locked_patient_id?: string | null
+          mode?: string | null
+          phone?: string
+          sub_state?: string | null
+          thread_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       webhook_events: {
         Row: {
           created_at: string | null
@@ -776,3 +905,12 @@ export const Constants = {
     },
   },
 } as const
+supabase : A new version of Supabase CLI is available: v2.106.0 (currently installed v)
+No linha:2 caractere:8
++ $out = supabase gen types typescript --project-id rrdvivxdasezvhfbetr ...
++        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (A new version o...ly installed v):String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+We recommend updating regularly for new features and bug fixes: 
+https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli

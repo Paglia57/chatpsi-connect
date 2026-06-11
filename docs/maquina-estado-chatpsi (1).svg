@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="680" height="720" viewBox="0 0 680 720" font-family="'Hanken Grotesk', system-ui, -apple-system, Segoe UI, Roboto, sans-serif" role="img" aria-label="Maquina de estado da conversa do ChatPsi no WhatsApp">
+<svg xmlns="http://www.w3.org/2000/svg" width="680" height="850" viewBox="0 0 680 850" font-family="'Hanken Grotesk', system-ui, -apple-system, Segoe UI, Roboto, sans-serif" role="img" aria-label="Maquina de estado da conversa do ChatPsi no WhatsApp">
 <title>Maquina de estado da conversa do ChatPsi no WhatsApp</title>
-<desc>Mensagem recebida (texto, audio, imagem ou documento) e convertida em texto, passa pela identificacao do telefone, que separa em tres casos: nao cadastrado vai para vendas; assinatura inativa vai para renovacao; assinatura ativa abre o menu de tres caminhos (escolher paciente, cadastrar paciente, falar sem paciente). Os dois primeiros levam ao modo paciente, que grava na ficha e aparece na web; o terceiro leva ao modo livre, que nao grava em ficha. Em paralelo, um motor de reativacao por comportamento provoca quem esta esfriando: dentro da janela de 24h pelo canal gratis, fora da janela por template pago.</desc>
+<desc>Mensagem recebida (texto, audio, imagem ou documento) e convertida em texto, passa pela identificacao do telefone, que separa em tres casos: nao cadastrado vai para vendas; assinatura inativa vai para renovacao; assinatura ativa abre o menu de tres caminhos (escolher paciente, cadastrar paciente, falar sem paciente). Os dois primeiros levam ao modo paciente, que grava na ficha e aparece na web; o terceiro leva ao modo livre, que nao grava em ficha. No modo paciente o psicologo pode ditar evolucao, ver historico, pedir plano, consultar a ficha e editar o paciente. Quando ha muitos pacientes, a escolha vira lista em texto. Apos 24h sem interacao a conversa volta ao menu. Em paralelo, um motor de reativacao por comportamento provoca quem esta esfriando: dentro da janela de 24h pelo canal gratis, fora da janela por template pago.</desc>
 
 <defs>
 <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
@@ -83,29 +83,38 @@
 <path d="M340 506 L340 524 L225 524 L225 543" class="arr" marker-end="url(#arrow)"/>
 <line x1="550" y1="506" x2="505" y2="543" class="arr" marker-end="url(#arrow)"/>
 
+<!-- acoes disponiveis com um paciente travado -->
+<rect x="100" y="628" width="300" height="66" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.6"/>
+<text class="t" x="250" y="649" text-anchor="middle" fill="#04342C">Acoes do paciente travado</text>
+<text class="s" x="250" y="668" text-anchor="middle" fill="#0F6E56">Nova evolucao &#183; Historico &#183; Plano</text>
+<text class="s" x="250" y="685" text-anchor="middle" fill="#0F6E56">Consultar ficha &#183; Editar paciente</text>
+<line x1="225" y1="592" x2="250" y2="626" class="arr" marker-end="url(#arrow)"/>
+
 <!-- saida de contexto: modos voltam ao menu -->
 <path d="M610 568 L660 568 L660 398 L642 398" class="dash" marker-end="url(#arrow)"/>
-<text class="s" x="654" y="486" fill="#9a7d3f" text-anchor="middle" transform="rotate(90 654 486)">volta ao menu</text>
-<text class="s" x="70" y="614" fill="#9a7d3f">Sair do contexto: diga "menu" / "sair" / "trocar" ou toque em "Trocar de paciente"</text>
+<text class="s" x="654" y="470" fill="#9a7d3f" text-anchor="middle" transform="rotate(90 654 470)">volta ao menu</text>
+
+<text class="s" x="40" y="716" fill="#9a7d3f">Muitos pacientes: a escolha vira lista em texto e o sistema pede o nome.</text>
+<text class="s" x="40" y="734" fill="#9a7d3f">Sair do contexto: diga "menu" / "sair" / "trocar", toque em "Trocar de paciente" &#8212; ou automatico apos 24h sem interacao.</text>
 
 <!-- ============ MOTOR DE REATIVACAO (separado) ============ -->
-<line x1="40" y1="624" x2="640" y2="624" stroke="#d9d4c8" stroke-width="1"/>
-<text class="sec" x="40" y="646">MOTOR DE REATIVACAO (POR COMPORTAMENTO, NAO POR RELOGIO)</text>
+<line x1="40" y1="752" x2="640" y2="752" stroke="#d9d4c8" stroke-width="1"/>
+<text class="sec" x="40" y="774">MOTOR DE REATIVACAO (POR COMPORTAMENTO, NAO POR RELOGIO)</text>
 
-<rect x="40" y="658" width="172" height="48" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.6"/>
-<text class="t" x="126" y="677" text-anchor="middle" fill="#26215C">Usuario esfriando?</text>
-<text class="s" x="126" y="695" text-anchor="middle" fill="#534AB7">queda vs padrao dele</text>
+<rect x="40" y="786" width="172" height="48" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.6"/>
+<text class="t" x="126" y="805" text-anchor="middle" fill="#26215C">Usuario esfriando?</text>
+<text class="s" x="126" y="823" text-anchor="middle" fill="#534AB7">queda vs padrao dele</text>
 
-<rect x="250" y="658" width="180" height="48" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.6"/>
-<text class="t" x="340" y="677" text-anchor="middle" fill="#04342C">Janela 24h aberta</text>
-<text class="s" x="340" y="695" text-anchor="middle" fill="#0F6E56">provocacao gratis</text>
+<rect x="250" y="786" width="180" height="48" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.6"/>
+<text class="t" x="340" y="805" text-anchor="middle" fill="#04342C">Janela 24h aberta</text>
+<text class="s" x="340" y="823" text-anchor="middle" fill="#0F6E56">provocacao gratis</text>
 
-<rect x="468" y="658" width="180" height="48" rx="8" fill="#FAEEDA" stroke="#854F0B" stroke-width="0.6"/>
-<text class="t" x="558" y="677" text-anchor="middle" fill="#633806">Janela fechada</text>
-<text class="s" x="558" y="695" text-anchor="middle" fill="#854F0B">template pago (parcimonia)</text>
+<rect x="468" y="786" width="180" height="48" rx="8" fill="#FAEEDA" stroke="#854F0B" stroke-width="0.6"/>
+<text class="t" x="558" y="805" text-anchor="middle" fill="#633806">Janela fechada</text>
+<text class="s" x="558" y="823" text-anchor="middle" fill="#854F0B">template pago (parcimonia)</text>
 
-<path d="M212 678 L248 678" class="dash" marker-end="url(#arrow)"/>
-<path d="M340 658 L340 644 L150 644 L150 656" class="dash" marker-end="url(#arrow)"/>
-<text class="s" x="300" y="640" text-anchor="middle" fill="#9a7d3f">responde &#8594; reabre janela</text>
-<path d="M430 682 L466 682" class="dash" marker-end="url(#arrow)"/>
+<path d="M212 806 L248 806" class="dash" marker-end="url(#arrow)"/>
+<path d="M340 786 L340 772 L150 772 L150 784" class="dash" marker-end="url(#arrow)"/>
+<text class="s" x="300" y="768" text-anchor="middle" fill="#9a7d3f">responde &#8594; reabre janela</text>
+<path d="M430 810 L466 810" class="dash" marker-end="url(#arrow)"/>
 </svg>

@@ -4,7 +4,7 @@ import { chat } from "../_shared/llm/index.ts";
 import { fetchWhatsappMedia } from "../_shared/media/whatsappMedia.ts";
 import { audioToText, documentToText, imageToText } from "../_shared/media/toText.ts";
 import { sendText } from "../_shared/wa/messaging.ts";
-import { getSession, logWaMessage, patchSession } from "../_shared/wa/repo.ts";
+import { getSession, logWaMessage, markMessageProcessed, patchSession } from "../_shared/wa/repo.ts";
 import { type ConversationInput, handleConversation } from "../_shared/wa/state.ts";
 
 const corsHeaders = {
@@ -45,6 +45,7 @@ async function isValidSignature(appSecret: string, header: string | null, rawBod
 type MessageKind = 'text' | 'audio' | 'image' | 'document' | 'interactive';
 
 interface IncomingMessage {
+  id?: string;       // message.id da Meta (idempotência)
   from: string;
   senderName: string;
   type: MessageKind;
@@ -72,28 +73,29 @@ function extractMessages(payload: any): IncomingMessage[] {
         if (!msg?.from) continue;
         const from = String(msg.from);
         const senderName = nameByWaId.get(from) ?? '';
+        const id = msg?.id ? String(msg.id) : undefined;
 
         if (msg.type === 'text' && msg?.text?.body) {
-          out.push({ from, senderName, type: 'text', body: String(msg.text.body) });
+          out.push({ id, from, senderName, type: 'text', body: String(msg.text.body) });
         } else if (msg.type === 'audio') {
           const mediaId = msg.audio?.id ?? msg.voice?.id;
-          if (mediaId) out.push({ from, senderName, type: 'audio', mediaId: String(mediaId) });
+          if (mediaId) out.push({ id, from, senderName, type: 'audio', mediaId: String(mediaId) });
         } else if (msg.type === 'image' && msg.image?.id) {
           out.push({
-            from, senderName, type: 'image',
+            id, from, senderName, type: 'image',
             mediaId: String(msg.image.id),
             caption: msg.image.caption ? String(msg.image.caption) : undefined,
           });
         } else if (msg.type === 'document' && msg.document?.id) {
           out.push({
-            from, senderName, type: 'document',
+            id, from, senderName, type: 'document',
             mediaId: String(msg.document.id),
             caption: msg.document.caption ? String(msg.document.caption) : undefined,
           });
         } else if (msg.type === 'interactive') {
           const it = msg.interactive;
           const replyId = it?.button_reply?.id ?? it?.list_reply?.id;
-          if (replyId) out.push({ from, senderName, type: 'interactive', replyId: String(replyId) });
+          if (replyId) out.push({ id, from, senderName, type: 'interactive', replyId: String(replyId) });
         }
         // Demais tipos (status, etc.) são ignorados.
       }
@@ -282,6 +284,11 @@ serve(async (req) => {
 
       for (const msg of incomingMessages) {
         try {
+          // Idempotência: ignora reentregas da Meta (mesmo message.id) para não duplicar gravações.
+          if (msg.id && !(await markMessageProcessed(supabase, msg.id))) {
+            console.log('Skipping duplicate message', msg.id);
+            continue;
+          }
           await processMessage(supabase, msg);
         } catch (err) {
           console.error('Error processing message:', err instanceof Error ? err.message : err);

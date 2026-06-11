@@ -1,52 +1,65 @@
-// Máquina de estado da conversa WhatsApp-first (a "espinha").
-// Mantém o comportamento descrito em docs/maquina-de-estado-chatpsi-whatsapp.md:
-// menu de 3 caminhos, escolher/cadastrar paciente, MODO PACIENTE vs MODO LIVRE,
-// e geração de evolução salvando na ficha real (evolutions) conforme a allowlist.
+// Máquina de estado da conversa WhatsApp-first — v2.
+// Implementa docs/specs/maquina-de-estado-chatpsi-whatsapp-v2.md.
 //
-// Isolamento por tenant: TODA leitura/escrita de patients/evolutions usa o userId
-// (= profiles.user_id, id de auth.users) resolvido pelo webhook.
+// Ordem do pipeline de uma mensagem (spec §11):
+//   Camada 0 (comando vence estado) → expiração 24h (preserva rascunho) →
+//   resolução de contexto → execução → gravação SOMENTE via padrão de captura.
+//
+// Duas regras de ouro:
+//   1) Comando vence estado: a Camada 0 roda antes de qualquer sub-fluxo; em rascunho, na dúvida
+//      o sistema PERGUNTA (2 botões), nunca adivinha, nunca perde o rascunho.
+//   2) Nada grava sem prévia: evolução, edição e cadastro passam por rascunho → prévia (com o nome
+//      do paciente no topo) → confirmação. Conversar nunca tem efeito colateral.
+//
+// Isolamento por psicólogo (LGPD): TODA leitura/escrita de patients/evolutions usa o userId
+// (= profiles.user_id) resolvido pelo webhook. `allowed` (allowlist de teste) trava SOMENTE a
+// gravação pós-confirmação — a prévia é sempre mostrada.
 
 import { sendButtons, sendList, sendText } from './messaging.ts';
 import {
   bumpPatientSession,
+  getEvolutionById,
   getPatientById,
   getSession,
   insertEvolution,
   insertPatient,
   listActivePatients,
+  listEvolutionsForPatient,
   logWaMessage,
   patchSession,
   type Patient,
   recentEvolutions,
   searchPatientsByName,
+  softDeleteEvolution,
+  updateEvolutionContent,
   updatePatient,
   uploadSessionAudio,
 } from './repo.ts';
-import { chat, type ChatTool } from '../llm/index.ts';
+import { chat, type ChatResult, type ChatTool } from '../llm/index.ts';
 import { planoDeAcao } from '../tools/planoDeAcao.ts';
 import { buscarArtigos } from '../tools/buscarArtigos.ts';
 
+import * as ids from './v2/ids.ts';
+import { normalizeText } from './v2/normalize.ts';
+import { type CommandName, matchCommand, REQUIRES_PATIENT } from './v2/commands.ts';
+import { resolveSelection } from './v2/selection.ts';
+import { isPreviewTrigger } from './v2/drafts.ts';
+import {
+  type Draft,
+  type FlowData,
+  joinParts,
+  type NameCandidate,
+  readFlow,
+} from './v2/draftState.ts';
+import { buildCadastroPreview, buildEvolutionPreview, buildPatientEditPreview, type PreviewMessage } from './v2/preview.ts';
+import { classifyMatches, findMentionedPatients } from './v2/nameResolver.ts';
+import { evaluateExpiry } from './v2/expiry.ts';
+import { type EvoRow, formatDeleteConfirmation, formatEvolutionList } from './v2/evolutionsMachine.ts';
+
 const CLINICAL_ASSISTANT_ID = 'asst_ghTrVWfzgh5vtW28qDs5MnRB';
-
-// IDs dos componentes interativos.
-const MENU_CHOOSE = 'menu_choose';
-const MENU_CREATE = 'menu_create';
-const MENU_FREE = 'menu_free';
-const PT_EVOLUTION = 'pt_evolution';
-const PT_HISTORY = 'pt_history';
-const PT_PLAN = 'pt_plan';
-const PT_VIEW = 'pt_view';
-const PT_EDIT = 'pt_edit';
-const MENU_EXIT = 'ctx_exit';
-const PATIENT_PREFIX = 'patient:';
-const EDIT_PREFIX = 'edit:';
-
 const MAX_LIST = 10;
 
-// Janela de inatividade: após 24h sem interação, a sessão volta ao menu inicial.
-const STALE_MS = 24 * 60 * 60 * 1000;
-
-// Campos do paciente que podem ser editados pelo WhatsApp, com rótulo amigável.
+// Campos do paciente editáveis pelo WhatsApp, com rótulo amigável.
 const EDITABLE_FIELDS: Record<string, string> = {
   full_name: 'Nome',
   initials: 'Iniciais',
@@ -54,27 +67,36 @@ const EDITABLE_FIELDS: Record<string, string> = {
   main_complaint: 'Queixa',
 };
 
-/** Normaliza texto para comparar comandos: trim + minúsculas + sem acentos. */
-function normalizeText(t: string): string {
-  // Remove marcas diacríticas combinantes (U+0300–U+036F) após decompor em NFD.
-  return t.trim().toLowerCase().normalize('NFD').replace(new RegExp('[\\u0300-\\u036f]', 'g'), '');
-}
-
-/** Palavras-chave que acionam a saída de contexto (já normalizadas, sem acento). */
-const ESCAPE_WORDS = new Set(['menu', 'trocar', 'trocar de paciente', 'sair', 'voltar', 'inicio']);
+// Comandos de leitura: podem executar dentro de um rascunho (na desambiguação) e retomar a captura.
+const READONLY_COMMANDS = new Set<CommandName>(['historico', 'ficha', 'ajuda', 'acoes']);
 
 export interface ConversationInput {
   kind: 'text' | 'audio' | 'image' | 'document' | 'interactive';
-  text: string;                                   // texto derivado (transcrição/descrição) ou body
-  replyId?: string;                               // id de botão/lista (interactive)
-  audio?: { bytes: Uint8Array; mimeType: string }; // bytes do áudio (p/ upload no Storage)
+  text: string;
+  replyId?: string;
+  audio?: { bytes: Uint8Array; mimeType: string };
 }
+
+// Seam de injeção para testes: emissores de mensagem e o gateway de IA.
+export interface Io {
+  sendText: typeof sendText;
+  sendButtons: typeof sendButtons;
+  sendList: typeof sendList;
+}
+export type ChatFn = (opts: Parameters<typeof chat>[0]) => Promise<ChatResult>;
+const defaultIo: Io = { sendText, sendButtons, sendList };
 
 function clinicalTools(): ChatTool[] {
   return [
     { name: 'plano_de_acao', handler: (a) => planoDeAcao({ user_query: String(a.user_query ?? '') }) },
     { name: 'buscar_artigos', handler: (a) => buscarArtigos({ user_query: String(a.user_query ?? '') }) },
   ];
+}
+
+/** dd/mm de hoje, para o cabeçalho da prévia de evolução. */
+function todayLabel(): string {
+  const d = new Date();
+  return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
 }
 
 export async function handleConversation(opts: {
@@ -84,14 +106,18 @@ export async function handleConversation(opts: {
   displayName: string;
   allowed: boolean;
   input: ConversationInput;
+  io?: Io;
+  chatFn?: ChatFn;
 }): Promise<void> {
   const { supabase, phone, userId, displayName, allowed, input } = opts;
+  const io = opts.io ?? defaultIo;
+  const chatFn = opts.chatFn ?? chat;
+
   const session = await getSession(supabase, phone);
   const mode = session?.mode ?? null;
+  const subState = session?.sub_state ?? null;
   const lockedId = session?.locked_patient_id ?? null;
-
-  // Item 1 — inatividade: sessão parada há mais de 24h é considerada expirada.
-  const stale = !!session?.updated_at && (Date.now() - new Date(session.updated_at).getTime() > STALE_MS);
+  const flow: FlowData = readFlow(session?.flow_data);
 
   // Log da mensagem do usuário (entrada).
   await logWaMessage(
@@ -101,84 +127,94 @@ export async function handleConversation(opts: {
     input.kind === 'interactive' ? `[opção] ${input.replyId ?? ''}` : (input.text || '(vazio)'),
   );
 
-  // --- helpers (closures sobre o contexto) ---
+  // ---------- helpers de persistência ----------
 
-  const lockPatient = async (patient: Patient) => {
-    await patchSession(supabase, phone, {
-      mode: 'paciente', kind: 'clinico', locked_patient_id: patient.id,
-      flow_step: null, flow_data: null, last_intent: null,
-    });
+  const persist = (patch: Record<string, unknown>) => patchSession(supabase, phone, patch);
+  // saveFlow MUTA o objeto `flow` do turno e persiste o objeto vivo. Isso evita que dois helpers
+  // do mesmo turno (ex.: setar pendingIntent e depois listar pacientes), ambos partindo do mesmo
+  // snapshot de flow_data, sobrescrevam um ao outro — patchSession faz upsert do jsonb inteiro.
+  const saveFlow = (next: FlowData, patch: Record<string, unknown> = {}) => {
+    Object.assign(flow, next);
+    return persist({ flow_data: flow, ...patch });
+  };
+
+  // ---------- helpers de envio ----------
+
+  const sendPreview = async (pm: PreviewMessage, caption: string) => {
+    await io.sendText(phone, pm.text);
+    await io.sendButtons(phone, caption, pm.buttons);
   };
 
   const sendMenu = async () => {
-    await patchSession(supabase, phone, {
+    await persist({
       mode: 'menu', kind: 'clinico', locked_patient_id: null,
-      flow_step: null, flow_data: null, last_intent: null,
+      sub_state: 'idle', flow_step: null, flow_data: {}, last_intent: null,
     });
-    await sendButtons(phone, `Olá, ${displayName}! O que vamos fazer?`, [
-      { id: MENU_CHOOSE, title: 'Escolher paciente' },
-      { id: MENU_CREATE, title: 'Cadastrar paciente' },
-      { id: MENU_FREE, title: 'Falar sem paciente' },
+    await io.sendButtons(phone, `Olá, ${displayName}! O que vamos fazer?`, [
+      { id: ids.MENU_CHOOSE, title: 'Escolher paciente' },
+      { id: ids.MENU_CREATE, title: 'Cadastrar paciente' },
+      { id: ids.MENU_FREE, title: 'Falar sem paciente' },
     ]);
   };
 
-  // Usamos LISTA (não botões) no modo paciente: cabem as 3 ações + a saída de
-  // contexto numa única mensagem (botões de resposta são limitados a 3).
   const sendPatientMenu = async (patient: Patient) => {
-    await sendList(
+    await io.sendList(
       phone,
-      `Paciente *${patient.full_name}* selecionado. O que deseja?`,
-      'Ações',
+      `Contexto: *${patient.full_name}*. O que vamos fazer?`,
+      'Ver ações',
       [
-        { id: PT_EVOLUTION, title: 'Nova evolução' },
-        { id: PT_HISTORY, title: 'Histórico' },
-        { id: PT_PLAN, title: 'Plano' },
-        { id: PT_VIEW, title: 'Consultar ficha' },
-        { id: PT_EDIT, title: 'Editar paciente' },
-        { id: MENU_EXIT, title: '↩ Trocar / Menu' },
+        { id: ids.PT_EVOLUTION, title: 'Nova evolução' },
+        { id: ids.PT_EVOLUTIONS, title: 'Evoluções' },
+        { id: ids.PT_PLAN, title: 'Plano' },
+        { id: ids.PT_VIEW, title: 'Consultar ficha' },
+        { id: ids.PT_EDIT, title: 'Editar paciente' },
+        { id: ids.MENU_EXIT, title: '↩ Trocar / Menu' },
       ],
       'Ações do paciente',
     );
   };
 
-  // Saída de contexto: destrava o paciente / cancela cadastro e volta ao menu.
-  const exitContext = async () => {
-    if (session?.mode === 'cadastro') {
-      await sendText(phone, 'Cadastro cancelado.');
-    }
-    await sendMenu(); // sendMenu já zera locked_patient_id/mode/flow_step/flow_data/last_intent
+  const lockPatient = async (patient: Patient, extra: Partial<FlowData> = {}) => {
+    await persist({
+      mode: 'paciente', kind: 'clinico', locked_patient_id: patient.id,
+      sub_state: 'idle', flow_step: null, last_intent: null,
+      flow_data: { ...extra },
+    });
   };
+
+  const exitContext = async () => {
+    if (mode === 'cadastro' || flow.draft?.target === 'cadastro') await io.sendText(phone, 'Cadastro cancelado.');
+    await sendMenu();
+  };
+
+  // ---------- helpers de leitura ----------
+
+  const loadLockedPatient = async (): Promise<Patient | null> =>
+    lockedId ? await getPatientById(supabase, userId, lockedId) : null;
 
   const showPatientList = async () => {
     const patients = await listActivePatients(supabase, userId, 50);
     if (patients.length === 0) {
-      await sendText(phone, 'Você ainda não tem pacientes cadastrados. Toque em "Cadastrar paciente" para criar a primeira ficha.');
+      await io.sendText(phone, 'Você ainda não tem pacientes cadastrados. Toque em "Cadastrar paciente" para criar a primeira ficha.');
       return;
     }
+    const candidates: NameCandidate[] = patients.map((p) => ({ id: p.id, full_name: p.full_name, initials: p.initials }));
+    await saveFlow({ ...flow, patientList: candidates }, { sub_state: 'choose_patient', mode: 'menu' });
     if (patients.length > MAX_LIST) {
-      // Lista interativa não comporta tantos itens: mostra os nomes em texto e pede o nome.
-      await patchSession(supabase, phone, { mode: 'menu', flow_step: 'await_name' });
-      const linhas = patients
-        .map((p, i) => `${i + 1}. ${p.full_name}${p.initials ? ` (${p.initials})` : ''}`)
-        .join('\n');
-      await sendText(
-        phone,
-        `Você tem ${patients.length} pacientes:\n\n${linhas}\n\nMe diga o *nome* (ou parte do nome) de quem você quer atender.`,
-      );
+      const linhas = patients.map((p, i) => `${i + 1}. ${p.full_name}${p.initials ? ` (${p.initials})` : ''}`).join('\n');
+      await io.sendText(phone, `Você tem ${patients.length} pacientes:\n\n${linhas}\n\nResponda com o *número* ou o *nome*.`);
       return;
     }
-    await sendList(
-      phone,
-      'Selecione o paciente:',
-      'Ver pacientes',
-      patients.map((p) => ({ id: `${PATIENT_PREFIX}${p.id}`, title: p.full_name, description: p.initials })),
+    await io.sendList(
+      phone, 'Selecione o paciente:', 'Ver pacientes',
+      patients.map((p) => ({ id: `${ids.PATIENT_PREFIX}${p.id}`, title: p.full_name, description: p.initials })),
     );
   };
 
   const showHistory = async (patient: Patient) => {
     const evos = await recentEvolutions(supabase, userId, patient.id, 5);
     if (evos.length === 0) {
-      await sendText(phone, `Ainda não há evoluções registradas para *${patient.full_name}*.`);
+      await io.sendText(phone, `Ainda não há evoluções registradas para *${patient.full_name}*.`);
       return;
     }
     const lines = evos.map((e) => {
@@ -187,334 +223,684 @@ export async function handleConversation(opts: {
       const snippet = (e.output_content ?? '').replace(/\s+/g, ' ').slice(0, 180);
       return `📂 ${date} ${sn}\n${snippet}…`;
     });
-    await sendText(phone, `Histórico recente de *${patient.full_name}*:\n\n${lines.join('\n\n')}`);
+    await io.sendText(phone, `Histórico recente de *${patient.full_name}*:\n\n${lines.join('\n\n')}`);
   };
 
-  // Item 3 — Consultar ficha: mostra os dados cadastrais do paciente.
   const showPatientDetails = async (patient: Patient) => {
-    const linhas = [
-      `📋 *Ficha do paciente*`,
-      ``,
+    await io.sendText(phone, [
+      `📋 *Ficha do paciente*`, ``,
       `*Nome:* ${patient.full_name}`,
       `*Iniciais:* ${patient.initials || '—'}`,
       `*Abordagem:* ${patient.approach || '—'}`,
       `*Queixa:* ${patient.main_complaint || '—'}`,
       `*Sessões:* ${patient.total_sessions ?? 0}`,
-    ];
-    await sendText(phone, linhas.join('\n'));
+    ].join('\n'));
   };
 
-  // Item 2 — Editar paciente: aplica o novo valor do campo escolhido e volta ao menu do paciente.
-  const applyPatientEdit = async (patient: Patient) => {
-    const field = String((session?.flow_data as Record<string, unknown>)?.field ?? '');
-    const label = EDITABLE_FIELDS[field];
-    const value = (input.text ?? '').trim();
-    if (!label) {
-      await patchSession(supabase, phone, { last_intent: null, flow_step: null, flow_data: null });
-      await sendPatientMenu(patient);
-      return;
-    }
-    if (value.length < 1) {
-      await sendText(phone, `Não recebi o novo valor para *${label}*. Tente novamente.`);
-      return;
-    }
-    const updated = await updatePatient(supabase, userId, patient.id, { [field]: value });
-    await patchSession(supabase, phone, { last_intent: null, flow_step: null, flow_data: null });
-    if (!updated) {
-      await sendText(phone, 'Não consegui salvar a alteração agora. Tente novamente em instantes.');
-      await sendPatientMenu(patient);
-      return;
-    }
-    await sendText(phone, `✅ *${label}* atualizado(a).`);
-    await sendPatientMenu(updated);
+  // ---------- padrão de captura: abrir rascunhos ----------
+
+  const openEvolutionDraft = async (patient: Patient, seedText?: string) => {
+    const draft: Draft = { target: 'new_evolution', patientId: patient.id, parts: [] };
+    if (seedText && seedText.trim()) draft.parts.push({ kind: 'text', text: seedText.trim() });
+    await saveFlow({ ...flow, draft, pendingCommand: undefined }, { sub_state: 'draft_capturing', mode: 'paciente' });
+    await io.sendButtons(
+      phone,
+      `Pode ditar ou escrever o relato da sessão de *${patient.full_name}* (em quantas mensagens quiser). Quando terminar, toque em *Gerar prévia* ou diga "pronto".`,
+      [{ id: ids.DRAFT_PREVIEW, title: 'Gerar prévia' }],
+    );
   };
 
-  const generateEvolution = async (patient: Patient) => {
-    const relato = input.text;
-    if (!relato || relato.trim().length < 3) {
-      await sendText(phone, 'Não recebi o relato da sessão. Pode ditar (áudio) ou escrever o que aconteceu.');
+  const openCadastro = async () => {
+    const draft: Draft = { target: 'cadastro', parts: [], cadastro: {}, cadastroStep: 'nome' };
+    await saveFlow({ ...flow, draft }, { sub_state: 'draft_capturing', mode: 'cadastro', locked_patient_id: null });
+    await io.sendText(phone, 'Vamos cadastrar um paciente. Qual é o *nome completo* dele(a)? (digite "voltar" para corrigir um passo)');
+  };
+
+  const openPatientEdit = async (patient: Patient, field: string) => {
+    const draft: Draft = { target: 'edit_patient', patientId: patient.id, field, parts: [] };
+    await saveFlow({ ...flow, draft }, { sub_state: 'draft_capturing', mode: 'paciente' });
+    await io.sendText(phone, `Envie o novo valor para *${EDITABLE_FIELDS[field]}*:`);
+  };
+
+  const openEvolutionEdit = async (patient: Patient, evoId: string, baseText: string) => {
+    const draft: Draft = { target: 'edit_evolution', patientId: patient.id, evolutionId: evoId, baseText, parts: [] };
+    await saveFlow({ ...flow, draft, selectedEvolutionId: undefined }, { sub_state: 'draft_capturing', mode: 'paciente' });
+    await io.sendButtons(
+      phone,
+      'O que você quer ajustar nesta evolução? Pode ditar/escrever o ajuste; depois toque em *Gerar prévia*.',
+      [{ id: ids.DRAFT_PREVIEW, title: 'Gerar prévia' }],
+    );
+  };
+
+  // ---------- padrão de captura: acumular ----------
+
+  const accumulate = async (draft: Draft) => {
+    let audioPath: string | null | undefined = undefined;
+    if (input.kind === 'audio' && input.audio && allowed) {
+      audioPath = await uploadSessionAudio(supabase, userId, input.audio.bytes, input.audio.mimeType);
+    }
+    draft.parts.push({ kind: input.kind, text: input.text ?? '', audioPath: audioPath ?? null });
+    if (input.kind === 'audio') {
+      draft.inputType = 'audio';
+      if (!draft.audioPath && audioPath) draft.audioPath = audioPath;
+    }
+    await saveFlow({ ...flow, draft }, { sub_state: 'draft_capturing' });
+  };
+
+  // ---------- padrão de captura: gerar prévia ----------
+
+  const generateEvolutionPreview = async (draft: Draft) => {
+    const patient = await getPatientById(supabase, userId, draft.patientId!);
+    if (!patient) { await sendMenu(); return; }
+    const relato = joinParts(draft.parts);
+    if (relato.trim().length < 3) {
+      await io.sendText(phone, 'Ainda não recebi o relato. Pode ditar ou escrever o que aconteceu na sessão.');
       return;
     }
 
     const evos = await recentEvolutions(supabase, userId, patient.id, 5);
     const history = evos.length
-      ? evos.slice().reverse()
-          .map((e) => `(${(e.created_at ?? '').slice(0, 10)}) ${(e.output_content ?? '').slice(0, 600)}`)
-          .join('\n---\n')
+      ? evos.slice().reverse().map((e) => `(${(e.created_at ?? '').slice(0, 10)}) ${(e.output_content ?? '').slice(0, 600)}`).join('\n---\n')
       : 'Sem evoluções anteriores.';
+
+    const base = draft.target === 'edit_evolution'
+      ? `Texto ATUAL da evolução (edite conforme o ajuste pedido, mantendo o que não foi alterado):\n${draft.baseText ?? ''}\n\nAJUSTE PEDIDO:\n${relato}`
+      : `HISTÓRICO RECENTE (mais antigo → mais recente):\n${history}\n\nNOVO RELATO DA SESSÃO:\n${relato}`;
 
     const userText =
       `Gere uma evolução clínica para o paciente de iniciais ${patient.initials} ` +
-      `(abordagem: ${patient.approach ?? 'não informada'}), coerente com o histórico.\n\n` +
-      `HISTÓRICO RECENTE (mais antigo → mais recente):\n${history}\n\n` +
-      `NOVO RELATO DA SESSÃO:\n${relato}`;
+      `(abordagem: ${patient.approach ?? 'não informada'}), coerente com o histórico.\n\n${base}`;
 
-    const result = await chat({
-      task: 'clinico', assistantId: CLINICAL_ASSISTANT_ID, userText, tools: clinicalTools(),
+    const result = await chatFn({ task: 'clinico', assistantId: CLINICAL_ASSISTANT_ID, userText, tools: clinicalTools() });
+
+    draft.previewText = result.text;
+    await saveFlow({ ...flow, draft }, { sub_state: 'draft_await_preview_confirm' });
+    const pm = buildEvolutionPreview({ patientName: patient.full_name, dateLabel: todayLabel(), body: result.text });
+    await sendPreview(pm, 'Confira a evolução acima. O que deseja?');
+  };
+
+  const generatePatientEditPreview = async (draft: Draft) => {
+    const patient = await getPatientById(supabase, userId, draft.patientId!);
+    if (!patient) { await sendMenu(); return; }
+    const value = joinParts(draft.parts).trim();
+    if (value.length < 1) {
+      await io.sendText(phone, `Não recebi o novo valor para *${EDITABLE_FIELDS[draft.field!]}*. Tente novamente.`);
+      return;
+    }
+    const oldValue = String((patient as any)[draft.field!] ?? '');
+    draft.previewText = value;
+    await saveFlow({ ...flow, draft }, { sub_state: 'draft_await_preview_confirm' });
+    const pm = buildPatientEditPreview({ patientName: patient.full_name, fieldLabel: EDITABLE_FIELDS[draft.field!], oldValue, newValue: value });
+    await sendPreview(pm, 'Confirmar a alteração?');
+  };
+
+  const generateCadastroPreview = async (draft: Draft) => {
+    const c = draft.cadastro ?? {};
+    await saveFlow({ ...flow, draft }, { sub_state: 'draft_await_preview_confirm' });
+    const pm = buildCadastroPreview({
+      full_name: c.full_name ?? '', initials: c.initials ?? '', approach: c.approach ?? '', main_complaint: c.main_complaint ?? '',
     });
+    await sendPreview(pm, 'Confirmar o cadastro?');
+  };
 
-    await sendText(phone, result.text);
-    await logWaMessage(supabase, phone, 'ai', result.text, result.usage);
+  // ---------- padrão de captura: confirmar (gravação) ----------
 
-    if (allowed) {
-      let audioUrl: string | null = null;
-      if (input.kind === 'audio' && input.audio) {
-        audioUrl = await uploadSessionAudio(supabase, userId, input.audio.bytes, input.audio.mimeType);
-      }
+  const saveEvolution = async (draft: Draft) => {
+    const patient = await getPatientById(supabase, userId, draft.patientId!);
+    if (!patient) { await sendMenu(); return; }
+    const text = draft.previewText ?? '';
+    if (!allowed) {
+      await io.sendText(phone, '_(Modo teste: esta evolução não foi salva no prontuário porque seu número não está na allowlist.)_');
+      await persist({ sub_state: 'idle', flow_data: { ...flow, draft: undefined } });
+      await sendPatientMenu(patient);
+      return;
+    }
+    if (draft.target === 'edit_evolution' && draft.evolutionId) {
+      await updateEvolutionContent(supabase, userId, draft.evolutionId, text, joinParts(draft.parts), phone);
+      await io.sendText(phone, '✅ Evolução atualizada (e já reflete na web).');
+    } else {
       await insertEvolution(supabase, {
         user_id: userId,
         patient_id: patient.id,
         patient_initials: patient.initials,
-        input_type: input.kind === 'audio' ? 'audio' : 'text',
-        input_content: relato,
-        output_content: result.text,
+        input_type: draft.inputType === 'audio' ? 'audio' : 'text',
+        input_content: joinParts(draft.parts),
+        output_content: text,
         approach: patient.approach,
-        audio_url: audioUrl,
+        audio_url: draft.audioPath ?? null,
       });
       await bumpPatientSession(supabase, patient);
-    } else {
-      await sendText(phone, '_(Modo teste: esta evolução não foi salva no prontuário porque seu número não está na allowlist.)_');
+      await io.sendText(phone, '✅ Evolução salva na ficha (e já aparece na web).');
     }
-    await patchSession(supabase, phone, { last_intent: null });
+    await persist({ sub_state: 'idle', flow_data: { ...flow, draft: undefined } });
+    await sendPatientMenu(patient);
+  };
+
+  const savePatientEdit = async (draft: Draft) => {
+    const patient = await getPatientById(supabase, userId, draft.patientId!);
+    if (!patient) { await sendMenu(); return; }
+    if (!allowed) {
+      await io.sendText(phone, '_(Modo teste: a alteração não foi salva porque seu número não está na allowlist.)_');
+      await persist({ sub_state: 'idle', flow_data: { ...flow, draft: undefined } });
+      await sendPatientMenu(patient);
+      return;
+    }
+    const updated = await updatePatient(supabase, userId, patient.id, { [draft.field!]: draft.previewText ?? '' });
+    await persist({ sub_state: 'idle', flow_data: { ...flow, draft: undefined } });
+    if (!updated) {
+      await io.sendText(phone, 'Não consegui salvar a alteração agora. Tente novamente em instantes.');
+      await sendPatientMenu(patient);
+      return;
+    }
+    await io.sendText(phone, `✅ *${EDITABLE_FIELDS[draft.field!]}* atualizado(a) (e reflete na web).`);
+    await sendPatientMenu(updated);
+  };
+
+  const saveCadastro = async (draft: Draft) => {
+    const c = draft.cadastro ?? {};
+    if (!allowed) {
+      await io.sendText(phone, '_(Modo teste: o cadastro não foi salvo porque seu número não está na allowlist.)_');
+      await sendMenu();
+      return;
+    }
+    const patient = await insertPatient(supabase, {
+      user_id: userId, full_name: c.full_name ?? '', initials: c.initials ?? '',
+      approach: c.approach, main_complaint: c.main_complaint,
+    });
+    if (!patient) {
+      await io.sendText(phone, 'Não consegui cadastrar o paciente agora. Tente novamente em instantes.');
+      await sendMenu();
+      return;
+    }
+    await lockPatient(patient);
+    await io.sendText(phone, `Pronto! *${patient.full_name}* foi cadastrado(a) e já aparece no seu painel web.`);
+    await sendPatientMenu(patient);
+  };
+
+  // ---------- sub-máquina de evoluções (spec §8) ----------
+
+  const showEvolutionList = async (patient: Patient) => {
+    const evos = await listEvolutionsForPatient(supabase, userId, patient.id, 5);
+    if (evos.length === 0) {
+      await io.sendText(phone, `Ainda não há evoluções registradas para *${patient.full_name}*.`);
+      await sendPatientMenu(patient);
+      return;
+    }
+    const candidates: NameCandidate[] = evos.map((e) => ({ id: e.id, full_name: (e.created_at ?? '').slice(0, 10) }));
+    await saveFlow({ ...flow, evoList: candidates, selectedEvolutionId: undefined }, { sub_state: 'evo_list' });
+    await io.sendList(
+      phone,
+      formatEvolutionList(patient.full_name, evos as EvoRow[]),
+      'Ver evoluções',
+      evos.map((e, i) => ({
+        id: `${ids.EVO_PREFIX}${e.id}`,
+        title: `${i + 1}. ${(e.created_at ?? '').slice(8, 10)}/${(e.created_at ?? '').slice(5, 7)}`,
+        description: (e.output_content ?? '').replace(/\s+/g, ' ').slice(0, 60),
+      })),
+      'Evoluções',
+    );
+  };
+
+  const showEvolutionActions = async (evoId: string) => {
+    await saveFlow({ ...flow, selectedEvolutionId: evoId }, { sub_state: 'evo_selected' });
+    await io.sendButtons(phone, 'O que deseja fazer com esta evolução?', [
+      { id: ids.EVO_VIEW, title: 'Ver completa' },
+      { id: ids.EVO_EDIT, title: 'Editar' },
+      { id: ids.EVO_DELETE, title: 'Excluir' },
+    ]);
+  };
+
+  // ---------- Camada 0: executar comando ----------
+
+  const executeCommand = async (cmd: CommandName) => {
+    if (cmd === 'menu') { await exitContext(); return; }
+
+    if (REQUIRES_PATIENT[cmd] && !lockedId) {
+      // Sem paciente: escolhe primeiro, executa depois.
+      await saveFlow({ ...flow, pendingIntent: cmd });
+      await io.sendText(phone, 'Primeiro escolha o paciente:');
+      await showPatientList();
+      return;
+    }
+
+    const patient = REQUIRES_PATIENT[cmd] ? await loadLockedPatient() : null;
+    if (REQUIRES_PATIENT[cmd] && !patient) { await sendMenu(); return; }
+
+    switch (cmd) {
+      case 'acoes':
+        if (patient) await sendPatientMenu(patient); else await sendMenu();
+        return;
+      case 'ajuda':
+        await io.sendText(phone, [
+          '*Comandos disponíveis:*',
+          '• *menu* / *sair* — volta ao início',
+          '• *nova evolução* — registra uma evolução (com prévia antes de salvar)',
+          '• *evoluções* — listar/ver/editar/excluir evoluções',
+          '• *histórico* — resumo do caso',
+          '• *plano* — plano de ação',
+          '• *ficha* / *editar* — consultar/editar o cadastro',
+        ].join('\n'));
+        return;
+      case 'nova_evolucao':
+        await openEvolutionDraft(patient!);
+        return;
+      case 'evolucoes':
+        await showEvolutionList(patient!);
+        return;
+      case 'historico':
+        await showHistory(patient!);
+        return;
+      case 'ficha':
+        await showPatientDetails(patient!);
+        return;
+      case 'plano':
+        await persist({ last_intent: 'plan' });
+        await io.sendText(phone, 'Sobre qual tema/foco você quer o plano de ação para este paciente?');
+        return;
+      case 'editar':
+        await io.sendList(
+          phone, `O que deseja editar em *${patient!.full_name}*?`, 'Campos',
+          Object.entries(EDITABLE_FIELDS).map(([field, label]) => ({ id: `${ids.EDIT_PREFIX}${field}`, title: label })),
+          'Editar paciente',
+        );
+        return;
+    }
+  };
+
+  // ---------- desambiguação de comando em rascunho ----------
+
+  const askCommandDisambiguation = async (cmd: CommandName, raw: string) => {
+    const leftLabel: Record<CommandName, string> = {
+      menu: 'Ir ao menu', acoes: 'Ver ações', nova_evolucao: 'Nova evolução', evolucoes: 'Ver evoluções',
+      historico: 'Ver histórico', plano: 'Ver plano', ficha: 'Ver ficha', editar: 'Editar', ajuda: 'Ver ajuda',
+    };
+    await saveFlow({ ...flow, pendingCommand: { command: cmd, raw } }, { sub_state: 'draft_command_disambig' });
+    await io.sendButtons(phone, `"${raw}" — o que você quer?`, [
+      { id: ids.DISAMBIG_COMMAND, title: leftLabel[cmd] },
+      { id: ids.DISAMBIG_CONTENT, title: 'É conteúdo' },
+    ]);
+  };
+
+  // ---------- MODO LIVRE / conversa (não grava) ----------
+
+  const handleConversationalText = async (threadId?: string) => {
+    const text = input.text;
+    if (!text || text.trim().length < 1) {
+      await io.sendText(phone, 'Pode mandar sua dúvida, um tema de estudo ou um pedido.');
+      return;
+    }
+    const result = await chatFn({
+      task: 'clinico', assistantId: CLINICAL_ASSISTANT_ID, userText: text, threadId, tools: clinicalTools(),
+    });
+    if (result.threadId && result.threadId !== threadId) {
+      await persist({ thread_id: result.threadId, kind: 'clinico' });
+    }
+    await io.sendText(phone, result.text);
+    await logWaMessage(supabase, phone, 'ai', result.text, result.usage);
   };
 
   const runPlan = async (patient: Patient) => {
     const theme = input.text;
     if (!theme || theme.trim().length < 2) {
-      await sendText(phone, 'Sobre qual tema/foco você quer o plano de ação?');
+      await io.sendText(phone, 'Sobre qual tema/foco você quer o plano de ação?');
       return;
     }
     const query = `Paciente ${patient.initials}${patient.main_complaint ? `, queixa: ${patient.main_complaint}` : ''}. Foco do plano: ${theme}`;
     const plan = await planoDeAcao({ user_query: query });
-    await sendText(phone, plan);
+    await io.sendText(phone, plan);
     await logWaMessage(supabase, phone, 'ai', plan);
-    if (allowed) {
-      await insertEvolution(supabase, {
-        user_id: userId,
-        patient_id: patient.id,
-        patient_initials: patient.initials,
-        input_type: 'text',
-        input_content: `[plano de ação] ${theme}`,
-        output_content: plan,
-        approach: patient.approach,
-      });
-    }
-    await patchSession(supabase, phone, { last_intent: null });
+    await persist({ last_intent: null });
+    await sendPatientMenu(patient);
   };
 
-  const handleFree = async () => {
-    const text = input.text;
-    if (!text || text.trim().length < 1) {
-      await sendText(phone, 'Modo livre ativo. Pode mandar sua dúvida, um tema de estudo ou um pedido.');
-      return;
-    }
-    const result = await chat({
-      task: 'clinico', assistantId: CLINICAL_ASSISTANT_ID, userText: text,
-      threadId: session?.thread_id ?? undefined, tools: clinicalTools(),
-    });
-    if (result.threadId && result.threadId !== session?.thread_id) {
-      await patchSession(supabase, phone, { thread_id: result.threadId, kind: 'clinico' });
-    }
-    await sendText(phone, result.text);
-    await logWaMessage(supabase, phone, 'ai', result.text, result.usage);
-  };
+  // ---------- roteamento de respostas interativas (botões/listas) ----------
 
   const handleReply = async (replyId: string) => {
-    if (replyId.startsWith(PATIENT_PREFIX)) {
-      const patient = await getPatientById(supabase, userId, replyId.slice(PATIENT_PREFIX.length));
-      if (!patient) { await sendText(phone, 'Não encontrei esse paciente. Vamos recomeçar.'); await sendMenu(); return; }
-      await lockPatient(patient);
-      await sendPatientMenu(patient);
+    // Seleção de paciente / campo / evolução (ids com prefixo).
+    if (replyId.startsWith(ids.PATIENT_PREFIX)) {
+      const patient = await getPatientById(supabase, userId, replyId.slice(ids.PATIENT_PREFIX.length));
+      if (!patient) { await io.sendText(phone, 'Não encontrei esse paciente. Vamos recomeçar.'); await sendMenu(); return; }
+      await onPatientChosen(patient);
       return;
     }
-    // Item 2 — escolha do campo a editar: arma o passo que aguarda o novo valor.
-    if (replyId.startsWith(EDIT_PREFIX)) {
-      const field = replyId.slice(EDIT_PREFIX.length);
-      const label = EDITABLE_FIELDS[field];
-      if (!lockedId || !label) { await sendMenu(); return; }
-      await patchSession(supabase, phone, { last_intent: 'edit', flow_step: 'edit_value', flow_data: { field } });
-      await sendText(phone, `Envie o novo valor para *${label}*:`);
+    if (replyId.startsWith(ids.EDIT_PREFIX)) {
+      const field = replyId.slice(ids.EDIT_PREFIX.length);
+      const patient = await loadLockedPatient();
+      if (!patient || !EDITABLE_FIELDS[field]) { await sendMenu(); return; }
+      await openPatientEdit(patient, field);
       return;
     }
+    if (replyId.startsWith(ids.EVO_PREFIX)) {
+      await showEvolutionActions(replyId.slice(ids.EVO_PREFIX.length));
+      return;
+    }
+
     switch (replyId) {
-      case MENU_CHOOSE:
-        await showPatientList();
+      // Menu inicial
+      case ids.MENU_CHOOSE: await showPatientList(); return;
+      case ids.MENU_CREATE: await openCadastro(); return;
+      case ids.MENU_FREE:
+        await persist({ mode: 'livre', kind: 'clinico', locked_patient_id: null, sub_state: 'idle', last_intent: null, flow_data: {} });
+        await io.sendText(phone, 'Modo livre ativado. Pode mandar sua dúvida clínica, um tema de estudo ou um pedido (sem vincular a um paciente).');
         return;
-      case MENU_CREATE:
-        if (!allowed) {
-          await sendText(phone, 'O cadastro de paciente só é gravado para números na allowlist de teste. Fale com o suporte para liberar o seu número.');
-          await sendMenu();
-          return;
-        }
-        await patchSession(supabase, phone, { mode: 'cadastro', flow_step: 'nome', flow_data: {}, locked_patient_id: null });
-        await sendText(phone, 'Vamos cadastrar um paciente. Qual é o *nome completo* dele(a)?');
-        return;
-      case MENU_FREE:
-        await patchSession(supabase, phone, { mode: 'livre', kind: 'clinico', locked_patient_id: null, last_intent: null });
-        await sendText(phone, 'Modo livre ativado. Pode mandar sua dúvida clínica, um tema de estudo ou um pedido (sem vincular a um paciente).');
-        return;
-      case PT_EVOLUTION:
-        await patchSession(supabase, phone, { last_intent: 'evolution' });
-        await sendText(phone, 'Pode ditar (áudio) ou escrever o relato da sessão. Vou gerar a evolução a partir dele.');
-        return;
-      case PT_HISTORY: {
-        if (!lockedId) { await sendMenu(); return; }
-        const patient = await getPatientById(supabase, userId, lockedId);
-        if (patient) await showHistory(patient);
-        return;
-      }
-      case PT_VIEW: {
-        if (!lockedId) { await sendMenu(); return; }
-        const patient = await getPatientById(supabase, userId, lockedId);
-        if (!patient) { await sendMenu(); return; }
-        await showPatientDetails(patient);
-        await sendPatientMenu(patient);
-        return;
-      }
-      case PT_EDIT: {
-        if (!lockedId) { await sendMenu(); return; }
-        const patient = await getPatientById(supabase, userId, lockedId);
-        if (!patient) { await sendMenu(); return; }
-        await sendList(
-          phone,
-          `O que deseja editar em *${patient.full_name}*?`,
-          'Campos',
-          Object.entries(EDITABLE_FIELDS).map(([field, label]) => ({ id: `${EDIT_PREFIX}${field}`, title: label })),
-          'Editar paciente',
-        );
-        return;
-      }
-      case PT_PLAN:
-        await patchSession(supabase, phone, { last_intent: 'plan' });
-        await sendText(phone, 'Sobre qual tema/foco você quer o plano de ação para este paciente?');
-        return;
-      case MENU_EXIT:
-        await exitContext();
-        return;
-      default:
-        await sendMenu();
+
+      // Ações do modo paciente
+      case ids.PT_EVOLUTION: { const p = await loadLockedPatient(); if (p) await openEvolutionDraft(p); else await sendMenu(); return; }
+      case ids.PT_EVOLUTIONS: { const p = await loadLockedPatient(); if (p) await showEvolutionList(p); else await sendMenu(); return; }
+      case ids.PT_HISTORY: { const p = await loadLockedPatient(); if (p) await showHistory(p); return; }
+      case ids.PT_VIEW: { const p = await loadLockedPatient(); if (!p) { await sendMenu(); return; } await showPatientDetails(p); await sendPatientMenu(p); return; }
+      case ids.PT_EDIT: { const p = await loadLockedPatient(); if (!p) { await sendMenu(); return; }
+        await io.sendList(phone, `O que deseja editar em *${p.full_name}*?`, 'Campos',
+          Object.entries(EDITABLE_FIELDS).map(([field, label]) => ({ id: `${ids.EDIT_PREFIX}${field}`, title: label })), 'Editar paciente');
+        return; }
+      case ids.PT_PLAN: { const p = await loadLockedPatient(); if (!p) { await sendMenu(); return; }
+        await persist({ last_intent: 'plan' }); await io.sendText(phone, 'Sobre qual tema/foco você quer o plano de ação para este paciente?'); return; }
+      case ids.MENU_EXIT: await exitContext(); return;
+
+      // Padrão de captura
+      case ids.DRAFT_PREVIEW: { const d = flow.draft; if (!d) { await sendMenu(); return; } await triggerPreview(d); return; }
+      case ids.DRAFT_SAVE: { const d = flow.draft; if (!d) { await sendMenu(); return; } await confirmDraft(d); return; }
+      case ids.DRAFT_ADJUST: { const d = flow.draft; if (!d) { await sendMenu(); return; }
+        await saveFlow({ ...flow, draft: { ...d, previewText: undefined } }, { sub_state: 'draft_capturing' });
+        await io.sendButtons(phone, 'Pode complementar ou corrigir o relato. Depois toque em *Gerar prévia*.', [{ id: ids.DRAFT_PREVIEW, title: 'Gerar prévia' }]);
+        return; }
+      case ids.DRAFT_CANCEL: { const p = await loadLockedPatient();
+        await persist({ sub_state: 'idle', flow_data: { ...flow, draft: undefined } });
+        await io.sendText(phone, 'Rascunho descartado.');
+        if (p) await sendPatientMenu(p); else await sendMenu(); return; }
+      case ids.DRAFT_RESUME: { const d = flow.draft; if (!d) { await sendMenu(); return; }
+        await saveFlow({ ...flow, pendingCommand: undefined }, { sub_state: 'draft_capturing' });
+        await io.sendButtons(phone, 'Voltando ao seu rascunho. Pode continuar ou toque em *Gerar prévia*.', [{ id: ids.DRAFT_PREVIEW, title: 'Gerar prévia' }]); return; }
+
+      // Confirmações específicas
+      case ids.PATIENT_EDIT_CONFIRM: { const d = flow.draft; if (d?.target === 'edit_patient') await savePatientEdit(d); else await sendMenu(); return; }
+      case ids.PATIENT_EDIT_CANCEL: case ids.CADASTRO_CANCEL: { const p = await loadLockedPatient();
+        await persist({ sub_state: 'idle', mode: p ? 'paciente' : 'menu', flow_data: { ...flow, draft: undefined } });
+        await io.sendText(phone, 'Operação cancelada.'); if (p) await sendPatientMenu(p); else await sendMenu(); return; }
+      case ids.CADASTRO_CREATE: { const d = flow.draft; if (d?.target === 'cadastro') await saveCadastro(d); else await sendMenu(); return; }
+      case ids.CADASTRO_FIX: { const d = flow.draft; if (d?.target === 'cadastro') {
+        await saveFlow({ ...flow, draft: { ...d, cadastroStep: 'nome' } }, { sub_state: 'draft_capturing', mode: 'cadastro' });
+        await io.sendText(phone, 'Vamos corrigir. Qual é o *nome completo*?'); } else await sendMenu(); return; }
+
+      // Desambiguação de comando em rascunho
+      case ids.DISAMBIG_COMMAND: await resolveDisambiguation('command'); return;
+      case ids.DISAMBIG_CONTENT: await resolveDisambiguation('content'); return;
+
+      // Sub-máquina de evoluções
+      case ids.EVO_VIEW: { const id = flow.selectedEvolutionId; if (!id) { await sendMenu(); return; }
+        const evo = await getEvolutionById(supabase, userId, id);
+        if (evo) await io.sendText(phone, evo.output_content ?? '(evolução vazia)');
+        await showEvolutionActions(id); return; }
+      case ids.EVO_EDIT: { const id = flow.selectedEvolutionId; const p = await loadLockedPatient(); if (!id || !p) { await sendMenu(); return; }
+        const evo = await getEvolutionById(supabase, userId, id); if (!evo) { await sendMenu(); return; }
+        await openEvolutionEdit(p, id, evo.output_content ?? ''); return; }
+      case ids.EVO_DELETE: { const id = flow.selectedEvolutionId; if (!id) { await sendMenu(); return; }
+        const evo = await getEvolutionById(supabase, userId, id); if (!evo) { await sendMenu(); return; }
+        await saveFlow({ ...flow, selectedEvolutionId: id }, { sub_state: 'evo_delete_confirm' });
+        await io.sendButtons(phone, formatDeleteConfirmation(evo as EvoRow), [
+          { id: ids.EVO_DELETE_CONFIRM, title: 'Excluir' }, { id: ids.EVO_DELETE_CANCEL, title: 'Cancelar' },
+        ]); return; }
+      case ids.EVO_DELETE_CONFIRM: { const id = flow.selectedEvolutionId; const p = await loadLockedPatient(); if (!id) { await sendMenu(); return; }
+        if (!allowed) { await io.sendText(phone, '_(Modo teste: exclusão não aplicada — número fora da allowlist.)_'); }
+        else { const ok = await softDeleteEvolution(supabase, userId, id, phone);
+          await io.sendText(phone, ok ? '🗑️ Evolução excluída (sumiu da web; registro preservado para auditoria).' : 'Não consegui excluir agora.'); }
+        await saveFlow({ ...flow, selectedEvolutionId: undefined }, { sub_state: 'idle' });
+        if (p) await showEvolutionList(p); else await sendMenu(); return; }
+      case ids.EVO_DELETE_CANCEL: case ids.EVO_BACK: { const p = await loadLockedPatient();
+        await saveFlow({ ...flow, selectedEvolutionId: undefined }, { sub_state: 'idle' });
+        if (p) await showEvolutionList(p); else await sendMenu(); return; }
+
+      // Resolução de nome (nenhuma correspondência)
+      case ids.NAME_CREATE: await openCadastro(); return;
+      case ids.NAME_CHOOSE: await showPatientList(); return;
+      case ids.NAME_MENU: await sendMenu(); return;
+
+      // Expiração preservando rascunho
+      case ids.EXPIRY_RESUME: { const d = flow.draft; if (!d) { await sendMenu(); return; }
+        await saveFlow({ ...flow }, { sub_state: 'draft_capturing' });
+        await io.sendButtons(phone, 'Retomando seu rascunho. Pode continuar ou toque em *Gerar prévia*.', [{ id: ids.DRAFT_PREVIEW, title: 'Gerar prévia' }]); return; }
+      case ids.EXPIRY_DISCARD: await sendMenu(); return;
+
+      default: await sendMenu();
     }
   };
 
-  const continueCadastro = async () => {
-    const data = { ...(session?.flow_data ?? {}) } as Record<string, string>;
-    const text = input.text?.trim() ?? '';
-    switch (session?.flow_step) {
-      case 'nome':
-        data.full_name = text;
-        await patchSession(supabase, phone, { flow_data: data, flow_step: 'iniciais' });
-        await sendText(phone, 'Quais as *iniciais* do paciente? (ex.: M.S.)');
+  // Quando um paciente é escolhido (lista/atalho): trava e, se havia um comando pendente, executa.
+  const onPatientChosen = async (patient: Patient) => {
+    const intent = flow.pendingIntent as CommandName | undefined;
+    await lockPatient(patient);
+    if (intent) {
+      // Recarrega contexto local mínimo: executa o comando agora com o paciente travado.
+      await runIntentForPatient(intent, patient);
+      return;
+    }
+    await sendPatientMenu(patient);
+  };
+
+  const runIntentForPatient = async (cmd: CommandName, patient: Patient) => {
+    switch (cmd) {
+      case 'nova_evolucao': await openEvolutionDraft(patient); return;
+      case 'evolucoes': await showEvolutionList(patient); return;
+      case 'historico': await showHistory(patient); await sendPatientMenu(patient); return;
+      case 'ficha': await showPatientDetails(patient); await sendPatientMenu(patient); return;
+      case 'plano': await persist({ last_intent: 'plan' }); await io.sendText(phone, 'Sobre qual tema/foco você quer o plano de ação?'); return;
+      case 'editar':
+        await io.sendList(phone, `O que deseja editar em *${patient.full_name}*?`, 'Campos',
+          Object.entries(EDITABLE_FIELDS).map(([field, label]) => ({ id: `${ids.EDIT_PREFIX}${field}`, title: label })), 'Editar paciente');
         return;
-      case 'iniciais':
-        data.initials = text;
-        await patchSession(supabase, phone, { flow_data: data, flow_step: 'abordagem' });
-        await sendText(phone, 'Qual a *abordagem* terapêutica? (ex.: TCC, Psicanálise)');
-        return;
-      case 'abordagem':
-        data.approach = text;
-        await patchSession(supabase, phone, { flow_data: data, flow_step: 'queixa' });
-        await sendText(phone, 'Qual a *queixa principal*?');
-        return;
-      case 'queixa': {
-        data.main_complaint = text;
-        const patient = await insertPatient(supabase, {
-          user_id: userId,
-          full_name: data.full_name,
-          initials: data.initials,
-          approach: data.approach,
-          main_complaint: data.main_complaint,
-        });
-        if (!patient) {
-          await sendText(phone, 'Não consegui cadastrar o paciente agora. Tente novamente em instantes.');
-          await sendMenu();
-          return;
-        }
-        await lockPatient(patient);
-        await sendText(phone, `Pronto! *${patient.full_name}* foi cadastrado(a) e já aparece no seu painel web.`);
-        await sendPatientMenu(patient);
-        return;
-      }
-      default:
-        await sendMenu();
+      default: await sendPatientMenu(patient);
     }
   };
 
-  // --- roteamento principal ---
+  const triggerPreview = async (draft: Draft) => {
+    if (draft.target === 'edit_patient') return generatePatientEditPreview(draft);
+    if (draft.target === 'cadastro') return generateCadastroPreview(draft);
+    return generateEvolutionPreview(draft);
+  };
 
-  // Item 1 — Inatividade > 24h: descarta o contexto antigo e volta ao menu inicial.
-  if (stale && (session?.mode || session?.locked_patient_id || session?.flow_step)) {
-    await sendMenu();
-    return;
+  const confirmDraft = async (draft: Draft) => {
+    if (draft.target === 'edit_patient') return savePatientEdit(draft);
+    if (draft.target === 'cadastro') return saveCadastro(draft);
+    return saveEvolution(draft);
+  };
+
+  const resolveDisambiguation = async (choice: 'command' | 'content') => {
+    const pending = flow.pendingCommand;
+    const draft = flow.draft;
+    if (!pending || !draft) { await sendMenu(); return; }
+    if (choice === 'content') {
+      draft.parts.push({ kind: 'text', text: pending.raw });
+      await saveFlow({ ...flow, draft, pendingCommand: undefined }, { sub_state: 'draft_capturing' });
+      await io.sendButtons(phone, 'Anotado no rascunho. Pode continuar ou toque em *Gerar prévia*.', [{ id: ids.DRAFT_PREVIEW, title: 'Gerar prévia' }]);
+      return;
+    }
+    // choice === 'command'
+    const cmd = pending.command as CommandName;
+    if (cmd === 'menu') { await exitContext(); return; } // saída explícita confirmada
+    if (READONLY_COMMANDS.has(cmd)) {
+      // Executa o comando de leitura e RETOMA o rascunho automaticamente (nunca o perde).
+      await saveFlow({ ...flow, pendingCommand: undefined }, { sub_state: 'draft_capturing' });
+      const patient = await loadLockedPatient();
+      if (cmd === 'historico' && patient) await showHistory(patient);
+      else if (cmd === 'ficha' && patient) await showPatientDetails(patient);
+      else if (cmd === 'ajuda') await executeCommand('ajuda');
+      else if (cmd === 'acoes' && patient) { /* não reabrir lista para não perder o fio */ }
+      await io.sendButtons(phone, 'Voltei ao seu rascunho. Pode continuar ou toque em *Gerar prévia*.', [{ id: ids.DRAFT_PREVIEW, title: 'Gerar prévia' }]);
+      return;
+    }
+    // Comando que troca contexto: confirmado pelo usuário → executa (descarta o rascunho atual).
+    await persist({ sub_state: 'idle', flow_data: { ...flow, draft: undefined, pendingCommand: undefined } });
+    await executeCommand(cmd);
+  };
+
+  // ---------- cadastro guiado (dentro de draft target=cadastro) ----------
+
+  const continueCadastro = async (draft: Draft) => {
+    const c = { ...(draft.cadastro ?? {}) };
+    const step = draft.cadastroStep ?? 'nome';
+    const text = (input.text ?? '').trim();
+
+    // "voltar" corrige o passo anterior (spec §4) — tratado aqui, não como comando de menu.
+    if (normalizeText(text) === 'voltar') {
+      const order = ['nome', 'iniciais', 'abordagem', 'queixa'];
+      const idx = order.indexOf(step);
+      const prev = order[Math.max(0, idx - 1)];
+      draft.cadastroStep = prev;
+      await saveFlow({ ...flow, draft }, { sub_state: 'draft_capturing' });
+      const prompts: Record<string, string> = {
+        nome: 'Qual é o *nome completo*?', iniciais: 'Quais as *iniciais*? (ex.: M.S.)',
+        abordagem: 'Qual a *abordagem* terapêutica?', queixa: 'Qual a *queixa principal*?',
+      };
+      await io.sendText(phone, `Voltando. ${prompts[prev]}`);
+      return;
+    }
+
+    switch (step) {
+      case 'nome': c.full_name = text; draft.cadastro = c; draft.cadastroStep = 'iniciais';
+        await saveFlow({ ...flow, draft }, { sub_state: 'draft_capturing' });
+        await io.sendText(phone, 'Quais as *iniciais* do paciente? (ex.: M.S.)'); return;
+      case 'iniciais': c.initials = text; draft.cadastro = c; draft.cadastroStep = 'abordagem';
+        await saveFlow({ ...flow, draft }, { sub_state: 'draft_capturing' });
+        await io.sendText(phone, 'Qual a *abordagem* terapêutica? (ex.: TCC, Psicanálise)'); return;
+      case 'abordagem': c.approach = text; draft.cadastro = c; draft.cadastroStep = 'queixa';
+        await saveFlow({ ...flow, draft }, { sub_state: 'draft_capturing' });
+        await io.sendText(phone, 'Qual a *queixa principal*?'); return;
+      case 'queixa': c.main_complaint = text; draft.cadastro = c;
+        await generateCadastroPreview(draft); return;
+      default: await sendMenu();
+    }
+  };
+
+  // ===================== PIPELINE PRINCIPAL =====================
+
+  const hasDraft = !!flow.draft;
+  const hasContext = !!(mode && mode !== 'menu') || !!lockedId || !!flow.draft || (!!subState && subState !== 'idle');
+
+  // 1. CAMADA 0 — comando reservado (mensagem curta e exata). Só para texto.
+  if (input.kind !== 'interactive') {
+    // Caso especial: "voltar" dentro do cadastro corrige passo (não é menu).
+    const isCadastroBack = flow.draft?.target === 'cadastro' && normalizeText(input.text ?? '') === 'voltar';
+    if (!isCadastroBack) {
+      const cmd = matchCommand(input.text ?? '');
+      if (cmd) {
+        if (hasDraft) { await askCommandDisambiguation(cmd, input.text ?? ''); return; }
+        await executeCommand(cmd);
+        return;
+      }
+    }
   }
 
-  // 0. Saída de contexto por TEXTO — prioridade máxima (antes de paciente/cadastro).
-  if (input.kind !== 'interactive' && ESCAPE_WORDS.has(normalizeText(input.text ?? ''))) {
-    await exitContext();
-    return;
+  // 2. EXPIRAÇÃO 24h — preservando rascunho. Só avalia em mensagem de texto (não em respostas a prompts).
+  if (input.kind !== 'interactive' && subState !== 'expiry_prompt') {
+    const verdict = evaluateExpiry({ updatedAt: session?.updated_at ?? null, now: Date.now(), hasDraft, hasContext });
+    if (verdict === 'stale_no_draft') { await sendMenu(); return; }
+    if (verdict === 'stale_with_draft') {
+      await persist({ sub_state: 'expiry_prompt' });
+      const when = '';
+      await io.sendButtons(phone, `Você tinha um rascunho de evolução em aberto${when}. O que fazer?`, [
+        { id: ids.EXPIRY_RESUME, title: 'Retomar' }, { id: ids.EXPIRY_DISCARD, title: 'Descartar' },
+      ]);
+      return;
+    }
   }
 
-  // 1. Resposta de botão/lista.
+  // 3. Respostas interativas (botões/listas).
   if (input.kind === 'interactive' && input.replyId) {
     await handleReply(input.replyId);
     return;
   }
 
-  // 2. Escolha de paciente por nome (lista grande).
-  if (mode === 'menu' && session?.flow_step === 'await_name' && input.text) {
-    const matches = await searchPatientsByName(supabase, userId, input.text.trim());
-    if (matches.length === 0) {
-      await sendText(phone, 'Não encontrei nenhum paciente com esse nome. Pode tentar de novo?');
-    } else if (matches.length === 1) {
-      await lockPatient(matches[0]);
-      await sendPatientMenu(matches[0]);
-    } else {
-      await sendList(
-        phone, 'Encontrei mais de um. Selecione:', 'Ver pacientes',
-        matches.map((p) => ({ id: `${PATIENT_PREFIX}${p.id}`, title: p.full_name, description: p.initials })),
-      );
+  // 4. RESOLUÇÃO DE CONTEXTO (texto) por sub-estado.
+
+  // 4a. Rascunho em captura: a mensagem entra no rascunho (ou dispara prévia).
+  if (subState === 'draft_capturing' && flow.draft) {
+    const draft = flow.draft;
+    if (draft.target === 'cadastro') { await continueCadastro(draft); return; }
+    if (isPreviewTrigger(input.text ?? '')) { await triggerPreview(draft); return; }
+    await accumulate(draft);
+    return;
+  }
+
+  // 4b. Aguardando confirmação de prévia: texto extra volta a capturar (re-gera depois).
+  if (subState === 'draft_await_preview_confirm' && flow.draft) {
+    const draft = flow.draft;
+    if (draft.target !== 'cadastro') {
+      draft.previewText = undefined;
+      await accumulate(draft); // acumula e segue em captura
+      await io.sendButtons(phone, 'Complementei o rascunho. Toque em *Gerar prévia* quando terminar.', [{ id: ids.DRAFT_PREVIEW, title: 'Gerar prévia' }]);
     }
     return;
   }
 
-  // 3. Cadastro guiado em andamento.
-  if (mode === 'cadastro') {
-    await continueCadastro();
+  // 4c. Escolha de paciente por número ou nome.
+  if (subState === 'choose_patient' && (flow.patientList?.length ?? 0) > 0 && input.text) {
+    const sel = resolveSelection(input.text, flow.patientList!, (p) => p.full_name);
+    if (sel.kind === 'item') {
+      const patient = await getPatientById(supabase, userId, sel.item.id);
+      if (patient) { await onPatientChosen(patient); return; }
+    }
+    if (sel.kind === 'ambiguous') {
+      await io.sendList(phone, 'Encontrei mais de um. Selecione:', 'Ver pacientes',
+        sel.items.map((p) => ({ id: `${ids.PATIENT_PREFIX}${p.id}`, title: p.full_name, description: p.initials ?? undefined })));
+      return;
+    }
+    await io.sendText(phone, 'Não encontrei esse paciente. Tente o número da lista ou o nome.');
     return;
   }
 
-  // 4. MODO PACIENTE (paciente travado).
+  // 4d. Lista de evoluções: seleção por número ou data.
+  if (subState === 'evo_list' && (flow.evoList?.length ?? 0) > 0 && input.text) {
+    const sel = resolveSelection(input.text, flow.evoList!, (e) => e.full_name); // full_name guarda a data
+    if (sel.kind === 'item') { await showEvolutionActions(sel.item.id); return; }
+    await io.sendText(phone, 'Não identifiquei a evolução. Responda com o número ou a data (dd/mm).');
+    return;
+  }
+
+  // 5. MODO PACIENTE — conversa NÃO grava (spec §7). Só ações explícitas escrevem.
   if (mode === 'paciente' && lockedId) {
-    const patient = await getPatientById(supabase, userId, lockedId);
+    const patient = await loadLockedPatient();
     if (!patient) { await sendMenu(); return; }
-    if (session?.last_intent === 'edit') {
-      await applyPatientEdit(patient);
-    } else if (session?.last_intent === 'plan') {
-      await runPlan(patient);
-    } else {
-      await generateEvolution(patient);
-    }
+    if (session?.last_intent === 'plan') { await runPlan(patient); return; }
+    // Conversa livre sobre o caso: responde sem efeito colateral.
+    await handleConversationalText(session?.thread_id ?? undefined);
     return;
   }
 
-  // 5. MODO LIVRE.
+  // 6. MODO LIVRE.
   if (mode === 'livre') {
-    await handleFree();
+    await handleConversationalText(session?.thread_id ?? undefined);
     return;
   }
 
-  // 6. Atalho do apressado: a mensagem cita um paciente?
+  // 7. ATALHO DO APRESSADO — a mensagem cita um paciente? (resolução de nome, spec §9)
   if (input.text && input.text.trim().length > 0) {
     const patients = await listActivePatients(supabase, userId, 50);
-    const lower = input.text.toLowerCase();
-    const match = patients.find((p) => p.full_name && lower.includes(p.full_name.toLowerCase()));
-    if (match) {
-      await lockPatient(match);
-      await sendText(phone, `Selecionei *${match.full_name}*.`);
-      await sendPatientMenu(match);
+    const mentioned = findMentionedPatients(input.text, patients.map((p) => ({ id: p.id, full_name: p.full_name, initials: p.initials })));
+    const klass = classifyMatches(mentioned);
+    if (klass === 'one') {
+      const patient = patients.find((p) => p.id === mentioned[0].id)!;
+      await io.sendText(phone, `Ok, contexto: *${patient.full_name}*.`);
+      // Se a mensagem tem conteúdo além do nome, abre rascunho de evolução com o que já veio.
+      const words = (input.text ?? '').trim().split(/\s+/).length;
+      if (words > 4) { await openEvolutionDraft(patient, input.text); }
+      else { await lockPatient(patient); await sendPatientMenu(patient); }
+      return;
+    }
+    if (klass === 'many') {
+      await saveFlow({ ...flow, patientList: mentioned }, { sub_state: 'choose_patient', mode: 'menu' });
+      await io.sendList(phone, 'Encontrei mais de um paciente. Selecione:', 'Ver pacientes',
+        mentioned.map((p) => ({ id: `${ids.PATIENT_PREFIX}${p.id}`, title: p.full_name, description: p.initials ?? undefined })));
+      return;
+    }
+    // nenhuma: oferece cadastrar / escolher / menu (apenas se a mensagem parecia citar um nome próprio).
+    if ((input.text ?? '').trim().split(/\s+/).length <= 6) {
+      await io.sendButtons(phone, 'Não encontrei esse paciente. O que deseja?', [
+        { id: ids.NAME_CREATE, title: 'Cadastrar' }, { id: ids.NAME_CHOOSE, title: 'Escolher da lista' }, { id: ids.NAME_MENU, title: 'Menu' },
+      ]);
       return;
     }
   }
 
-  // 7. Sem contexto → menu inicial.
+  // 8. Sem contexto → menu inicial.
   await sendMenu();
 }

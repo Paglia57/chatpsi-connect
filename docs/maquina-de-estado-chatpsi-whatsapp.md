@@ -45,7 +45,7 @@ Olá, [nome]! O que vamos fazer?
 
 ### Caminho 1 — Escolher paciente
 Mostra a lista de pacientes do psicólogo. Ao escolher um, o **histórico daquele paciente é carregado no contexto** e a conversa entra em **MODO PACIENTE**.
-*Quando há muitos pacientes:* a lista interativa comporta poucos itens; acima disso, o sistema pede o nome por texto ("me diz o nome da paciente") em vez de listar todos.
+*Quando há muitos pacientes:* a lista interativa comporta poucos itens (até 10). Acima disso, o sistema **lista os nomes em texto** (numerados) e pede que o psicólogo diga o nome de quem quer atender — em vez de despejar dezenas de botões.
 
 ### Caminho 2 — Cadastrar paciente novo
 O sistema conduz um **cadastro por conversa** (pergunta nome completo, iniciais, abordagem e queixa, um de cada vez). Ao terminar, cria a ficha e já entra em **MODO PACIENTE** com esse paciente.
@@ -79,8 +79,11 @@ As **ferramentas são as mesmas** nos dois modos. O que muda é **onde o resulta
 Com um paciente travado, o sistema oferece botões de ação:
 ```
 [ Nova evolução ]  [ Histórico ]  [ Plano ]
+[ Consultar ficha ]  [ Editar paciente ]
 [ ↩ Trocar de paciente / Menu ]
 ```
+- **Consultar ficha:** mostra os dados cadastrais do paciente — nome, iniciais, abordagem, queixa principal e número de sessões.
+- **Editar paciente:** o psicólogo escolhe um campo (nome, iniciais, abordagem ou queixa) e envia o novo valor; a ficha é atualizada na hora (e na web).
 
 ### Sair do contexto (trocar de paciente ou voltar ao menu)
 Depois que um paciente é travado, **todas** as mensagens seguintes valem para ele — até que o psicólogo saia do contexto de propósito. A saída é **sempre disponível**, de duas formas equivalentes:
@@ -88,6 +91,8 @@ Depois que um paciente é travado, **todas** as mensagens seguintes valem para e
 - **Comando de texto** a qualquer momento: "menu", "trocar", "sair" ou "voltar".
 
 Ao acionar a saída, o sistema **destrava o paciente atual** (limpa o paciente travado e volta ao modo menu) e reexibe o menu dos três caminhos — de onde o psicólogo escolhe **outro paciente**, **cadastra um novo** ou vai para o **modo livre**. O mesmo comando de escape funciona dentro do modo livre e no meio de um cadastro guiado (cancela o cadastro em andamento e volta ao menu).
+
+Há ainda uma terceira saída, **automática**: se a conversa fica **mais de 24 horas sem nenhuma interação**, o contexto é considerado expirado. Na mensagem seguinte, em vez de retomar o paciente travado ou o cadastro pela metade de ontem, o sistema **reinicia no menu** — evitando que o psicólogo continue, sem perceber, um contexto antigo. (Isso é diferente do *Motor de reativação* da seção 9, que é o sistema **iniciando** conversa proativamente.)
 
 > Princípio: o psicólogo **nunca fica preso** num contexto. Há sempre uma porta de saída visível (botão) e uma por texto (comando), sem precisar de gambiarra como "mandar oi de novo".
 
@@ -104,6 +109,7 @@ Por número de telefone, o sistema mantém um estado leve de conversa:
 | **passo** | em que ponto de um cadastro guiado a pessoa está |
 | **dados parciais** | o que já foi respondido num cadastro em andamento |
 | **última intenção** | para entender "agora faz o plano" como continuação |
+| **última atualização** | quando o estado mudou pela última vez — usado para expirar o contexto após 24h sem interação |
 
 Esse estado é o que permite a conversa fluir naturalmente entre mensagens.
 
@@ -125,6 +131,7 @@ Mensagem chega
    │       └─ documento ..→ extração / descrição do conteúdo
    │
    ├─ 3. Resolve o contexto
+   │       ├─ +24h sem interação? ............→ expira o contexto e volta ao MENU
    │       ├─ comando de saída ("menu"/"trocar"/"sair")? → destrava e volta ao MENU
    │       ├─ já há paciente travado? ........→ MODO PACIENTE
    │       ├─ a mensagem cita um paciente? ...→ trava nele (atalho do apressado)
@@ -173,10 +180,12 @@ Para validar o fluxo no número de teste sem se perder, o escopo do MVP é a **e
 **Agora (MVP de teste):**
 - Identidade com os três casos (novo / ativo / inativo).
 - Menu de três caminhos com botões.
-- Escolher paciente, cadastrar por conversa, modo livre.
+- Escolher paciente (com lista em texto quando há muitos), cadastrar por conversa, modo livre.
 - MODO PACIENTE com histórico do paciente no contexto.
 - Evolução por texto, áudio, imagem e documento, salva na ficha (e visível na web).
 - Atalhos de Histórico e Plano no modo paciente.
+- **Consultar ficha** e **Editar paciente** no modo paciente.
+- **Expiração de contexto após 24h** sem interação (reinicia no menu).
 
 **Depois (evoluções):**
 - Formulário no chat (WhatsApp Flow) no lugar do cadastro por conversa.

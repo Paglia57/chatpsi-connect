@@ -1,51 +1,46 @@
 // Gateway de IA provider-agnóstico.
 //
-// Expõe uma interface única e estável — `chat()` — para interagir com um LLM.
-// A implementação atual usa a OpenAI Assistants API, mas TODA a lógica específica
-// da OpenAI fica escondida atrás de `chat()`. Trocar de provedor/modelo no futuro
-// (ex.: OpenAI Responses API) deve ser uma mudança apenas neste arquivo, sem afetar
-// quem chama o módulo.
+// Expõe uma interface única e estável — `chat()` — para interagir com um LLM. A
+// implementação por baixo é selecionada por env `LLM_BACKEND` ('assistants' | 'responses'),
+// permitindo trocar/rollback sem mexer em quem chama. Os system prompts vêm do sistema de
+// personas no banco (getPersona). Tipos públicos ficam em ./types.ts.
 
-const OPENAI_BASE = 'https://api.openai.com/v1';
+import type { ChatContentPart, ChatOptions, ChatResult, ResolvedChat } from "./types.ts";
+import { assistantIdForPersona, defaultModel, getBackend, shouldShadow } from "./config.ts";
+import { executeTool, toolsToMap } from "./toolrunner.ts";
+import { chatViaOpenAIResponses } from "./responses.ts";
+import { runShadow } from "./shadow.ts";
+import { getPersona } from "../personas/resolve.ts";
 
-// Limites de polling — nunca loop infinito.
+export type { ChatContentPart, ChatOptions, ChatResult, ChatTool } from "./types.ts";
+
+const OPENAI_BASE = "https://api.openai.com/v1";
 const POLL_TIMEOUT_MS = 90_000;
 const POLL_INTERVAL_MS = 1_500;
 
-// --- Interface pública (estável) ---
-
-export type ChatTool = {
-  name: string;
-  handler: (args: Record<string, unknown>) => Promise<string>;
-};
-
-export type ChatOptions = {
-  /** Ex.: "clinico" | "vendas". Hoje só roteia para OpenAI; serve para roteamento futuro. */
-  task: string;
-  /** Id do assistant da OpenAI a usar. */
-  assistantId: string;
-  /** Texto do usuário. */
-  userText: string;
-  /** Se ausente, cria uma thread nova. */
-  threadId?: string;
-  /** Handlers para as funções que o assistant pode chamar. */
-  tools?: ChatTool[];
-};
-
-export type ChatResult = {
-  text: string;
-  threadId: string;
-  usage?: { prompt: number; completion: number; total: number };
-};
-
 /**
  * Conversa com o LLM, resolvendo tool calls localmente quando necessário.
- * Retorna o texto final do assistant, o threadId (novo ou reutilizado) e, se
- * disponível, o uso de tokens.
+ * Resolve instruções (persona) e assistant, escolhe o backend e — sob 'assistants' com
+ * sombra ligada — dispara a comparação com a Responses em paralelo.
  */
 export async function chat(opts: ChatOptions): Promise<ChatResult> {
-  // Roteamento futuro por `task` acontecerá aqui; hoje sempre OpenAI Assistants.
-  return await chatViaOpenAIAssistants(opts);
+  const instructions = opts.instructions ??
+    (opts.personaSlug ? await getPersona(opts.personaSlug) : undefined);
+  const assistantId = opts.assistantId ?? assistantIdForPersona(opts.personaSlug);
+  // model_hint da persona pode ser ligado aqui no futuro; hoje todas usam o default.
+  const model = opts.model ?? defaultModel();
+  const resolved: ResolvedChat = { instructions, assistantId, model };
+
+  if (getBackend() === "responses") {
+    return await chatViaOpenAIResponses(opts, resolved);
+  }
+
+  const started = Date.now();
+  const result = await chatViaOpenAIAssistants(opts, resolved);
+  if (shouldShadow(opts.shadowKey)) {
+    runShadow(opts, resolved, result, Date.now() - started);
+  }
+  return result;
 }
 
 // --- Implementação OpenAI Assistants API (privada ao módulo) ---
@@ -54,91 +49,74 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-/** Faz uma requisição à OpenAI Assistants API. Lança erro descritivo (sem vazar a chave). */
 async function openaiRequest(path: string, options: RequestInit = {}): Promise<any> {
-  const apiKey = Deno.env.get('OPENAI_API_KEY');
-  if (!apiKey) {
-    throw new Error('OPENAI_API_KEY não configurada no ambiente');
-  }
+  const apiKey = Deno.env.get("OPENAI_API_KEY");
+  if (!apiKey) throw new Error("OPENAI_API_KEY não configurada no ambiente");
 
   const res = await fetch(`${OPENAI_BASE}${path}`, {
     ...options,
     headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-      'OpenAI-Beta': 'assistants=v2',
+      "Authorization": `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+      "OpenAI-Beta": "assistants=v2",
       ...(options.headers || {}),
     },
   });
-
   if (!res.ok) {
     const errText = await res.text();
-    // Não logar a chave; apenas status + corpo do erro da OpenAI.
     throw new Error(`OpenAI API error ${res.status} em ${path}: ${errText}`);
   }
   return res.json();
 }
 
-/** Executa um tool call resolvendo o handler local correspondente. */
-async function runToolCall(
-  toolCall: any,
-  toolsByName: Map<string, ChatTool>,
-): Promise<{ tool_call_id: string; output: string }> {
-  const fnName: string = toolCall?.function?.name ?? '';
-  const tool = toolsByName.get(fnName);
-
-  if (!tool) {
-    return {
-      tool_call_id: toolCall.id,
-      output: `Ferramenta "${fnName}" não disponível.`,
-    };
+/** Monta o content (e attachments) da mensagem da thread a partir de userText/content. */
+function buildAssistantMessage(opts: ChatOptions): { content: unknown; attachments?: unknown[] } {
+  if (opts.content && opts.content.length) {
+    const blocks: unknown[] = [];
+    const attachments: unknown[] = [];
+    for (const p of opts.content as ChatContentPart[]) {
+      if (p.type === "text") blocks.push({ type: "text", text: p.text });
+      else if (p.type === "image") blocks.push({ type: "image_url", image_url: { url: p.dataUrl } });
+      else attachments.push({ file_id: p.fileId, tools: [{ type: "file_search" }] });
+    }
+    if (blocks.length === 0) blocks.push({ type: "text", text: opts.userText || "Analise o anexo enviado." });
+    return { content: blocks, attachments: attachments.length ? attachments : undefined };
   }
-
-  let args: Record<string, unknown> = {};
-  try {
-    const rawArgs = toolCall?.function?.arguments;
-    if (rawArgs) args = JSON.parse(rawArgs);
-  } catch {
-    args = {};
-  }
-
-  try {
-    const output = await tool.handler(args);
-    return { tool_call_id: toolCall.id, output };
-  } catch (err) {
-    return {
-      tool_call_id: toolCall.id,
-      output: `Erro ao executar a ferramenta "${fnName}": ${err instanceof Error ? err.message : String(err)}`,
-    };
-  }
+  return { content: opts.userText ?? "" };
 }
 
-async function chatViaOpenAIAssistants(opts: ChatOptions): Promise<ChatResult> {
-  const { assistantId, userText, tools = [] } = opts;
-  const toolsByName = new Map(tools.map((t) => [t.name, t]));
+async function chatViaOpenAIAssistants(opts: ChatOptions, resolved: ResolvedChat): Promise<ChatResult> {
+  const assistantId = resolved.assistantId;
+  if (!assistantId) {
+    throw new Error("Backend 'assistants': assistantId não resolvido (personaSlug sem mapa e sem assistantId).");
+  }
+  const toolsByName = toolsToMap(opts.tools);
 
   // 1. Garante uma thread.
   let threadId = opts.threadId;
   if (!threadId) {
-    const thread = await openaiRequest('/threads', { method: 'POST', body: '{}' });
+    const thread = await openaiRequest("/threads", { method: "POST", body: "{}" });
     threadId = thread.id as string;
   }
 
-  // 2. Adiciona a mensagem do usuário.
+  // 2. Adiciona a mensagem do usuário (texto/imagens/anexos).
+  const { content, attachments } = buildAssistantMessage(opts);
+  const messagePayload: Record<string, unknown> = { role: "user", content };
+  if (attachments) messagePayload.attachments = attachments;
   await openaiRequest(`/threads/${threadId}/messages`, {
-    method: 'POST',
-    body: JSON.stringify({ role: 'user', content: userText }),
+    method: "POST",
+    body: JSON.stringify(messagePayload),
   });
 
   // 3. Cria o run.
   const run = await openaiRequest(`/threads/${threadId}/runs`, {
-    method: 'POST',
+    method: "POST",
     body: JSON.stringify({ assistant_id: assistantId }),
   });
   const runId = run.id as string;
 
-  // 4. Polling com tratamento de tool calls (requires_action) e limites de tempo.
-  const TERMINAL = ['completed', 'failed', 'cancelled', 'expired', 'incomplete'];
+  // 4. Polling com tratamento de tool calls e limite de tempo.
+  const TERMINAL = ["completed", "failed", "cancelled", "expired", "incomplete"];
   const startTime = Date.now();
   let current = run;
 
@@ -147,14 +125,16 @@ async function chatViaOpenAIAssistants(opts: ChatOptions): Promise<ChatResult> {
       throw new Error(`Tempo limite excedido aguardando o run ${runId} (último status: ${current.status})`);
     }
 
-    if (current.status === 'requires_action') {
+    if (current.status === "requires_action") {
       const toolCalls: any[] = current.required_action?.submit_tool_outputs?.tool_calls ?? [];
       const tool_outputs = await Promise.all(
-        toolCalls.map((tc) => runToolCall(tc, toolsByName)),
+        toolCalls.map(async (tc) => ({
+          tool_call_id: tc.id,
+          output: await executeTool(toolsByName, tc?.function?.name ?? "", tc?.function?.arguments),
+        })),
       );
-
       current = await openaiRequest(`/threads/${threadId}/runs/${runId}/submit_tool_outputs`, {
-        method: 'POST',
+        method: "POST",
         body: JSON.stringify({ tool_outputs }),
       });
       continue;
@@ -164,25 +144,25 @@ async function chatViaOpenAIAssistants(opts: ChatOptions): Promise<ChatResult> {
     current = await openaiRequest(`/threads/${threadId}/runs/${runId}`);
   }
 
-  if (current.status !== 'completed') {
-    const lastError = current.last_error ? `: ${current.last_error.code} — ${current.last_error.message}` : '';
+  if (current.status !== "completed") {
+    const lastError = current.last_error ? `: ${current.last_error.code} — ${current.last_error.message}` : "";
     throw new Error(`Run terminou com status "${current.status}"${lastError}`);
   }
 
   // 5. Lê a última mensagem do assistant.
   const messages = await openaiRequest(`/threads/${threadId}/messages?limit=1&order=desc`);
   const assistantMsg = messages.data?.[0];
-  if (!assistantMsg || assistantMsg.role !== 'assistant') {
-    throw new Error('Resposta do assistant não encontrada');
+  if (!assistantMsg || assistantMsg.role !== "assistant") {
+    throw new Error("Resposta do assistant não encontrada");
   }
 
   const text = (assistantMsg.content ?? [])
-    .filter((block: any) => block.type === 'text')
+    .filter((block: any) => block.type === "text")
     .map((block: any) => block.text.value)
-    .join('\n');
+    .join("\n");
 
   // 6. Extrai usage de tokens, se disponível.
-  let usage: ChatResult['usage'];
+  let usage: ChatResult["usage"];
   if (current.usage) {
     usage = {
       prompt: current.usage.prompt_tokens ?? 0,
@@ -191,6 +171,5 @@ async function chatViaOpenAIAssistants(opts: ChatOptions): Promise<ChatResult> {
     };
   }
 
-  // 7. Retorna o resultado.
   return { text, threadId, usage };
 }

@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { getPersona } from "../_shared/personas/resolve.ts";
+import { getBackend } from "../_shared/llm/config.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -63,6 +64,16 @@ serve(async (req) => {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    // Backend Responses: não criamos Assistant/Thread por paciente — o contexto é montado
+    // a partir do histórico do nosso lado a cada geração (generate-evolution). Retorna ids
+    // vazios; patients.openai_thread_id passará a guardar o previous_response_id.
+    if (getBackend() === "responses") {
+      return new Response(
+        JSON.stringify({ thread_id: null, assistant_id: null }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
     }
 
     const openaiHeaders = {

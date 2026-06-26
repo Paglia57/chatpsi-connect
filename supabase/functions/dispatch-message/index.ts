@@ -1,6 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.55.0";
+import { chat, type ChatContentPart } from "../_shared/llm/index.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -8,38 +9,14 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
-const ASSISTANT_ID = 'asst_4sei53DAsGVYUhyZzp3BsLJZ';
 const OPENAI_BASE = 'https://api.openai.com/v1';
-
-function sleep(ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-async function openaiRequest(path: string, apiKey: string, options: RequestInit = {}) {
-  const res = await fetch(`${OPENAI_BASE}${path}`, {
-    ...options,
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-      'OpenAI-Beta': 'assistants=v2',
-      ...(options.headers || {}),
-    },
-  });
-  if (!res.ok) {
-    const errText = await res.text();
-    console.error(`OpenAI error ${res.status} on ${path}:`, errText);
-    throw new Error(`OpenAI API error ${res.status}: ${errText}`);
-  }
-  return res.json();
-}
 
 // --- File processing helpers ---
 
 function getExtensionFromUrl(url: string): string {
   try {
     const pathname = new URL(url).pathname;
-    const ext = pathname.split('.').pop()?.toLowerCase() || '';
-    return ext;
+    return pathname.split('.').pop()?.toLowerCase() || '';
   } catch {
     return '';
   }
@@ -63,13 +40,11 @@ async function downloadFile(url: string): Promise<{ data: Uint8Array; ext: strin
   return { data, ext, mime };
 }
 
-/**
- * Transcribe audio using Whisper API. Returns transcription text.
- */
+/** Transcribe audio using Whisper API. */
 async function transcribeAudio(fileUrl: string, apiKey: string): Promise<string> {
   console.log('Transcribing audio via Whisper...');
   const { data, ext } = await downloadFile(fileUrl);
-  
+
   const formData = new FormData();
   const blob = new Blob([data], { type: getMimeType(ext) });
   formData.append('file', blob, `audio.${ext || 'mp3'}`);
@@ -81,43 +56,26 @@ async function transcribeAudio(fileUrl: string, apiKey: string): Promise<string>
     headers: { 'Authorization': `Bearer ${apiKey}` },
     body: formData,
   });
-
   if (!res.ok) {
     const errText = await res.text();
     console.error('Whisper error:', errText);
     throw new Error(`Whisper API error ${res.status}: ${errText}`);
   }
-
   const result = await res.json();
-  console.log('Whisper transcription length:', result.text?.length);
   return result.text;
 }
 
-/**
- * Process image: download and convert to base64 for vision content block.
- */
-async function processImage(fileUrl: string): Promise<{ type: string; image_url: { url: string } }> {
+/** Process image: download and return a base64 data URL for a vision content part. */
+async function processImageDataUrl(fileUrl: string): Promise<string> {
   console.log('Processing image for vision...');
-  const { data, ext, mime } = await downloadFile(fileUrl);
-  
-  // Convert to base64
+  const { data, mime } = await downloadFile(fileUrl);
   let binary = '';
-  for (let i = 0; i < data.length; i++) {
-    binary += String.fromCharCode(data[i]);
-  }
+  for (let i = 0; i < data.length; i++) binary += String.fromCharCode(data[i]);
   const base64 = btoa(binary);
-  const dataUrl = `data:${mime};base64,${base64}`;
-  
-  console.log('Image encoded, size:', data.length, 'bytes');
-  return {
-    type: 'image_url',
-    image_url: { url: dataUrl },
-  };
+  return `data:${mime};base64,${base64}`;
 }
 
-/**
- * Process document: upload to OpenAI Files API and return file_id for attachment.
- */
+/** Process document: upload to OpenAI Files API and return file_id for a file content part. */
 async function processDocument(fileUrl: string, apiKey: string): Promise<string> {
   console.log('Uploading document to OpenAI Files API...');
   const { data, ext } = await downloadFile(fileUrl);
@@ -132,15 +90,12 @@ async function processDocument(fileUrl: string, apiKey: string): Promise<string>
     headers: { 'Authorization': `Bearer ${apiKey}` },
     body: formData,
   });
-
   if (!res.ok) {
     const errText = await res.text();
     console.error('Files API error:', errText);
     throw new Error(`Files API error ${res.status}: ${errText}`);
   }
-
   const result = await res.json();
-  console.log('File uploaded:', result.id);
   return result.id;
 }
 
@@ -182,15 +137,13 @@ serve(async (req) => {
     }
 
     const userId = user.id;
-
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { 
-      message, 
-      messageType = 'text', 
+    const {
+      message,
+      messageType = 'text',
       fileUrl = null,
-      nickname = null,
-      openai_thread_id = null
+      openai_thread_id = null,
     } = await req.json();
 
     const validTypes = ['text', 'audio', 'image', 'video', 'document'];
@@ -213,6 +166,7 @@ serve(async (req) => {
     }
 
     const conversationId = userId;
+    const threadIdIn = openai_thread_id || profile.openai_thread_id || undefined;
 
     // Save user message
     const { error: insertError } = await supabase
@@ -224,10 +178,7 @@ serve(async (req) => {
         type: validatedMessageType,
         sender: 'user',
         media_url: fileUrl,
-        metadata: { 
-          original_file_url: fileUrl,
-          openai_thread_id: openai_thread_id || profile.openai_thread_id || null
-        }
+        metadata: { original_file_url: fileUrl, openai_thread_id: threadIdIn || null }
       });
 
     if (insertError) {
@@ -238,27 +189,10 @@ serve(async (req) => {
       );
     }
 
-    // --- OpenAI Assistants API ---
-
-    // 1. Get or create thread
-    let threadId = openai_thread_id || profile.openai_thread_id;
-
-    if (!threadId) {
-      console.log('Creating new OpenAI thread for user:', userId);
-      const threadData = await openaiRequest('/threads', openaiApiKey, { method: 'POST', body: '{}' });
-      threadId = threadData.id;
-      console.log('Created thread:', threadId);
-
-      await supabase
-        .from('profiles')
-        .update({ openai_thread_id: threadId })
-        .eq('user_id', userId);
-    }
-
-    // 2. Process file and build message content
-    let messageContent: any; // will be string or array of content blocks
-    let attachments: any[] | undefined;
+    // --- Build the chat input (text and/or rich content parts) ---
     const userText = message || '';
+    let chatUserText: string | undefined;
+    let chatContent: ChatContentPart[] | undefined;
 
     if (fileUrl && validatedMessageType !== 'text') {
       try {
@@ -266,121 +200,74 @@ serve(async (req) => {
           case 'audio': {
             const transcription = await transcribeAudio(fileUrl, openaiApiKey);
             const prefix = userText ? `${userText}\n\n` : '';
-            messageContent = `${prefix}[Transcrição do áudio do paciente]: ${transcription}`;
+            chatUserText = `${prefix}[Transcrição do áudio do paciente]: ${transcription}`;
             break;
           }
-
           case 'image': {
-            const imageBlock = await processImage(fileUrl);
-            const contentBlocks: any[] = [];
-            if (userText) {
-              contentBlocks.push({ type: 'text', text: userText });
-            }
-            contentBlocks.push(imageBlock);
-            messageContent = contentBlocks;
+            const dataUrl = await processImageDataUrl(fileUrl);
+            chatContent = [];
+            if (userText) chatContent.push({ type: 'text', text: userText });
+            chatContent.push({ type: 'image', dataUrl });
             break;
           }
-
           case 'document': {
             const fileId = await processDocument(fileUrl, openaiApiKey);
-            messageContent = userText || 'Analise o documento enviado.';
-            attachments = [{ file_id: fileId, tools: [{ type: 'file_search' }] }];
+            chatContent = [
+              { type: 'text', text: userText || 'Analise o documento enviado.' },
+              { type: 'file', fileId },
+            ];
             break;
           }
-
           case 'video': {
-            // Video: no direct processing, send as description
-            messageContent = userText 
+            chatUserText = userText
               ? `${userText}\n\n[Vídeo enviado: ${fileUrl}]`
               : `[Vídeo enviado: ${fileUrl}]`;
             break;
           }
-
           default: {
-            messageContent = userText || 'Arquivo enviado';
+            chatUserText = userText || 'Arquivo enviado';
           }
         }
       } catch (processingError) {
-        // Fallback: send as text description if processing fails
         console.error('File processing failed, using fallback:', processingError);
         const typeLabels: Record<string, string> = {
           audio: 'Áudio', image: 'Imagem', video: 'Vídeo', document: 'Documento',
         };
         const label = typeLabels[validatedMessageType] || 'Arquivo';
-        messageContent = userText 
+        chatUserText = userText
           ? `${userText}\n\n[${label} enviado: ${fileUrl}]`
           : `[${label} enviado: ${fileUrl}]`;
       }
     } else {
-      messageContent = userText || 'Arquivo enviado';
+      chatUserText = userText || 'Arquivo enviado';
     }
 
-    console.log('Sending message to thread:', threadId, 'type:', typeof messageContent === 'string' ? 'text' : 'content_blocks');
-
-    // 3. Add message to thread
-    const messagePayload: any = { role: 'user', content: messageContent };
-    if (attachments) {
-      messagePayload.attachments = attachments;
-    }
-
-    await openaiRequest(`/threads/${threadId}/messages`, openaiApiKey, {
-      method: 'POST',
-      body: JSON.stringify(messagePayload),
+    // --- Gateway: persona clínico web; backend escolhido por LLM_BACKEND ---
+    const result = await chat({
+      task: 'clinico',
+      personaSlug: 'clinico_web',
+      userText: chatContent ? undefined : chatUserText,
+      content: chatContent,
+      threadId: threadIdIn,
+      shadowKey: userId,
     });
 
-    // 4. Create run
-    const run = await openaiRequest(`/threads/${threadId}/runs`, openaiApiKey, {
-      method: 'POST',
-      body: JSON.stringify({ assistant_id: ASSISTANT_ID }),
-    });
-
-    console.log('Run created:', run.id, 'status:', run.status);
-
-    // 5. Poll run until terminal state
-    const TIMEOUT_MS = 90_000;
-    const POLL_INTERVAL = 1500;
-    const startTime = Date.now();
-    let runStatus = run.status;
-    let runId = run.id;
-
-    while (!['completed', 'failed', 'cancelled', 'expired', 'incomplete'].includes(runStatus)) {
-      if (Date.now() - startTime > TIMEOUT_MS) {
-        throw new Error('Tempo limite excedido aguardando resposta da IA');
-      }
-      await sleep(POLL_INTERVAL);
-      const updated = await openaiRequest(`/threads/${threadId}/runs/${runId}`, openaiApiKey);
-      runStatus = updated.status;
-      console.log('Run poll:', runStatus);
+    // Persiste o id de conversa (thread/response) no perfil, como antes.
+    if (result.threadId && result.threadId !== profile.openai_thread_id) {
+      await supabase
+        .from('profiles')
+        .update({ openai_thread_id: result.threadId })
+        .eq('user_id', userId);
     }
 
-    if (runStatus !== 'completed') {
-      console.error('Run ended with status:', runStatus);
-      throw new Error(`A IA não conseguiu processar a mensagem (status: ${runStatus})`);
-    }
-
-    // 6. Get assistant's latest message
-    const messagesData = await openaiRequest(
-      `/threads/${threadId}/messages?limit=1&order=desc`,
-      openaiApiKey
-    );
-
-    const assistantMsg = messagesData.data?.[0];
-    if (!assistantMsg || assistantMsg.role !== 'assistant') {
-      throw new Error('Resposta da IA não encontrada');
-    }
-
-    const responseText = assistantMsg.content
-      .filter((block: any) => block.type === 'text')
-      .map((block: any) => block.text.value)
-      .join('\n');
-
+    const responseText = result.text;
     if (!responseText) {
       throw new Error('Resposta da IA veio vazia');
     }
 
     console.log('Assistant response length:', responseText.length);
 
-    // 7. Save assistant message
+    // Save assistant message
     const { error: assistantInsertError } = await supabase
       .from('messages')
       .insert({
@@ -390,7 +277,7 @@ serve(async (req) => {
         type: 'text',
         sender: 'assistant',
         media_url: null,
-        metadata: { openai_thread_id: threadId }
+        metadata: { openai_thread_id: result.threadId }
       });
 
     if (assistantInsertError) {
@@ -407,7 +294,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in dispatch-message:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error instanceof Error ? error.message : 'Erro desconhecido' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

@@ -1,5 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { getPersona } from "../_shared/personas/resolve.ts";
+import { defaultModel, getBackend } from "../_shared/llm/config.ts";
+import { chatStreamViaResponses } from "../_shared/llm/responses.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -127,6 +129,55 @@ serve(async (req) => {
         return new Response(JSON.stringify({ error: "Paciente não encontrado" }), {
           status: 404,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // ---- BACKEND RESPONSES: sem Assistant por paciente; contexto montado do nosso lado ----
+      if (getBackend() === "responses") {
+        const baseInstructions = await getPersona("paciente_thread");
+        // patient.openai_thread_id passa a guardar o previous_response_id (encadeamento).
+        const prevResponseId = patient.openai_thread_id || undefined;
+
+        let instructions = baseInstructions;
+        if (!prevResponseId) {
+          // Primeiro turno: injeta dados do paciente + histórico recente nas instruções.
+          const { data: evos } = await supabaseAdmin
+            .from("evolutions")
+            .select("output_content, created_at")
+            .eq("patient_id", patient_id)
+            .eq("user_id", user.id)
+            .order("created_at", { ascending: false })
+            .limit(5);
+          const hist = (evos ?? []).slice().reverse()
+            .map((e: any) => `(${(e.created_at ?? "").slice(0, 10)}) ${(e.output_content ?? "").slice(0, 600)}`)
+            .join("\n---\n") || "Sem evoluções anteriores.";
+          instructions = `${baseInstructions}\n\nCONTEXTO DO PACIENTE\nIniciais: ${patient_initials}\nAbordagem: ${approach ?? "não informada"}\nHISTÓRICO RECENTE (mais antigo → mais recente):\n${hist}`;
+        }
+
+        const sessionMessage =
+          `Sessão nº ${session_number || "N/I"} — ${today} — Duração: ${session_duration || "N/I"} — ${session_type || "N/I"}\n\n` +
+          `Relato da sessão:\n${finalInputContent}\n\n` +
+          `Gere a evolução clínica completa seguindo a estrutura obrigatória, adaptando a terminologia para a abordagem ${approach || "geral"}.`;
+
+        const stream = await chatStreamViaResponses(
+          { task: "clinico", userText: sessionMessage, threadId: prevResponseId },
+          { instructions, model: defaultModel() },
+          (responseId) => {
+            supabaseAdmin
+              .from("patients")
+              .update({
+                openai_thread_id: responseId,
+                total_sessions: (patient.total_sessions || 0) + 1,
+                last_session_at: new Date().toISOString(),
+              })
+              .eq("id", patient_id)
+              .then(({ error }: any) => {
+                if (error) console.error("Falha ao atualizar paciente (responses):", error);
+              });
+          },
+        );
+        return new Response(stream, {
+          headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
         });
       }
 

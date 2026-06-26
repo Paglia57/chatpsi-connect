@@ -13,8 +13,8 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
 };
 
-// Assistant de vendas (não cadastrados). O clínico vive na máquina de estado.
-const SALES_ASSISTANT_ID = 'asst_TjXksuG8kL3Gp6xLb1QIQALE';
+// Persona de vendas (não cadastrados). O clínico vive na máquina de estado.
+const VENDAS_PERSONA = 'vendas';
 
 // --- Signature validation (X-Hub-Signature-256) ---
 
@@ -147,8 +147,8 @@ async function salesFlow(supabase: any, msg: IncomingMessage, text: string): Pro
   await logWaMessage(supabase, msg.from, 'user', msg.type === 'interactive' ? `[opção] ${msg.replyId ?? ''}` : (text || '(vazio)'));
   const session = await getSession(supabase, msg.from);
   const result = await chat({
-    task: 'vendas', assistantId: SALES_ASSISTANT_ID, userText: text || 'Olá',
-    threadId: session?.thread_id ?? undefined,
+    task: 'vendas', personaSlug: VENDAS_PERSONA, userText: text || 'Olá',
+    threadId: session?.thread_id ?? undefined, shadowKey: msg.from,
   });
   if (result.threadId && result.threadId !== session?.thread_id) {
     await patchSession(supabase, msg.from, { kind: 'vendas', thread_id: result.threadId });

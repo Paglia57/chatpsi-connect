@@ -26,7 +26,17 @@ import { chat, type ChatTool } from '../llm/index.ts';
 import { planoDeAcao } from '../tools/planoDeAcao.ts';
 import { buscarArtigos } from '../tools/buscarArtigos.ts';
 
-const CLINICAL_ASSISTANT_ID = 'asst_ghTrVWfzgh5vtW28qDs5MnRB';
+// Persona do clínico no WhatsApp (instruções vêm do banco; o backend resolve o assistant
+// correspondente quando LLM_BACKEND='assistants').
+const CLINICO_WA = 'clinico_whatsapp';
+
+// JSON Schema dos parâmetros das tools (exigido pelo backend Responses; ignorado no Assistants).
+const USER_QUERY_SCHEMA = {
+  type: 'object',
+  properties: { user_query: { type: 'string', description: 'Tema/foco da consulta.' } },
+  required: ['user_query'],
+  additionalProperties: false,
+};
 
 // IDs dos componentes interativos.
 const MENU_CHOOSE = 'menu_choose';
@@ -72,8 +82,18 @@ export interface ConversationInput {
 
 function clinicalTools(): ChatTool[] {
   return [
-    { name: 'plano_de_acao', handler: (a) => planoDeAcao({ user_query: String(a.user_query ?? '') }) },
-    { name: 'buscar_artigos', handler: (a) => buscarArtigos({ user_query: String(a.user_query ?? '') }) },
+    {
+      name: 'plano_de_acao',
+      description: 'Gera um plano de ação terapêutico para o tema/foco informado.',
+      parameters: USER_QUERY_SCHEMA,
+      handler: (a) => planoDeAcao({ user_query: String(a.user_query ?? '') }),
+    },
+    {
+      name: 'buscar_artigos',
+      description: 'Busca artigos científicos de psicologia sobre o tema informado.',
+      parameters: USER_QUERY_SCHEMA,
+      handler: (a) => buscarArtigos({ user_query: String(a.user_query ?? '') }),
+    },
   ];
 }
 
@@ -250,7 +270,7 @@ export async function handleConversation(opts: {
       `NOVO RELATO DA SESSÃO:\n${relato}`;
 
     const result = await chat({
-      task: 'clinico', assistantId: CLINICAL_ASSISTANT_ID, userText, tools: clinicalTools(),
+      task: 'clinico', personaSlug: CLINICO_WA, userText, tools: clinicalTools(), shadowKey: phone,
     });
 
     await sendText(phone, result.text);
@@ -309,8 +329,8 @@ export async function handleConversation(opts: {
       return;
     }
     const result = await chat({
-      task: 'clinico', assistantId: CLINICAL_ASSISTANT_ID, userText: text,
-      threadId: session?.thread_id ?? undefined, tools: clinicalTools(),
+      task: 'clinico', personaSlug: CLINICO_WA, userText: text,
+      threadId: session?.thread_id ?? undefined, tools: clinicalTools(), shadowKey: phone,
     });
     if (result.threadId && result.threadId !== session?.thread_id) {
       await patchSession(supabase, phone, { thread_id: result.threadId, kind: 'clinico' });

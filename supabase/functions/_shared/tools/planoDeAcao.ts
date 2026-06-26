@@ -1,16 +1,14 @@
-// Ferramenta plano_de_acao — invoca o assistant OpenAI dedicado a planos de ação.
-// A vector store / file_search já está configurada nesse assistant na OpenAI;
-// aqui apenas o invocamos via gateway chat().
+// Ferramenta plano_de_acao — invoca a persona dedicada a planos de ação via gateway chat().
+// A vector store / file_search já está configurada no assistant correspondente na OpenAI
+// (backend 'assistants'); o gateway resolve o assistant a partir do slug 'plano_acao'.
 
 import { chat } from '../llm/index.ts';
-
-const PLANO_ASSISTANT_ID = 'asst_esHKfSJcaMNF99QVrILGu6pW'; // "ChatPSI - V2 - Plano de ação"
 
 export async function planoDeAcao(args: { user_query: string }): Promise<string> {
   try {
     const result = await chat({
       task: 'plano',
-      assistantId: PLANO_ASSISTANT_ID,
+      personaSlug: 'plano_acao',
       userText: args.user_query,
       // Sem threadId: execução nova a cada chamada. Sem tools.
     });

@@ -80,13 +80,13 @@ export interface ConversationInput {
   audio?: { bytes: Uint8Array; mimeType: string }; // bytes do áudio (p/ upload no Storage)
 }
 
-function clinicalTools(): ChatTool[] {
+function clinicalTools(nomePsicologo?: string): ChatTool[] {
   return [
     {
       name: 'plano_de_acao',
-      description: 'Gera um plano de ação terapêutico para o tema/foco informado.',
+      description: 'Busca planos de ação do catálogo para o tema/foco informado.',
       parameters: USER_QUERY_SCHEMA,
-      handler: (a) => planoDeAcao({ user_query: String(a.user_query ?? '') }),
+      handler: (a) => planoDeAcao({ user_query: String(a.user_query ?? ''), nome_psicologo: nomePsicologo }),
     },
     {
       name: 'buscar_artigos',
@@ -270,7 +270,7 @@ export async function handleConversation(opts: {
       `NOVO RELATO DA SESSÃO:\n${relato}`;
 
     const result = await chat({
-      task: 'clinico', personaSlug: CLINICO_WA, userText, tools: clinicalTools(), shadowKey: phone,
+      task: 'clinico', personaSlug: CLINICO_WA, userText, tools: clinicalTools(displayName), shadowKey: phone,
     });
 
     await sendText(phone, result.text);
@@ -305,7 +305,7 @@ export async function handleConversation(opts: {
       return;
     }
     const query = `Paciente ${patient.initials}${patient.main_complaint ? `, queixa: ${patient.main_complaint}` : ''}. Foco do plano: ${theme}`;
-    const plan = await planoDeAcao({ user_query: query });
+    const plan = await planoDeAcao({ user_query: query, nome_psicologo: displayName });
     await sendText(phone, plan);
     await logWaMessage(supabase, phone, 'ai', plan);
     if (allowed) {
@@ -330,7 +330,7 @@ export async function handleConversation(opts: {
     }
     const result = await chat({
       task: 'clinico', personaSlug: CLINICO_WA, userText: text,
-      threadId: session?.thread_id ?? undefined, tools: clinicalTools(), shadowKey: phone,
+      threadId: session?.thread_id ?? undefined, tools: clinicalTools(displayName), shadowKey: phone,
     });
     if (result.threadId && result.threadId !== session?.thread_id) {
       await patchSession(supabase, phone, { thread_id: result.threadId, kind: 'clinico' });

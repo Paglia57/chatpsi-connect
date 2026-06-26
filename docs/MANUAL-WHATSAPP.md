@@ -97,38 +97,49 @@ A qualquer momento, **menu** / **sair** / **voltar** retornam aqui.
 ## 4. Menu do paciente (paciente travado)
 
 > **Mensagem:** "Paciente *{nome}* selecionado. O que deseja?"
-> **▸ Ações:** [Nova evolução] · [Planejar sessão] · [Ver evoluções] · [Plano de ação] ·
-> [Agendar] · [Ver ficha do paciente] · [Editar paciente] · [Trocar paciente / Menu]
+> **▸ Ações:** [Nova evolução] · [Planejar sessão] · [Ver planejamentos] · [Ver evoluções] ·
+> [Plano de ação] · [Agendar] · [Ver ficha do paciente] · [Editar paciente] ·
+> [Trocar paciente / Menu]
 
 ---
 
-## 5. Nova evolução (rascunho → prévia → salvar)
+## 5. Nova evolução (rascunho → gerar → prévia → salvar)
+
+O fluxo acumula o relato em quantas mensagens (áudio/texto) você quiser e **só gera quando você
+manda** — nada é gravado sem a prévia + Salvar.
 
 ### 5.1 Se há um plano de sessão não usado
 > **Mensagem:** "Você planejou esta sessão. Quer partir do plano?"
 > **[Partir do plano]** · **[Sem o plano]**
 
-> Ao escolher **Partir do plano:** "Ótimo — vou considerar o seu plano. Pode ditar (áudio) ou
-> escrever o relato da sessão."
-> Ao escolher **Sem o plano:** "Sem problema. Pode ditar (áudio) ou escrever o relato da sessão."
+Qualquer das opções abre o rascunho (a "Partir do plano" usa o plano como base).
 
-### 5.2 Pedir o relato
-> **Mensagem:** "Pode ditar (áudio) ou escrever o relato da sessão. Vou gerar a evolução a partir
-> dele."  **[Cancelar]**
+### 5.2 Abrir o rascunho (acumular o relato)
+> **Mensagem:** "Pode ditar (enviar Áudio) ou escrever o relato da sessão de *{nome}* (em quantas
+> mensagens quiser). Quando terminar, toque em *Gerar evolução* — você poderá revisar e editar
+> antes de salvar."  **[Gerar evolução]** · **[Cancelar]**
 >
-> Se nada chegar: "Não recebi o relato da sessão. Pode ditar (áudio) ou escrever o que aconteceu."
-> **[Cancelar]**
+> Você manda um ou vários áudios/textos — **eles são acumulados** e o sistema **não responde a cada
+> mensagem** (acúmulo silencioso).
 
-### 5.3 Evolução gerada
-A IA envia o texto da evolução. Em modo teste (fora da allowlist), acrescenta:
-> "_(Modo teste: esta evolução não foi salva no prontuário porque seu número não está na
-> allowlist.)_"
+### 5.3 Gerar a prévia
+Toque em **[Gerar evolução]** ou diga **pronto**.
+> Se não houver relato: "Ainda não recebi o relato. Pode ditar (enviar Áudio) ou escrever o que
+> aconteceu na sessão." **[Gerar evolução]** · **[Cancelar]**
 
-> Em seguida: "Evolução pronta. Próximo passo?"
-> **[Planejar próxima]** · **[Agendar]** · **[Menu]**
+A IA gera e mostra o texto da evolução (**prévia**), seguido de:
+> **Mensagem:** "Salvar esta evolução? Você pode revisar e editar depois."
+> **[Salvar]** · **[Ajustar]** · **[Cancelar]**
 
-*(A geração segue a regra de ouro: o texto é mostrado para você revisar; o que é gravado é a
-evolução exibida.)*
+- **Salvar** → grava na ficha: "✅ Evolução salva na ficha." e oferece o próximo passo:
+  > "Evolução pronta. Próximo passo?" **[Planejar próxima]** · **[Agendar]** · **[Menu]**
+  > Em modo teste (fora da allowlist): "_(Modo teste: esta evolução não foi salva no prontuário
+  > porque seu número não está na allowlist.)_"
+- **Ajustar** → "O que você quer complementar ou corrigir? Pode ditar (enviar Áudio) ou escrever;
+  depois toque em *Gerar evolução*." (volta a acumular e regenera) **[Gerar evolução]** · **[Cancelar]**
+- **Cancelar** → "Evolução descartada. Nada foi salvo." → menu do paciente.
+
+*(Regra de ouro: nada é gravado antes da prévia + Salvar.)*
 
 ---
 
@@ -249,9 +260,23 @@ Escreva, por exemplo, "remarca para sexta 16h" ou "cancela a sessão da Maria".
 
 ## 12. Planejamento de sessão
 
+### 12.1 Escolha antes de gerar
+Ao tocar em **Planejar sessão** (ou digitar "planejar"):
+> **Mensagem:** "Vamos planejar a sessão de *{nome}*. Como prefere?"
+> **[Dar mais contexto]** · **[Gerar agora]** · **[Menu]**
+
+- **Gerar agora** → gera a partir do histórico do paciente (vai direto à prévia).
+- **Dar mais contexto** → abre um **rascunho de direcionamento**:
+  > "Pode ditar (enviar Áudio) ou escrever o foco do planejamento de *{nome}* (em quantas mensagens
+  > quiser). Quando terminar, toque em *Gerar planejamento*." **[Gerar planejamento]** · **[Cancelar]**
+  >
+  > Acúmulo silencioso (vários áudios/textos). Gere com **[Gerar planejamento]** ou diga **pronto**.
+  > Sem direcionamento: "Ainda não recebi o direcionamento. Pode ditar (enviar Áudio) ou escrever o
+  > foco do planejamento." **[Gerar planejamento]** · **[Cancelar]**
+
+### 12.2 Prévia (regra de ouro)
 > **Gerando:** "Gerando o plano da próxima sessão… um instante. 📝"
 >
-> **Prévia (regra de ouro):**
 > "*Plano da próxima sessão — {nome}*
 > *Objetivo:* … *Roteiro:* … *Técnicas/materiais:* … *Atenção:* … *Perguntas:* …"
 > "_Sugestão de rascunho — você revisa e edita. A responsabilidade clínica é sua._"
@@ -267,6 +292,24 @@ Escreva, por exemplo, "remarca para sexta 16h" ou "cancela a sessão da Maria".
 > **Erros (com [Menu]):** "Não consegui gerar o plano agora. Tente novamente em instantes." ·
 > "Não há plano pendente para salvar." · "Não consegui salvar o plano agora. Tente novamente."
 
+### 12.3 Ver planejamentos (recuperar salvos)
+Pela ação **Ver planejamentos** (ou digitar "planejamentos"):
+> **Com planos:** "Planejamentos de *{nome}*:" → lista ({dd/mm}, "· usado" quando aplicável, com um
+> trecho do objetivo). Se forem muitos (>10): "Me diga o *número* ou a *data*."
+>
+> **Sem planos:** "Ainda não há planejamentos salvos para *{nome}*." **[Planejar sessão]** · **[Menu]**
+
+Ao escolher um planejamento:
+> **Mensagem:** "Planejamento de {dd/mm}. O que deseja?"
+> **[Ver completo]** · **[Editar]** · **[Usar na evolução]** · **[Menu]**
+
+- **Ver completo** → exibe objetivo/roteiro/técnicas/atenção/perguntas (+ espaço livre).
+- **Editar** → "O que você quer ajustar neste planejamento? Pode ditar (enviar Áudio) ou escrever;
+  depois toque em *Gerar planejamento*." → nova **prévia**; **Salvar atualiza** o mesmo plano
+  ("✅ Plano atualizado.").
+- **Usar na evolução** → inicia uma **Nova evolução** já partindo deste plano como base (o plano é
+  marcado como *usado* ao salvar a evolução).
+
 ---
 
 ## 13. Comandos de texto (sempre disponíveis)
@@ -274,7 +317,11 @@ Escreva, por exemplo, "remarca para sexta 16h" ou "cancela a sessão da Maria".
 - **menu**, **sair**, **voltar**, **trocar**, **trocar de paciente**, **inicio** → menu / destrava paciente.
 - **ajuda**, **help**, **?**, **duvida(s)** → painel de ajuda.
 - **agenda**, **agendar**, **minha agenda**, **agenda da semana** → agenda.
-- **planejar** (ou "planeja …") → planejamento de sessão.
+- **planejar** (sozinho) → abre a escolha *Dar mais contexto / Gerar agora*; **"planeja {foco}"**
+  (com direção) → gera direto com esse foco.
+- **planejamentos** → ver os planejamentos salvos do paciente travado.
+- **pronto** → fecha o rascunho e gera a prévia (na **Nova evolução** e no **Dar mais contexto** do
+  planejamento).
 - **remarca/adia/muda/transfere …**, **cancela/desmarca …** → remarcar/cancelar.
 - Colar uma **URL** de reunião → anexa o link à próxima sessão.
 - Citar o **nome** de um paciente ativo → trava o paciente e abre o menu dele.

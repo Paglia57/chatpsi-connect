@@ -44,11 +44,12 @@ histórico da web, e vice-versa, porque ambos gravam em `evolutions`/`appointmen
 |---|:---:|:---:|---|
 | Cadastro/ficha de paciente | ✅ | ✅ | Web tem ficha completa; WhatsApp cadastra 4 campos (nome, iniciais, abordagem, queixa) |
 | Editar paciente | ✅ | ✅ | WhatsApp edita nome/iniciais/abordagem/queixa |
-| Gerar evolução clínica (IA) | ✅ | ✅ | Texto ou áudio; web também aceita melhorar via chat |
+| Gerar evolução clínica (IA) | ✅ | ✅ | Texto ou áudio; no WhatsApp: rascunho acumulável → Gerar → prévia (Salvar/Ajustar/Cancelar); web também melhora via chat |
 | Ver/editar/excluir evolução | ✅ | parcial | WhatsApp mostra histórico recente (até 5); edição/exclusão completas só na web |
 | Exportar evolução em PDF | ✅ | — | Só web |
 | Agenda (criar/listar/status) | ✅ | ✅ | WhatsApp: agendar/remarcar/cancelar/colar link por conversa |
-| Planejamento de sessão (IA) | ✅ | ✅ | Gera rascunho (objetivo/roteiro/técnicas/atenção/perguntas) |
+| Planejamento de sessão (IA) | ✅ | ✅ | Gera rascunho (objetivo/roteiro/técnicas/atenção/perguntas); no WhatsApp há escolha "Dar mais contexto/Gerar agora" |
+| Recuperar planejamentos salvos | ✅ | ✅ | WhatsApp: "Ver planejamentos" → ver/editar/usar na evolução |
 | Plano de ação (catálogo pgvector) | ✅ | ✅ | Busca semântica + fallback no assistant legado |
 | Chat clínico / modo livre | ✅ | ✅ | Consulta protocolos, dúvidas (com tools de artigos e planos) |
 | Busca de artigos científicos | ✅ | via tool | Web tem tela; WhatsApp usa a tool no chat |
@@ -149,6 +150,12 @@ identidade (telefone → profiles / wa_sessions)
                     resposta (sendText/sendButtons/sendList) — sempre com próximo passo/saída
 ```
 
+**Gate de prévia (regra de ouro):** ações que geram conteúdo clínico — **evolução** e
+**planejamento** — acumulam o relato/direcionamento em `flow_data` e **só gravam após a prévia +
+Salvar**. A evolução tem o passo de rascunho (acumula → *Gerar evolução* → prévia
+*Salvar/Ajustar/Cancelar*); o planejamento oferece *Dar mais contexto / Gerar agora* e permite
+recuperar/editar planos salvos.
+
 **Equivalente na web:** o psicólogo autentica (`/auth`), navega pelas telas (`/app/*`),
 e cada ação chama Edge Functions / RPCs do Supabase que gravam nas mesmas tabelas.
 
@@ -178,6 +185,8 @@ um **baseline** versionado no código (nunca fica sem prompt). Personas completa
 Catálogo próprio com embeddings (`text-embedding-3-small`, 1536 dims, índice HNSW cosseno).
 A tool gera o embedding da consulta e chama `match_planos_de_acao` (threshold 0.35, top 3).
 **Fallback:** catálogo vazio ou sem match → cai para o assistant `plano_acao` legado.
+A ingestão de PDFs no admin (`planos-acao-admin`) extrai **título curto + resumo** com IA (robusto a
+PDFs sem quebras de linha) e regrava pelo `hash` ao re-subir o mesmo arquivo.
 
 ### Tools do chat
 - **`buscarArtigos`** — busca artigos científicos (via Perplexity), retorna conteúdo + links.

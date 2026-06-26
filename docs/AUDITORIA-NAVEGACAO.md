@@ -118,3 +118,21 @@ Legenda: **OK** já tinha saída · **CORRIGIDO** estava nu/sem saída e foi aju
 - [x] Sem poluição: pontos simples usam 1 botão (**Menu**); pontos de decisão, 2–3 botões.
 
 **Resultado:** nenhum ponto permanece *SEM SAÍDA* ou *PEDE INPUT SEM SAÍDA*.
+
+---
+
+## Adendo — novos fluxos (mantêm a regra)
+
+Fluxos adicionados depois desta auditoria já seguem o princípio (próximo passo e/ou saída em toda
+mensagem; prompts de input com botão de saída):
+
+| Ponto | Saída/Botões | Status |
+|---|---|---|
+| Evolução — abrir rascunho (`openEvoCapture`) | **[Gerar evolução] · [Cancelar]** | OK |
+| Evolução — aviso "sem relato" | **[Gerar evolução] · [Cancelar]** | OK |
+| Evolução — prévia | **[Salvar] · [Ajustar] · [Cancelar]** | OK |
+| Planejamento — escolha (`offerPlanningChoice`) | **[Dar mais contexto] · [Gerar agora] · [Menu]** | OK |
+| Planejamento — rascunho de direcionamento | **[Gerar planejamento] · [Cancelar]** | OK |
+| Ver planejamentos — lista vazia | **[Planejar sessão] · [Menu]** | OK |
+| Ver planejamentos — opções do plano | **[Ver completo] · [Editar] · [Usar na evolução] · [Menu]** | OK |
+| Ver planejamentos — escolha por número/data (>10) | reaviso com **[Menu]** | OK |

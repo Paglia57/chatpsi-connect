@@ -257,7 +257,8 @@ export async function showPatientAgenda(ctx: AgendaCtx, patient: Patient): Promi
   // Deixa o paciente travado e pronto para qualquer ação (inclusive ditar a evolução).
   await patchSession(ctx.supabase, ctx.phone, { mode: "paciente", kind: "clinico", locked_patient_id: patient.id, flow_step: null, flow_data: null, last_intent: null });
   if (appts.length === 0) {
-    await sendText(ctx.phone, `*${patient.full_name}* não tem sessões agendadas. Para marcar, escreva por exemplo: *quinta 15h* (ou "agenda ${(patient.full_name ?? "").split(" ")[0]} quinta 15h").`);
+    const first = (patient.full_name ?? "").split(" ")[0];
+    await sendText(ctx.phone, `*${patient.full_name}* não tem sessões agendadas. Para marcar, toque em *Agendar* no menu do paciente — ou escreva, por exemplo, *agenda ${first} quinta 15h*.`);
     return;
   }
   const linhas = appts.map((a: any) =>

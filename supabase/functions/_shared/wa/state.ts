@@ -514,7 +514,8 @@ export async function handleConversation(opts: {
         if (!lockedId) { await sendMenu(); return; }
         const patient = await getPatientById(supabase, userId, lockedId);
         if (!patient) { await sendMenu(); return; }
-        await showPatientAgenda(agCtx(), patient);
+        // "Agendar" inicia o fluxo de agendamento (não só lista) — pergunta "quando?".
+        await startAgendar(agCtx(), patient, '');
         return;
       }
       case PT_PLANEJAR: {

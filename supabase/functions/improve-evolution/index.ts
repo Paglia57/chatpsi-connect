@@ -1,37 +1,13 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { getPersona } from "../_shared/personas/resolve.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const SYSTEM_PROMPT = `Você é um especialista em saúde mental clínica com vasta experiência em psicologia e psiquiatria. Sua função é refinar evoluções clínicas já redigidas a partir de uma solicitação específica do profissional.
-
-REGRAS FUNDAMENTAIS:
-1. Aplique APENAS a melhoria solicitada. NUNCA invente dados clínicos que não estejam no prontuário atual nem foram explicitamente trazidos pela solicitação.
-2. Preserve a estrutura obrigatória do prontuário (cabeçalhos e ordem das seções).
-3. Mantenha terminologia técnica adequada à abordagem terapêutica original.
-4. Mantenha tom profissional e clínico — isto é um documento de prontuário.
-5. Use APENAS iniciais do paciente, nunca nomes completos.
-6. Respeite o sigilo profissional em todos os aspectos.
-7. Se a solicitação pedir uma informação que não existe no prontuário e não foi fornecida, indique "Não informado" ou "A ser complementado pelo profissional" — não invente.
-8. Devolva APENAS o prontuário completo reescrito, sem comentários introdutórios nem despedidas.
-
-ESTRUTURA OBRIGATÓRIA (preservar exatamente esses cabeçalhos):
-
-EVOLUÇÃO CLÍNICA
-Data: [data] | Paciente: [iniciais] | Sessão nº: [número] | Abordagem: [abordagem] | Duração: [duração] | Modalidade: [tipo]
-
----
-
-IDENTIFICAÇÃO E CONTEXTO
-QUEIXA PRINCIPAL / DEMANDA DA SESSÃO
-RELATO E TEMAS ABORDADOS
-ESTADO MENTAL E COMPORTAMENTO OBSERVADO
-INTERVENÇÕES REALIZADAS
-EVOLUÇÃO E ANÁLISE CLÍNICA
-CONDUTA E ENCAMINHAMENTOS
-PLANEJAMENTO PARA PRÓXIMA SESSÃO`;
+// O system prompt agora vem do sistema de personas (getPersona("prontuario_refinar")).
+// Cópia-base de fallback em supabase/functions/_shared/personas/baseline.ts.
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -162,6 +138,8 @@ ${finalPromptText}
 
 Reescreva o prontuário aplicando a melhoria solicitada. MANTENHA OBRIGATORIAMENTE a estrutura completa (cabeçalhos IDENTIFICAÇÃO E CONTEXTO, QUEIXA PRINCIPAL, RELATO E TEMAS ABORDADOS, ESTADO MENTAL, INTERVENÇÕES, EVOLUÇÃO E ANÁLISE, CONDUTA, PLANEJAMENTO), o tom clínico e as iniciais do paciente. Devolva APENAS o prontuário completo reescrito, sem comentários adicionais.`;
 
+    const systemPrompt = await getPersona("prontuario_refinar");
+
     const openaiResp = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -171,7 +149,7 @@ Reescreva o prontuário aplicando a melhoria solicitada. MANTENHA OBRIGATORIAMEN
       body: JSON.stringify({
         model: "gpt-4.1-mini",
         messages: [
-          { role: "system", content: SYSTEM_PROMPT },
+          { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
         ],
         stream: true,

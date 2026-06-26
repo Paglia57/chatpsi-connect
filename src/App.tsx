@@ -13,6 +13,7 @@ import ResetPasswordPage from "./pages/ResetPasswordPage";
 import AuthCallbackPage from "./pages/AuthCallbackPage";
 import AdminPage from "./pages/AdminPage";
 import AdminReferralsPage from "./pages/AdminReferralsPage";
+import AdminPersonasPage from "./pages/AdminPersonasPage";
 import MarketingPage from "./pages/MarketingPage";
 import NotFound from "./pages/NotFound";
 import AppLayout from "@/components/app/AppLayout";
@@ -65,6 +66,7 @@ const App = () => (
               <Route path="/marketing" element={<MarketingPage />} />
               <Route path="/admin" element={<AdminPage />} />
               <Route path="/admin/referrals" element={<AdminReferralsPage />} />
+              <Route path="/admin/personas" element={<AdminPersonasPage />} />
             </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

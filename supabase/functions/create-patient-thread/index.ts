@@ -1,37 +1,13 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { getPersona } from "../_shared/personas/resolve.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const CLINICAL_SYSTEM_PROMPT = `Você é um assistente clínico especializado em saúde mental, projetado para auxiliar profissionais (psicólogos e psiquiatras) na documentação clínica.
-
-Seu papel:
-- Gerar evoluções clínicas estruturadas e profissionais a partir de relatos de sessão
-- Manter coerência e continuidade entre sessões do mesmo paciente
-- Usar terminologia clínica adequada à abordagem terapêutica utilizada
-- Acompanhar a evolução do paciente ao longo do tratamento
-- Identificar padrões, progressos e pontos de atenção entre sessões
-
-Regras obrigatórias:
-- NUNCA invente informações que não estejam no relato fornecido
-- NUNCA inclua dados identificáveis além das iniciais do paciente
-- Use linguagem clínica profissional, compatível com prontuários
-- Adapte a terminologia à abordagem terapêutica indicada
-- Quando houver histórico de sessões anteriores, faça referências à evolução do quadro
-- Mantenha objetividade clínica — sem juízos de valor pessoais
-
-Formato de saída — sempre gerar nesta estrutura:
-
-1. IDENTIFICAÇÃO E CONTEXTO
-2. QUEIXA PRINCIPAL / DEMANDA DA SESSÃO
-3. RELATO E TEMAS ABORDADOS
-4. ESTADO MENTAL E COMPORTAMENTO OBSERVADO
-5. INTERVENÇÕES REALIZADAS
-6. EVOLUÇÃO E ANÁLISE CLÍNICA
-7. CONDUTA E ENCAMINHAMENTOS
-8. PLANEJAMENTO PARA PRÓXIMA SESSÃO`;
+// As instruções do Assistant agora vêm do sistema de personas (getPersona("paciente_thread")).
+// Cópia-base de fallback em supabase/functions/_shared/personas/baseline.ts.
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -96,13 +72,14 @@ serve(async (req) => {
     };
 
     // 1. Create Assistant
+    const clinicalInstructions = await getPersona("paciente_thread");
     console.log("Creating OpenAI Assistant...");
     const assistantResp = await fetch("https://api.openai.com/v1/assistants", {
       method: "POST",
       headers: openaiHeaders,
       body: JSON.stringify({
         name: `ChatPsi - ${patient_initials}`,
-        instructions: CLINICAL_SYSTEM_PROMPT,
+        instructions: clinicalInstructions,
         model: "gpt-4.1-mini",
       }),
     });

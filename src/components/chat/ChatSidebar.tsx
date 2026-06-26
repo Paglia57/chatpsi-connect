@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import {
   Home, ClipboardList, Plus, History, Users, MessageCircle, Target, BookOpen,
   PenTool, Settings, Gift, CircleUser, HelpCircle, LogOut, Menu, ChevronDown,
-  ChevronRight, Star, MessageSquare, RotateCcw, Calculator, ShieldCheck
+  ChevronRight, Star, MessageSquare, RotateCcw, Calculator, ShieldCheck, Bot
 } from 'lucide-react';
 import BetaChip from '@/components/ui/BetaChip';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
@@ -256,6 +256,10 @@ const ChatSidebar = () => {
               <Gift className="h-4 w-4 shrink-0" />
               <span>Validar Indicações</span>
             </NavLink>
+            <NavLink to="/admin/personas" onClick={onNavigate} className={navLinkClass(isActive('/admin/personas'))}>
+              <Bot className="h-4 w-4 shrink-0" />
+              <span>Personas da IA</span>
+            </NavLink>
           </>
         )}
 
@@ -423,6 +427,10 @@ const ChatSidebar = () => {
               <NavLink to="/admin/referrals" title="Validar Indicações"
                 className={`p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg transition-colors ${isActive('/admin/referrals') ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground hover:bg-sidebar-accent/50'}`}>
                 <Gift className="h-4 w-4" />
+              </NavLink>
+              <NavLink to="/admin/personas" title="Personas da IA"
+                className={`p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg transition-colors ${isActive('/admin/personas') ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground hover:bg-sidebar-accent/50'}`}>
+                <Bot className="h-4 w-4" />
               </NavLink>
             </>
           )}

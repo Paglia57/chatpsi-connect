@@ -156,6 +156,15 @@ export async function handleConversation(opts: {
   // Contexto para o planejamento de sessão (_shared/wa/planning.ts).
   const planCtx = (): PlanningCtx => ({ supabase, phone, userId, displayName, session, input });
 
+  // Prompt que pede input digitado + saída (Cancelar). Digitar continua funcionando.
+  const askExit = async (body: string) => {
+    await sendButtons(phone, body, [{ id: MENU_EXIT, title: 'Cancelar' }]);
+  };
+  // Mensagem informativa/erro + saída (Menu).
+  const menuExit = async (body: string) => {
+    await sendButtons(phone, body, [{ id: MENU_EXIT, title: 'Menu' }]);
+  };
+
   const sendMenu = async () => {
     await patchSession(supabase, phone, {
       mode: 'menu', kind: 'clinico', locked_patient_id: null,
@@ -220,7 +229,10 @@ export async function handleConversation(opts: {
   const showPatientList = async () => {
     const patients = await listActivePatients(supabase, userId, 50);
     if (patients.length === 0) {
-      await sendText(phone, 'Você ainda não tem pacientes cadastrados. Toque em "Cadastrar paciente" para criar a primeira ficha.');
+      await sendButtons(phone, 'Você ainda não tem pacientes cadastrados.', [
+        { id: MENU_CREATE, title: 'Cadastrar paciente' },
+        { id: MENU_EXIT, title: 'Menu' },
+      ]);
       return;
     }
     if (patients.length > MAX_LIST) {
@@ -279,7 +291,7 @@ export async function handleConversation(opts: {
       return;
     }
     if (value.length < 1) {
-      await sendText(phone, `Não recebi o novo valor para *${label}*. Tente novamente.`);
+      await askExit(`Não recebi o novo valor para *${label}*. Tente novamente.`);
       return;
     }
     const updated = await updatePatient(supabase, userId, patient.id, { [field]: value });
@@ -296,7 +308,7 @@ export async function handleConversation(opts: {
   const generateEvolution = async (patient: Patient) => {
     const relato = input.text;
     if (!relato || relato.trim().length < 3) {
-      await sendText(phone, 'Não recebi o relato da sessão. Pode ditar (áudio) ou escrever o que aconteceu.');
+      await askExit('Não recebi o relato da sessão. Pode ditar (áudio) ou escrever o que aconteceu.');
       return;
     }
 
@@ -374,7 +386,7 @@ export async function handleConversation(opts: {
   const runPlan = async (patient: Patient) => {
     const theme = input.text;
     if (!theme || theme.trim().length < 2) {
-      await sendText(phone, 'Sobre qual tema/foco você quer o plano de ação?');
+      await askExit('Sobre qual tema/foco você quer o plano de ação?');
       return;
     }
     const query = `Paciente ${patient.initials}${patient.main_complaint ? `, queixa: ${patient.main_complaint}` : ''}. Foco do plano: ${theme}`;
@@ -393,6 +405,8 @@ export async function handleConversation(opts: {
       });
     }
     await patchSession(supabase, phone, { last_intent: null });
+    // Continuidade: volta ao menu do paciente (próximas ações).
+    await sendPatientMenu(patient);
   };
 
   const handleFree = async () => {
@@ -408,7 +422,7 @@ export async function handleConversation(opts: {
     if (result.threadId && result.threadId !== session?.thread_id) {
       await patchSession(supabase, phone, { thread_id: result.threadId, kind: 'clinico' });
     }
-    await sendText(phone, result.text);
+    await sendText(phone, `${result.text}\n\n_Digite *menu* para voltar ao início._`);
     await logWaMessage(supabase, phone, 'ai', result.text, result.usage);
   };
 
@@ -428,7 +442,7 @@ export async function handleConversation(opts: {
       return;
     }
     await patchSession(supabase, phone, { last_intent: 'evolution' });
-    await sendText(phone, 'Pode ditar (áudio) ou escrever o relato da sessão. Vou gerar a evolução a partir dele.');
+    await askExit('Pode ditar (áudio) ou escrever o relato da sessão. Vou gerar a evolução a partir dele.');
   };
 
   // Executa uma ação pendente do menu inicial após o paciente ser escolhido.
@@ -461,6 +475,7 @@ export async function handleConversation(opts: {
         if (res.lockedPatient) await sendPatientMenu(res.lockedPatient);
         if (res.action === 'planning' && res.patient) await startPlanning(planCtx(), res.patient);
         else if (res.action === 'agendar_again' && res.patient) await startAgendar(agCtx(), res.patient, '');
+        else if (res.action === 'menu') await sendMenu();
         return;
       }
     }
@@ -469,8 +484,8 @@ export async function handleConversation(opts: {
       const res = await handlePlanningReply(planCtx(), replyId);
       if (res.handled) {
         if (res.action === 'agendar' && res.patient) await startAgendar(agCtx(), res.patient, '');
-        else if (res.action === 'patient_agenda' && res.patient) await showPatientAgenda(agCtx(), res.patient);
-        else if (res.action === 'patient_menu' && res.patient) await sendPatientMenu(res.patient);
+        else if (res.action === 'patient_agenda' && res.patient) { await showPatientAgenda(agCtx(), res.patient); await sendPatientMenu(res.patient); }
+        else if (res.action === 'patient_menu') { if (res.patient) await sendPatientMenu(res.patient); else await sendMenu(); }
         return;
       }
     }
@@ -489,7 +504,7 @@ export async function handleConversation(opts: {
       const label = EDITABLE_FIELDS[field];
       if (!lockedId || !label) { await sendMenu(); return; }
       await patchSession(supabase, phone, { last_intent: 'edit', flow_step: 'edit_value', flow_data: { field } });
-      await sendText(phone, `Envie o novo valor para *${label}*:`);
+      await askExit(`Envie o novo valor para *${label}*:`);
       return;
     }
     switch (replyId) {
@@ -503,7 +518,7 @@ export async function handleConversation(opts: {
           return;
         }
         await patchSession(supabase, phone, { mode: 'cadastro', flow_step: 'nome', flow_data: {}, locked_patient_id: null });
-        await sendText(phone, 'Vamos cadastrar um paciente. Qual é o *nome completo* dele(a)?');
+        await askExit('Vamos cadastrar um paciente. Qual é o *nome completo* dele(a)?');
         return;
       case MENU_PLANEJAR:
         await patchSession(supabase, phone, { mode: 'menu', flow_step: null, flow_data: { pending_action: 'planejar' } });
@@ -534,17 +549,18 @@ export async function handleConversation(opts: {
       case EV_USE_PLAN: {
         const offered = (session?.flow_data as Record<string, unknown> | null)?.offer_plan_id as string | undefined;
         await patchSession(supabase, phone, { last_intent: 'evolution', flow_data: offered ? { use_plan_id: offered } : null });
-        await sendText(phone, 'Ótimo — vou considerar o seu plano. Pode ditar (áudio) ou escrever o relato da sessão.');
+        await askExit('Ótimo — vou considerar o seu plano. Pode ditar (áudio) ou escrever o relato da sessão.');
         return;
       }
       case EV_NO_PLAN:
         await patchSession(supabase, phone, { last_intent: 'evolution', flow_data: null });
-        await sendText(phone, 'Sem problema. Pode ditar (áudio) ou escrever o relato da sessão.');
+        await askExit('Sem problema. Pode ditar (áudio) ou escrever o relato da sessão.');
         return;
       case PT_HISTORY: {
         if (!lockedId) { await sendMenu(); return; }
         const patient = await getPatientById(supabase, userId, lockedId);
-        if (patient) await showHistory(patient);
+        if (patient) { await showHistory(patient); await sendPatientMenu(patient); }
+        else await sendMenu();
         return;
       }
       case PT_VIEW: {
@@ -570,7 +586,7 @@ export async function handleConversation(opts: {
       }
       case PT_PLAN:
         await patchSession(supabase, phone, { last_intent: 'plan' });
-        await sendText(phone, 'Sobre qual tema/foco você quer o plano de ação para este paciente?');
+        await askExit('Sobre qual tema/foco você quer o plano de ação para este paciente?');
         return;
       case MENU_AGENDA:
         await showPanorama(agCtx());
@@ -605,17 +621,17 @@ export async function handleConversation(opts: {
       case 'nome':
         data.full_name = text;
         await patchSession(supabase, phone, { flow_data: data, flow_step: 'iniciais' });
-        await sendText(phone, 'Quais as *iniciais* do paciente? (ex.: M.S.)');
+        await askExit('Quais as *iniciais* do paciente? (ex.: M.S.)');
         return;
       case 'iniciais':
         data.initials = text;
         await patchSession(supabase, phone, { flow_data: data, flow_step: 'abordagem' });
-        await sendText(phone, 'Qual a *abordagem* terapêutica? (ex.: TCC, Psicanálise)');
+        await askExit('Qual a *abordagem* terapêutica? (ex.: TCC, Psicanálise)');
         return;
       case 'abordagem':
         data.approach = text;
         await patchSession(supabase, phone, { flow_data: data, flow_step: 'queixa' });
-        await sendText(phone, 'Qual a *queixa principal*?');
+        await askExit('Qual a *queixa principal*?');
         return;
       case 'queixa': {
         data.main_complaint = text;
@@ -721,7 +737,10 @@ export async function handleConversation(opts: {
         const p = await getPatientById(supabase, userId, lockedId);
         if (p) { await startPlanning(planCtx(), p, input.text); return; }
       }
-      await sendText(phone, 'Para planejar uma sessão, abra primeiro o paciente (Escolher paciente).');
+      await sendButtons(phone, 'Para planejar, escolha primeiro o paciente:', [
+        { id: MENU_CHOOSE, title: 'Escolher paciente' },
+        { id: MENU_EXIT, title: 'Menu' },
+      ]);
       return;
     }
   }
@@ -748,12 +767,15 @@ export async function handleConversation(opts: {
         );
         return;
       }
-      await sendText(phone, 'Não encontrei. Responda com o *número* da lista ou parte do *nome*.');
+      await menuExit('Não encontrei. Responda com o *número* da lista ou parte do *nome*.');
       return;
     }
     const matches = await searchPatientsByName(supabase, userId, input.text.trim());
     if (matches.length === 0) {
-      await sendText(phone, 'Não encontrei nenhum paciente com esse nome. Pode tentar de novo?');
+      await sendButtons(phone, 'Não encontrei nenhum paciente com esse nome. Tente de novo, ou:', [
+        { id: MENU_CHOOSE, title: 'Ver lista' },
+        { id: MENU_EXIT, title: 'Menu' },
+      ]);
     } else if (matches.length === 1) {
       await chosen(matches[0]);
     } else {

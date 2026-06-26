@@ -27,9 +27,19 @@ export const AG_NEXT_AGAIN = "ag_next_again";         // próximo passo: agendar
 export type AgendaReplyResult = {
   handled: boolean;
   lockedPatient?: Patient | null;
-  action?: "planning" | "agendar_again";
+  action?: "planning" | "agendar_again" | "menu";
   patient?: Patient | null;
 };
+
+/** Prompt que pede input digitado + botão de saída (Cancelar). Digitar segue funcionando. */
+async function ask(ctx: AgendaCtx, body: string): Promise<void> {
+  await sendButtons(ctx.phone, body, [{ id: AG_CANCEL, title: "Cancelar" }]);
+}
+
+/** Mensagem informativa/erro + saída (Menu). */
+async function info(ctx: AgendaCtx, body: string): Promise<void> {
+  await sendButtons(ctx.phone, body, [{ id: "ctx_exit", title: "Menu" }]);
+}
 
 type AgInput = { kind: string; text: string; replyId?: string };
 type Session = { mode?: string | null; locked_patient_id?: string | null; flow_step?: string | null; flow_data?: Record<string, unknown> | null } | null;
@@ -291,7 +301,7 @@ export async function startAgendar(ctx: AgendaCtx, lockedPatient: Patient | null
       mode: "agenda", flow_step: "await_time",
       flow_data: { ag_op: "create", patient_id: patient.id, patient_name: patient.full_name, patient_initials: patient.initials, date: resolved.date, duration_min: dur, modality },
     });
-    await sendText(ctx.phone, `Para que horário no dia ${resolved.date.d}/${resolved.date.mo + 1}? (ex.: 15h ou 15:30)`);
+    await ask(ctx, `Para que horário no dia ${resolved.date.d}/${resolved.date.mo + 1}? (ex.: 15h ou 15:30)`);
     return;
   }
   if (!resolved.iso) {
@@ -299,7 +309,7 @@ export async function startAgendar(ctx: AgendaCtx, lockedPatient: Patient | null
       mode: "agenda", flow_step: "await_when",
       flow_data: { ag_op: "create", patient_id: patient.id, patient_name: patient.full_name, patient_initials: patient.initials, duration_min: dur, modality },
     });
-    await sendText(ctx.phone, `Quando você quer agendar *${patient.full_name}*? (ex.: quinta 15h, amanhã 10h, 12/06 14h)`);
+    await ask(ctx, `Quando você quer agendar *${patient.full_name}*? (ex.: quinta 15h, amanhã 10h, 12/06 14h)`);
     return;
   }
 
@@ -313,12 +323,12 @@ export async function startAgendar(ctx: AgendaCtx, lockedPatient: Patient | null
 export async function editOrCancel(ctx: AgendaCtx, lockedPatient: Patient | null, rawText: string, op: "edit" | "cancel"): Promise<void> {
   const patient = lockedPatient ?? await resolvePatientFromText(ctx, rawText);
   if (!patient) {
-    await sendText(ctx.phone, "Não identifiquei o paciente para essa alteração. Tente: \"cancela a sessão da Maria\".");
+    await info(ctx, "Não identifiquei o paciente para essa alteração. Tente: \"cancela a sessão da Maria\".");
     return;
   }
   const appt = await nextFuture(ctx, patient.id);
   if (!appt) {
-    await sendText(ctx.phone, `*${patient.full_name}* não tem sessão futura agendada.`);
+    await info(ctx, `*${patient.full_name}* não tem sessão futura agendada.`);
     return;
   }
   if (op === "cancel") {
@@ -334,7 +344,7 @@ export async function editOrCancel(ctx: AgendaCtx, lockedPatient: Patient | null
       mode: "agenda", flow_step: "await_when",
       flow_data: { ag_op: "edit", appt_id: appt.id, patient_id: patient.id, patient_name: patient.full_name, patient_initials: patient.initials, duration_min: appt.duration_min, modality: appt.modality },
     });
-    await sendText(ctx.phone, `Para quando remarcar a sessão de *${patient.full_name}*? (ex.: sexta 16h)`);
+    await ask(ctx, `Para quando remarcar a sessão de *${patient.full_name}*? (ex.: sexta 16h)`);
     return;
   }
   await showPreview(ctx, {
@@ -349,12 +359,12 @@ export async function attachLink(ctx: AgendaCtx, lockedPatient: Patient | null, 
   if (!url) return false;
   const patient = lockedPatient ?? await resolvePatientFromText(ctx, rawText);
   if (!patient) {
-    await sendText(ctx.phone, "Para qual paciente é esse link? Abra o paciente e cole o link, ou escreva \"o link da Maria é ...\".");
+    await info(ctx, "Para qual paciente é esse link? Abra o paciente e cole o link, ou escreva \"o link da Maria é ...\".");
     return true;
   }
   const appt = await nextFuture(ctx, patient.id);
   if (!appt) {
-    await sendText(ctx.phone, `*${patient.full_name}* não tem sessão futura para anexar o link.`);
+    await info(ctx, `*${patient.full_name}* não tem sessão futura para anexar o link.`);
     return true;
   }
   await ctx.supabase.from("appointments").update({ meeting_link: url, atualizado_em: new Date().toISOString() }).eq("id", appt.id);
@@ -384,16 +394,16 @@ export async function continueAgenda(ctx: AgendaCtx): Promise<boolean> {
       const m = await searchPatientsByName(ctx.supabase, ctx.userId, text.trim(), 1);
       patientId = m[0]?.id ?? null;
     }
-    if (!patientId) { await sendText(ctx.phone, "Não encontrei. Responda com o *número* ou parte do *nome*."); return true; }
+    if (!patientId) { await ask(ctx, "Não encontrei. Responda com o *número* ou parte do *nome*."); return true; }
     const patient = await getPatientById(ctx.supabase, ctx.userId, patientId);
-    if (!patient) { await sendText(ctx.phone, "Paciente não encontrado."); return true; }
+    if (!patient) { await info(ctx, "Paciente não encontrado."); return true; }
     await startAgendar(ctx, patient, "");
     return true;
   }
 
   if (step === "agenda_dur_other" || step === "agenda_duration") {
     const m = text.match(/\d{1,3}/);
-    if (!m) { await sendText(ctx.phone, "Quantos minutos? (ex.: 45) — ou toque numa das opções."); return true; }
+    if (!m) { await ask(ctx, "Quantos minutos? (ex.: 45) — ou toque numa das opções."); return true; }
     const dur = Math.max(10, Math.min(240, +m[0]));
     await showPreview(ctx, { ...(data as unknown as PendingOp), duration_min: dur });
     return true;
@@ -401,7 +411,7 @@ export async function continueAgenda(ctx: AgendaCtx): Promise<boolean> {
 
   if (step === "await_time" && data.date) {
     const t = parseDateTimePtBr(text);
-    if (!t.time) { await sendText(ctx.phone, "Não entendi o horário. Envie como 15h ou 15:30."); return true; }
+    if (!t.time) { await ask(ctx, "Não entendi o horário. Envie como 15h ou 15:30."); return true; }
     const iso = spWallToUtc(data.date.y, data.date.mo, data.date.d, t.time.h, t.time.mi).toISOString();
     await proceedCreateOrEdit(ctx, { ag_op: data.ag_op, patient_id: data.patient_id, patient_name: data.patient_name, patient_initials: data.patient_initials, starts_at: iso, duration_min: data.duration_min ?? 50, modality: data.modality ?? "online", appt_id: data.appt_id });
     return true;
@@ -411,10 +421,10 @@ export async function continueAgenda(ctx: AgendaCtx): Promise<boolean> {
     const r = resolveStartsAt(text);
     if (r.needTime && r.date) {
       await patchSession(ctx.supabase, ctx.phone, { flow_step: "await_time", flow_data: { ...data, date: r.date } });
-      await sendText(ctx.phone, `Para que horário no dia ${r.date.d}/${r.date.mo + 1}? (ex.: 15h)`);
+      await ask(ctx, `Para que horário no dia ${r.date.d}/${r.date.mo + 1}? (ex.: 15h)`);
       return true;
     }
-    if (!r.iso) { await sendText(ctx.phone, "Não entendi a data/hora. Tente: quinta 15h, amanhã 10h, 12/06 14h."); return true; }
+    if (!r.iso) { await ask(ctx, "Não entendi a data/hora. Tente: quinta 15h, amanhã 10h, 12/06 14h."); return true; }
     await proceedCreateOrEdit(ctx, { ag_op: data.ag_op, patient_id: data.patient_id, patient_name: data.patient_name, patient_initials: data.patient_initials, starts_at: r.iso, duration_min: data.duration_min ?? 50, modality: data.modality ?? "online", appt_id: data.appt_id });
     return true;
   }
@@ -442,18 +452,18 @@ export async function handleAgendaReply(ctx: AgendaCtx, replyId: string): Promis
   // Escolha de paciente no picker do agendamento → resume o agendamento.
   if (replyId.startsWith(AG_PT_PREFIX)) {
     const patient = await getPatientById(ctx.supabase, ctx.userId, replyId.slice(AG_PT_PREFIX.length));
-    if (!patient) { await sendText(ctx.phone, "Paciente não encontrado."); return { handled: true }; }
+    if (!patient) { await info(ctx, "Paciente não encontrado."); return { handled: true }; }
     await startAgendar(ctx, patient, "");
     return { handled: true };
   }
   // Duração escolhida (30/50/60/Outro).
   if (replyId.startsWith(AG_DUR_PREFIX)) {
     const op = (ctx.session?.flow_data ?? {}) as unknown as PendingOp;
-    if (!op?.starts_at) { await sendText(ctx.phone, "Não há agendamento em andamento."); return { handled: true }; }
+    if (!op?.starts_at) { await info(ctx, "Não há agendamento em andamento."); return { handled: true }; }
     const suf = replyId.slice(AG_DUR_PREFIX.length);
     if (suf === "other") {
       await patchSession(ctx.supabase, ctx.phone, { mode: "agenda", flow_step: "agenda_dur_other", flow_data: op as unknown as Record<string, unknown> });
-      await sendText(ctx.phone, "Quantos minutos? (ex.: 45)");
+      await ask(ctx, "Quantos minutos? (ex.: 45)");
       return { handled: true };
     }
     await showPreview(ctx, { ...op, duration_min: Math.max(10, Math.min(240, +suf || op.duration_min)) });
@@ -478,11 +488,11 @@ export async function handleAgendaReply(ctx: AgendaCtx, replyId: string): Promis
     const { data: appt } = await ctx.supabase
       .from("appointments").select("patient_id").eq("id", apptId).eq("user_id", ctx.userId).maybeSingle();
     if (!appt?.patient_id) {
-      await sendText(ctx.phone, "Esse compromisso não está vinculado a um paciente.");
+      await info(ctx, "Esse compromisso não está vinculado a um paciente.");
       return { handled: true };
     }
     const patient = await getPatientById(ctx.supabase, ctx.userId, appt.patient_id);
-    if (!patient) { await sendText(ctx.phone, "Paciente não encontrado."); return { handled: true }; }
+    if (!patient) { await info(ctx, "Paciente não encontrado."); return { handled: true }; }
     await patchSession(ctx.supabase, ctx.phone, { mode: "paciente", kind: "clinico", locked_patient_id: patient.id, flow_step: null, flow_data: null, last_intent: null });
     await showPatientAgenda(ctx, patient);
     return { handled: true, lockedPatient: patient };
@@ -491,19 +501,19 @@ export async function handleAgendaReply(ctx: AgendaCtx, replyId: string): Promis
   if (replyId === AG_ADJUST) {
     const data = (ctx.session?.flow_data ?? {}) as Record<string, any>;
     await patchSession(ctx.supabase, ctx.phone, { mode: "agenda", flow_step: "adjust", flow_data: data });
-    await sendText(ctx.phone, "Sem problema. Reescreva o agendamento (ex.: \"sexta 16h\").");
+    await ask(ctx, "Sem problema. Reescreva o agendamento (ex.: \"sexta 16h\").");
     return { handled: true };
   }
 
   if (replyId === AG_CANCEL) {
     await patchSession(ctx.supabase, ctx.phone, { mode: "menu", flow_step: null, flow_data: null });
     await sendText(ctx.phone, "Operação cancelada. Nada foi gravado.");
-    return { handled: true };
+    return { handled: true, action: "menu" };
   }
 
   if (replyId === AG_SAVE) {
     const op = (ctx.session?.flow_data ?? {}) as unknown as PendingOp;
-    if (!op?.ag_op) { await sendText(ctx.phone, "Não há nada pendente para salvar."); return { handled: true }; }
+    if (!op?.ag_op) { await info(ctx, "Não há nada pendente para salvar."); return { handled: true }; }
     if (op.ag_op === "create") {
       const { data: inserted } = await ctx.supabase.from("appointments").insert({
         user_id: ctx.userId, patient_id: op.patient_id, patient_initials: op.patient_initials,
@@ -537,14 +547,14 @@ export async function handleAgendaReply(ctx: AgendaCtx, replyId: string): Promis
   if (replyId === AG_DISCARD) {
     await patchSession(ctx.supabase, ctx.phone, { mode: "menu", flow_step: null, flow_data: null });
     await sendText(ctx.phone, "Agendamento descartado.");
-    return { handled: true };
+    return { handled: true, action: "menu" };
   }
   if (replyId === AG_RESUME) {
     const op = (ctx.session?.flow_data ?? {}) as unknown as PendingOp;
     if (op?.ag_op && op?.starts_at) { await showPreview(ctx, op); return { handled: true }; }
-    await sendText(ctx.phone, "Não consegui retomar; vamos recomeçar.");
     await patchSession(ctx.supabase, ctx.phone, { mode: "menu", flow_step: null, flow_data: null });
-    return { handled: true };
+    await sendText(ctx.phone, "Não consegui retomar; vamos recomeçar.");
+    return { handled: true, action: "menu" };
   }
 
   return { handled: false };

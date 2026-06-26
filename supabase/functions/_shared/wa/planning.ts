@@ -43,6 +43,15 @@ interface PendingPlan {
   input_type: "texto" | "audio" | null;
 }
 
+/** Prompt de input + saída (Cancelar). */
+async function plAsk(ctx: PlanningCtx, body: string): Promise<void> {
+  await sendButtons(ctx.phone, body, [{ id: PL_CANCEL, title: "Cancelar" }]);
+}
+/** Informativo/erro + saída (Menu). */
+async function plInfo(ctx: PlanningCtx, body: string): Promise<void> {
+  await sendButtons(ctx.phone, body, [{ id: "ctx_exit", title: "Menu" }]);
+}
+
 function previewText(p: PendingPlan): string {
   return [
     `*Plano da próxima sessão — ${p.patient_name}*`,
@@ -66,7 +75,7 @@ async function runAndPreview(ctx: PlanningCtx, patientId: string, patientName: s
     fields = await generateSessionPlan(ctx.supabase, ctx.userId, patientId, direction ?? undefined);
   } catch (e) {
     console.error("Erro ao gerar plano (WA):", e instanceof Error ? e.message : e);
-    await sendText(ctx.phone, "Não consegui gerar o plano agora. Tente novamente em instantes.");
+    await plInfo(ctx, "Não consegui gerar o plano agora. Tente novamente em instantes.");
     return;
   }
   const pending: PendingPlan = {
@@ -115,16 +124,17 @@ export async function handlePlanningReply(ctx: PlanningCtx, replyId: string): Pr
 
   if (replyId === PL_ADJUST) {
     await patchSession(ctx.supabase, ctx.phone, { mode: "planning", flow_step: "adjust", flow_data: data as unknown as Record<string, unknown> });
-    await sendText(ctx.phone, "O que você quer ajustar? (ex.: \"foca na ansiedade no trabalho\" ou mande um áudio)");
+    await plAsk(ctx, "O que você quer ajustar? (ex.: \"foca na ansiedade no trabalho\" ou mande um áudio)");
     return { handled: true };
   }
   if (replyId === PL_CANCEL) {
     await patchSession(ctx.supabase, ctx.phone, { mode: "paciente", flow_step: null, flow_data: null });
     await sendText(ctx.phone, "Plano descartado. Nada foi salvo.");
-    return { handled: true };
+    const patient = data?.patient_id ? await getPatientById(ctx.supabase, ctx.userId, data.patient_id) : null;
+    return { handled: true, action: "patient_menu", patient };
   }
   if (replyId === PL_SAVE) {
-    if (!data?.patient_id) { await sendText(ctx.phone, "Não há plano pendente para salvar."); return { handled: true }; }
+    if (!data?.patient_id) { await plInfo(ctx, "Não há plano pendente para salvar."); return { handled: true }; }
     const { error } = await ctx.supabase.from("session_plans").insert({
       user_id: ctx.userId,
       patient_id: data.patient_id,
@@ -137,7 +147,7 @@ export async function handlePlanningReply(ctx: PlanningCtx, replyId: string): Pr
     if (error) {
       console.error("Erro ao salvar session_plan (WA):", error.message);
       await patchSession(ctx.supabase, ctx.phone, { mode: "paciente", flow_step: null, flow_data: null });
-      await sendText(ctx.phone, "Não consegui salvar o plano agora. Tente novamente.");
+      await plInfo(ctx, "Não consegui salvar o plano agora. Tente novamente.");
       return { handled: true };
     }
     await sendText(ctx.phone, `✅ Plano salvo para *${data.patient_name}*.`);

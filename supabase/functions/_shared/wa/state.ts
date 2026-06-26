@@ -161,7 +161,7 @@ export async function handleConversation(opts: {
       [
         { id: MENU_CHOOSE, title: 'Escolher paciente' },
         { id: MENU_CREATE, title: 'Cadastrar paciente' },
-        { id: MENU_FREE, title: 'Falar sem paciente' },
+        { id: MENU_FREE, title: 'Conversar sem paciente', description: 'Sem vincular a um paciente' },
         { id: MENU_AGENDA, title: 'Agenda' },
       ],
       'Início',
@@ -178,12 +178,12 @@ export async function handleConversation(opts: {
       [
         { id: PT_EVOLUTION, title: 'Nova evolução' },
         { id: PT_PLANEJAR, title: 'Planejar sessão' },
-        { id: PT_HISTORY, title: 'Histórico' },
-        { id: PT_PLAN, title: 'Plano' },
+        { id: PT_HISTORY, title: 'Ver evoluções' },
+        { id: PT_PLAN, title: 'Plano de ação' },
         { id: PT_AGENDA, title: 'Agendar' },
-        { id: PT_VIEW, title: 'Consultar ficha' },
+        { id: PT_VIEW, title: 'Ver ficha do paciente' },
         { id: PT_EDIT, title: 'Editar paciente' },
-        { id: MENU_EXIT, title: '↩ Trocar / Menu' },
+        { id: MENU_EXIT, title: 'Trocar paciente / Menu' },
       ],
       'Ações do paciente',
     );

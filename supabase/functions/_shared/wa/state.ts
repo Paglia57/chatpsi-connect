@@ -29,6 +29,7 @@ import {
   AG_DISCARD, AG_RESUME, type AgendaCtx, APPT_PREFIX, continueAgenda, handleAgendaCommand,
   handleAgendaReply, showPanorama, showPatientAgenda,
 } from './agenda.ts';
+import { continuePlanning, handlePlanningReply, type PlanningCtx, startPlanning } from './planning.ts';
 
 // Persona do clínico no WhatsApp (instruções vêm do banco; o backend resolve o assistant
 // correspondente quando LLM_BACKEND='assistants').
@@ -53,6 +54,9 @@ const PT_PLAN = 'pt_plan';
 const PT_VIEW = 'pt_view';
 const PT_EDIT = 'pt_edit';
 const PT_AGENDA = 'pt_agenda';
+const PT_PLANEJAR = 'pt_planejar';
+const EV_USE_PLAN = 'ev_use_plan';
+const EV_NO_PLAN = 'ev_no_plan';
 const MENU_EXIT = 'ctx_exit';
 
 // Comandos de texto que abrem a agenda (panorama) de qualquer lugar.
@@ -141,6 +145,8 @@ export async function handleConversation(opts: {
 
   // Contexto para a máquina da agenda (_shared/wa/agenda.ts).
   const agCtx = (): AgendaCtx => ({ supabase, phone, userId, displayName, session, input });
+  // Contexto para o planejamento de sessão (_shared/wa/planning.ts).
+  const planCtx = (): PlanningCtx => ({ supabase, phone, userId, displayName, session, input });
 
   const sendMenu = async () => {
     await patchSession(supabase, phone, {
@@ -171,6 +177,7 @@ export async function handleConversation(opts: {
       'Ações',
       [
         { id: PT_EVOLUTION, title: 'Nova evolução' },
+        { id: PT_PLANEJAR, title: 'Planejar sessão' },
         { id: PT_HISTORY, title: 'Histórico' },
         { id: PT_PLAN, title: 'Plano' },
         { id: PT_AGENDA, title: 'Agendar' },
@@ -284,7 +291,20 @@ export async function handleConversation(opts: {
           .join('\n---\n')
       : 'Sem evoluções anteriores.';
 
-    const userText =
+    // Conexão com o planejamento: se o psicólogo optou por partir do plano, usá-lo como base.
+    const usePlanId = (session?.flow_data as Record<string, unknown> | null)?.use_plan_id as string | undefined;
+    let planPrefix = '';
+    if (usePlanId) {
+      const { data: plan } = await supabase
+        .from('session_plans').select('objetivo, roteiro, tecnicas')
+        .eq('id', usePlanId).eq('user_id', userId).maybeSingle();
+      if (plan) {
+        planPrefix = `PLANO DESTA SESSÃO (use como base, sem se prender a ele):\n` +
+          `Objetivo: ${plan.objetivo ?? ''}\nRoteiro: ${plan.roteiro ?? ''}\nTécnicas: ${plan.tecnicas ?? ''}\n\n`;
+      }
+    }
+
+    const userText = planPrefix +
       `Gere uma evolução clínica para o paciente de iniciais ${patient.initials} ` +
       `(abordagem: ${patient.approach ?? 'não informada'}), coerente com o histórico.\n\n` +
       `HISTÓRICO RECENTE (mais antigo → mais recente):\n${history}\n\n` +
@@ -313,10 +333,20 @@ export async function handleConversation(opts: {
         audio_url: audioUrl,
       });
       await bumpPatientSession(supabase, patient);
+      // Marca o plano como usado e liga à evolução recém-criada (best-effort).
+      if (usePlanId) {
+        const { data: lastEv } = await supabase
+          .from('evolutions').select('id')
+          .eq('user_id', userId).eq('patient_id', patient.id)
+          .order('created_at', { ascending: false }).limit(1).maybeSingle();
+        await supabase.from('session_plans')
+          .update({ status: 'usado', used_in_evolution_id: lastEv?.id ?? null, atualizado_em: new Date().toISOString() })
+          .eq('id', usePlanId);
+      }
     } else {
       await sendText(phone, '_(Modo teste: esta evolução não foi salva no prontuário porque seu número não está na allowlist.)_');
     }
-    await patchSession(supabase, phone, { last_intent: null });
+    await patchSession(supabase, phone, { last_intent: null, flow_data: null });
   };
 
   const runPlan = async (patient: Patient) => {
@@ -369,6 +399,10 @@ export async function handleConversation(opts: {
         return;
       }
     }
+    // Respostas do planejamento de sessão (botões Salvar·Ajustar·Cancelar).
+    if (replyId.startsWith('pl_')) {
+      if (await handlePlanningReply(planCtx(), replyId)) return;
+    }
     if (replyId.startsWith(PATIENT_PREFIX)) {
       const patient = await getPatientById(supabase, userId, replyId.slice(PATIENT_PREFIX.length));
       if (!patient) { await sendText(phone, 'Não encontrei esse paciente. Vamos recomeçar.'); await sendMenu(); return; }
@@ -402,9 +436,35 @@ export async function handleConversation(opts: {
         await patchSession(supabase, phone, { mode: 'livre', kind: 'clinico', locked_patient_id: null, last_intent: null });
         await sendText(phone, 'Modo livre ativado. Pode mandar sua dúvida clínica, um tema de estudo ou um pedido (sem vincular a um paciente).');
         return;
-      case PT_EVOLUTION:
+      case PT_EVOLUTION: {
+        if (!lockedId) { await sendMenu(); return; }
+        // Conexão com o planejamento: se há plano recente salvo, oferecer partir dele.
+        const { data: plan } = await supabase
+          .from('session_plans').select('id')
+          .eq('user_id', userId).eq('patient_id', lockedId).eq('status', 'salvo')
+          .is('used_in_evolution_id', null)
+          .order('criado_em', { ascending: false }).limit(1).maybeSingle();
+        if (plan?.id) {
+          await patchSession(supabase, phone, { flow_data: { offer_plan_id: plan.id } });
+          await sendButtons(phone, 'Você planejou esta sessão. Quer partir do plano?', [
+            { id: EV_USE_PLAN, title: 'Partir do plano' },
+            { id: EV_NO_PLAN, title: 'Sem o plano' },
+          ]);
+          return;
+        }
         await patchSession(supabase, phone, { last_intent: 'evolution' });
         await sendText(phone, 'Pode ditar (áudio) ou escrever o relato da sessão. Vou gerar a evolução a partir dele.');
+        return;
+      }
+      case EV_USE_PLAN: {
+        const offered = (session?.flow_data as Record<string, unknown> | null)?.offer_plan_id as string | undefined;
+        await patchSession(supabase, phone, { last_intent: 'evolution', flow_data: offered ? { use_plan_id: offered } : null });
+        await sendText(phone, 'Ótimo — vou considerar o seu plano. Pode ditar (áudio) ou escrever o relato da sessão.');
+        return;
+      }
+      case EV_NO_PLAN:
+        await patchSession(supabase, phone, { last_intent: 'evolution', flow_data: null });
+        await sendText(phone, 'Sem problema. Pode ditar (áudio) ou escrever o relato da sessão.');
         return;
       case PT_HISTORY: {
         if (!lockedId) { await sendMenu(); return; }
@@ -445,6 +505,13 @@ export async function handleConversation(opts: {
         const patient = await getPatientById(supabase, userId, lockedId);
         if (!patient) { await sendMenu(); return; }
         await showPatientAgenda(agCtx(), patient);
+        return;
+      }
+      case PT_PLANEJAR: {
+        if (!lockedId) { await sendMenu(); return; }
+        const patient = await getPatientById(supabase, userId, lockedId);
+        if (!patient) { await sendMenu(); return; }
+        await startPlanning(planCtx(), patient);
         return;
       }
       case MENU_EXIT:
@@ -554,6 +621,27 @@ export async function handleConversation(opts: {
     }
     const lp = lockedId ? await getPatientById(supabase, userId, lockedId) : null;
     if (await handleAgendaCommand(agCtx(), lp, input.text ?? '')) return;
+  }
+
+  // 1.7. Planejamento de sessão em andamento (texto durante "Ajustar").
+  if (mode === 'planning' && input.kind !== 'interactive') {
+    if (await continuePlanning(planCtx())) return;
+  }
+
+  // 1.8. Comando "planejar" (precisa de paciente travado).
+  if (
+    input.kind !== 'interactive' && (input.text ?? '').trim() &&
+    mode !== 'cadastro' && session?.flow_step !== 'await_name' && session?.flow_step !== 'edit_value'
+  ) {
+    const n = normalizeText(input.text ?? '');
+    if (n === 'planejar' || n === 'planeja' || n.startsWith('planeja ') || n.startsWith('planejar ')) {
+      if (lockedId) {
+        const p = await getPatientById(supabase, userId, lockedId);
+        if (p) { await startPlanning(planCtx(), p, input.text); return; }
+      }
+      await sendText(phone, 'Para planejar uma sessão, abra primeiro o paciente (Escolher paciente).');
+      return;
+    }
   }
 
   // 2. Escolha de paciente por nome (lista grande).

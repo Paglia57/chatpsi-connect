@@ -50,6 +50,7 @@ export default function EvolutionPage() {
     input_content: string;
     audio_file?: File;
     patient_id?: string;
+    plan_id?: string;
   }) => {
     if (!user) return;
     setIsGenerating(true);
@@ -58,6 +59,15 @@ export default function EvolutionPage() {
 
     try {
       let inputContent = data.input_content;
+
+      // Conexão com o planejamento: se o psicólogo optou por partir do plano, envia o contexto.
+      let planContext: string | null = null;
+      if (data.plan_id) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: plan } = await (supabase as any)
+          .from("session_plans").select("objetivo, roteiro, tecnicas").eq("id", data.plan_id).maybeSingle();
+        if (plan) planContext = `Objetivo: ${plan.objetivo ?? ""}\nRoteiro: ${plan.roteiro ?? ""}\nTécnicas: ${plan.tecnicas ?? ""}`;
+      }
       let audioBase64: string | null = null;
       let audioFilename: string | null = null;
 
@@ -95,6 +105,7 @@ export default function EvolutionPage() {
             audio_base64: audioBase64,
             audio_filename: audioFilename,
             patient_id: data.patient_id || null,
+            plan_context: planContext,
           }),
         }
       );
@@ -173,7 +184,7 @@ export default function EvolutionPage() {
     setIsSaving(true);
     try {
       const params = lastParamsRef.current;
-      const { error } = await supabase.from("evolutions").insert({
+      const { data: inserted, error } = await supabase.from("evolutions").insert({
         user_id: user.id,
         patient_initials: params.patient_initials,
         session_number: params.session_number,
@@ -184,8 +195,15 @@ export default function EvolutionPage() {
         input_content: params.input_content,
         output_content: content,
         patient_id: params.patient_id || null,
-      });
+      }).select("id").single();
       if (error) throw error;
+      // Marca o plano de sessão como usado, ligando à evolução criada.
+      if (params.plan_id && inserted?.id) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (supabase as any).from("session_plans")
+          .update({ status: "usado", used_in_evolution_id: inserted.id, atualizado_em: new Date().toISOString() })
+          .eq("id", params.plan_id);
+      }
       toast.success("Evolução salva no prontuário!");
       trial.refetch();
     } catch (err: any) {

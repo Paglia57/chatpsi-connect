@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Sparkles, Mic, Upload, X, Loader2, Lock, Square } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Sparkles, Mic, Upload, X, Loader2, Lock, Square, ClipboardList } from "lucide-react";
 import PatientSelector, { type SelectedPatient } from "@/components/patients/PatientSelector";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -40,6 +41,7 @@ interface EvolutionInputProps {
     input_content: string;
     audio_file?: File;
     patient_id?: string;
+    plan_id?: string;
   }) => void;
   isLoading: boolean;
   trialReached?: boolean;
@@ -60,6 +62,8 @@ export default function EvolutionInput({ onGenerate, isLoading, trialReached }: 
   const [textContent, setTextContent] = useState("");
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [recentPlan, setRecentPlan] = useState<{ id: string } | null>(null);
+  const [usePlan, setUsePlan] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const recording = useAudioRecording();
 
@@ -93,6 +97,19 @@ export default function EvolutionInput({ onGenerate, isLoading, trialReached }: 
     }
   }, [selectedPatient]);
 
+  // Conexão com o planejamento: há um plano salvo (não usado) para este paciente?
+  useEffect(() => {
+    if (!selectedPatient || !user) { setRecentPlan(null); return; }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabase as any)
+      .from("session_plans")
+      .select("id, criado_em")
+      .eq("user_id", user.id).eq("patient_id", selectedPatient.id)
+      .eq("status", "salvo").is("used_in_evolution_id", null)
+      .order("criado_em", { ascending: false }).limit(1).maybeSingle()
+      .then(({ data }: any) => { setRecentPlan(data ? { id: data.id } : null); setUsePlan(true); });
+  }, [selectedPatient, user]);
+
   const canSubmit =
     (selectedPatient || (avulsoMode && patientInitials.trim())) &&
     ((activeTab === "text" && textContent.trim().length > 10) ||
@@ -119,6 +136,7 @@ export default function EvolutionInput({ onGenerate, isLoading, trialReached }: 
       input_content: activeTab === "text" ? textContent : "",
       audio_file: audioFile || undefined,
       patient_id: selectedPatient?.id,
+      plan_id: recentPlan && usePlan ? recentPlan.id : undefined,
     });
   };
 
@@ -171,6 +189,16 @@ export default function EvolutionInput({ onGenerate, isLoading, trialReached }: 
             }} />
           )}
         </div>
+
+        {recentPlan && !avulsoMode && (
+          <Alert>
+            <ClipboardList className="h-4 w-4" />
+            <AlertDescription className="flex items-center justify-between gap-3">
+              <span>Você planejou esta sessão. Usar o plano como base?</span>
+              <Switch checked={usePlan} onCheckedChange={setUsePlan} />
+            </AlertDescription>
+          </Alert>
+        )}
 
         {/* Approach */}
         <div className="space-y-2">

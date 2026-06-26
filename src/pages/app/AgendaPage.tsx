@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import AgendaEventDialog, { type AppointmentRow, spDateTimeParts } from "@/components/agenda/AgendaEventDialog";
-import { ChevronLeft, ChevronRight, Plus, Check, X, Edit, FileText, Ban } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Check, X, Edit, FileText, Ban, ClipboardList } from "lucide-react";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const sb: any = supabase;
@@ -163,6 +163,11 @@ const AgendaPage = () => {
                         <Button size="sm" variant="ghost" title="Realizado" onClick={() => setStatus(a, "realizado")}><Check className="h-4 w-4" /></Button>
                         <Button size="sm" variant="ghost" title="Faltou" onClick={() => setStatus(a, "faltou")}><X className="h-4 w-4" /></Button>
                         <Button size="sm" variant="ghost" title="Cancelar" onClick={() => setStatus(a, "cancelado")}><Ban className="h-4 w-4" /></Button>
+                        {a.patient_id && (
+                          <Button size="sm" variant="ghost" title="Planejar esta sessão" onClick={() => navigate(`/app/planejar-sessao?patient=${a.patient_id}&appointment=${a.id}`)}>
+                            <ClipboardList className="h-4 w-4" />
+                          </Button>
+                        )}
                         {a.patient_id && (
                           <Button size="sm" variant="ghost" title="Ditar evolução" onClick={() => navigate(`/app/evolucao?patient=${a.patient_id}`)}>
                             <FileText className="h-4 w-4" />

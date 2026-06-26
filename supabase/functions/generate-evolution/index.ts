@@ -55,7 +55,13 @@ serve(async (req) => {
       audio_base64,
       audio_filename,
       patient_id,
+      plan_context,
     } = await req.json();
+
+    // Contexto opcional vindo de um plano de sessão (quando o psicólogo opta por partir dele).
+    const planPrefix = (typeof plan_context === "string" && plan_context.trim())
+      ? `PLANO DESTA SESSÃO (use como base/orientação, sem se prender a ele):\n${plan_context.trim()}\n\n`
+      : "";
 
     if (!input_type || !patient_initials) {
       return new Response(JSON.stringify({ error: "Dados obrigatórios não fornecidos" }), {
@@ -155,7 +161,7 @@ serve(async (req) => {
           instructions = `${baseInstructions}\n\nCONTEXTO DO PACIENTE\nIniciais: ${patient_initials}\nAbordagem: ${approach ?? "não informada"}\nHISTÓRICO RECENTE (mais antigo → mais recente):\n${hist}`;
         }
 
-        const sessionMessage =
+        const sessionMessage = planPrefix +
           `Sessão nº ${session_number || "N/I"} — ${today} — Duração: ${session_duration || "N/I"} — ${session_type || "N/I"}\n\n` +
           `Relato da sessão:\n${finalInputContent}\n\n` +
           `Gere a evolução clínica completa seguindo a estrutura obrigatória, adaptando a terminologia para a abordagem ${approach || "geral"}.`;
@@ -190,7 +196,7 @@ serve(async (req) => {
         };
 
         // Add session message to thread
-        const sessionMessage = `Sessão nº ${session_number || "N/I"} — ${today} — Duração: ${session_duration || "N/I"} — ${session_type || "N/I"}
+        const sessionMessage = planPrefix + `Sessão nº ${session_number || "N/I"} — ${today} — Duração: ${session_duration || "N/I"} — ${session_type || "N/I"}
 
 Relato da sessão:
 ${finalInputContent}
@@ -336,7 +342,7 @@ Gere a evolução clínica completa seguindo a estrutura obrigatória, adaptando
     }
 
     // ---- STANDARD FLOW (no thread / avulso) ----
-    const userPrompt = `Gere uma evolução clínica completa com base nas seguintes informações:
+    const userPrompt = planPrefix + `Gere uma evolução clínica completa com base nas seguintes informações:
 
 Data: ${today}
 Paciente: ${patient_initials}

@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Pencil, Sparkles, Brain, ArrowLeft, Loader2 } from "lucide-react";
+import { Pencil, Sparkles, Brain, ArrowLeft, Loader2, ClipboardList } from "lucide-react";
 import { toast } from "sonner";
 import PatientFormDialog, { type PatientData } from "@/components/patients/PatientFormDialog";
 import EvolutionImprovementChat from "@/components/evolution/EvolutionImprovementChat";
@@ -187,6 +187,9 @@ export default function PatientDetailPage() {
         <div className="flex gap-2 shrink-0">
           <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
             <Pencil className="h-4 w-4" /> Editar
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => navigate(`/app/planejar-sessao?patient=${patient.id}`)}>
+            <ClipboardList className="h-4 w-4" /> Planejar sessão
           </Button>
           <Button variant="cta" size="sm" onClick={() => navigate(`/app/evolucao?patient=${patient.id}`)}>
             <Sparkles className="h-4 w-4" /> Gerar evolução

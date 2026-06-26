@@ -49,49 +49,76 @@ const ANY_URL_RE = /https?:\/\/[^\s)\]]+/i;
 
 type Parsed = { titulo: string; link: string; resumo: string; issues: string[]; needsReview: boolean };
 
+const TITULO_MAX = 140;
+
+/** Remove qualquer URL do texto. */
+function stripUrls(s: string): string {
+  return s.replace(/https?:\/\/[^\s)\]]+/gi, " ").replace(/\s+/g, " ").trim();
+}
+
+/**
+ * Extrai título (curto) e resumo (2-4 linhas) da ficha. Robusto a PDFs que o unpdf
+ * devolve como UMA linha só (sem quebras): usa a IA para extrair, com fallback heurístico.
+ */
 async function parseFicha(full: string, filename: string): Promise<Parsed> {
   const issues: string[] = [];
-  const lines = full.split(/\r?\n/).map((l) => l.trim());
-  const titleIdx = lines.findIndex((l) => l.length > 0);
-  let titulo = titleIdx >= 0 ? lines[titleIdx] : "";
-  if (!titulo) {
-    titulo = filename.replace(/\.pdf$/i, "").trim();
-    issues.push("sem_titulo");
-  }
 
+  // 1. Link (Drive primeiro; senão qualquer URL).
   const linkMatch = full.match(LINK_RE) ?? full.match(ANY_URL_RE);
   const link = linkMatch ? linkMatch[0].replace(/[.,;]+$/, "") : "";
   if (!link) issues.push("sem_link");
 
-  // resumo = linhas entre o título e a linha do link
-  const rest = lines.slice(titleIdx + 1);
-  const linkLineIdx = rest.findIndex((l) => /https?:\/\//i.test(l));
-  const resumoLines = linkLineIdx >= 0 ? rest.slice(0, linkLineIdx) : rest;
-  let resumo = resumoLines.join(" ").replace(/\s+/g, " ").trim();
-  let usedComplete = false;
+  // 2. Texto base: sem o link e com espaços normalizados.
+  const clean = stripUrls(full);
 
-  if (!resumo) {
-    issues.push("sem_resumo");
+  let titulo = "";
+  let resumo = "";
+
+  // 3. Extração primária por IA (um único complete), em formato fixo.
+  if (clean) {
     try {
-      resumo = (await complete(
-        `Resuma em 2 a 4 linhas, em português, este material de plano de ação clínico (apenas o resumo, sem títulos):\n\n${full.slice(0, 6000)}`,
+      const out = (await complete(
+        `Você recebe o texto de uma ficha de "plano de ação" clínico. Responda EXATAMENTE neste formato, em português:\n` +
+          `TITULO: <título curto, até ~80 caracteres, sem links>\n` +
+          `RESUMO: <2 a 4 linhas resumindo o material, sem títulos nem links>\n\n` +
+          `Texto:\n${clean.slice(0, 6000)}`,
       )).trim();
-      usedComplete = true;
+      const tMatch = out.match(/^\s*T[IÍ]TULO:\s*(.+)$/im);
+      const rMatch = out.match(/RESUMO:\s*([\s\S]+)$/im);
+      titulo = stripUrls((tMatch?.[1] ?? "").trim());
+      resumo = stripUrls((rMatch?.[1] ?? "").trim());
     } catch (_) {
-      resumo = "";
-    }
-  } else if (resumo.length > RESUMO_MAX) {
-    try {
-      resumo = (await complete(
-        `Condense em 2 a 4 linhas, em português, preservando o sentido, este resumo de um plano de ação:\n\n${resumo}`,
-      )).trim();
-      usedComplete = true;
-    } catch (_) {
-      resumo = resumo.slice(0, RESUMO_MAX);
+      // cai no fallback heurístico abaixo.
     }
   }
 
-  const needsReview = issues.length > 0 || usedComplete;
+  // 4. Fallback heurístico (IA falhou ou veio vazia).
+  if (!titulo) {
+    const base = clean.replace(/^\s*\d+\.\s*/, ""); // remove numeração "4. "
+    const cut = base.search(/•|\.\s/);
+    titulo = (cut > 0 ? base.slice(0, cut) : base.slice(0, 100)).trim();
+  }
+  if (!resumo) {
+    // restante após o título (se o título for um prefixo do texto base).
+    const base = clean.replace(/^\s*\d+\.\s*/, "");
+    const after = base.startsWith(titulo) ? base.slice(titulo.length) : base;
+    resumo = after.replace(/\s+/g, " ").trim().slice(0, RESUMO_MAX);
+  }
+
+  // 5. Sanitização final.
+  titulo = stripUrls(titulo).trim();
+  if (!titulo) {
+    titulo = filename.replace(/\.pdf$/i, "").trim();
+    issues.push("sem_titulo");
+  } else if (titulo.length > TITULO_MAX) {
+    titulo = titulo.slice(0, TITULO_MAX).trim();
+  }
+  resumo = resumo.trim();
+  if (resumo.length > RESUMO_MAX) resumo = resumo.slice(0, RESUMO_MAX).trim();
+  if (!resumo) issues.push("sem_resumo");
+
+  // 6. "Com problema" só para problemas reais (sem_link/sem_titulo/sem_resumo).
+  const needsReview = issues.length > 0;
   return { titulo, link, resumo, issues, needsReview };
 }
 

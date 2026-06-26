@@ -25,6 +25,10 @@ import {
 import { chat, type ChatTool } from '../llm/index.ts';
 import { planoDeAcao } from '../tools/planoDeAcao.ts';
 import { buscarArtigos } from '../tools/buscarArtigos.ts';
+import {
+  AG_DISCARD, AG_RESUME, type AgendaCtx, APPT_PREFIX, continueAgenda, handleAgendaCommand,
+  handleAgendaReply, showPanorama, showPatientAgenda,
+} from './agenda.ts';
 
 // Persona do clínico no WhatsApp (instruções vêm do banco; o backend resolve o assistant
 // correspondente quando LLM_BACKEND='assistants').
@@ -42,12 +46,17 @@ const USER_QUERY_SCHEMA = {
 const MENU_CHOOSE = 'menu_choose';
 const MENU_CREATE = 'menu_create';
 const MENU_FREE = 'menu_free';
+const MENU_AGENDA = 'menu_agenda';
 const PT_EVOLUTION = 'pt_evolution';
 const PT_HISTORY = 'pt_history';
 const PT_PLAN = 'pt_plan';
 const PT_VIEW = 'pt_view';
 const PT_EDIT = 'pt_edit';
+const PT_AGENDA = 'pt_agenda';
 const MENU_EXIT = 'ctx_exit';
+
+// Comandos de texto que abrem a agenda (panorama) de qualquer lugar.
+const AGENDA_WORDS = new Set(['agenda', 'agendar', 'minha agenda', 'agenda da semana', 'minha agenda da semana']);
 const PATIENT_PREFIX = 'patient:';
 const EDIT_PREFIX = 'edit:';
 
@@ -130,16 +139,27 @@ export async function handleConversation(opts: {
     });
   };
 
+  // Contexto para a máquina da agenda (_shared/wa/agenda.ts).
+  const agCtx = (): AgendaCtx => ({ supabase, phone, userId, displayName, session, input });
+
   const sendMenu = async () => {
     await patchSession(supabase, phone, {
       mode: 'menu', kind: 'clinico', locked_patient_id: null,
       flow_step: null, flow_data: null, last_intent: null,
     });
-    await sendButtons(phone, `Olá, ${displayName}! O que vamos fazer?`, [
-      { id: MENU_CHOOSE, title: 'Escolher paciente' },
-      { id: MENU_CREATE, title: 'Cadastrar paciente' },
-      { id: MENU_FREE, title: 'Falar sem paciente' },
-    ]);
+    // Lista (não botões) para caber a Agenda como 4º item.
+    await sendList(
+      phone,
+      `Olá, ${displayName}! O que vamos fazer?`,
+      'Menu',
+      [
+        { id: MENU_CHOOSE, title: 'Escolher paciente' },
+        { id: MENU_CREATE, title: 'Cadastrar paciente' },
+        { id: MENU_FREE, title: 'Falar sem paciente' },
+        { id: MENU_AGENDA, title: 'Agenda' },
+      ],
+      'Início',
+    );
   };
 
   // Usamos LISTA (não botões) no modo paciente: cabem as 3 ações + a saída de
@@ -153,6 +173,7 @@ export async function handleConversation(opts: {
         { id: PT_EVOLUTION, title: 'Nova evolução' },
         { id: PT_HISTORY, title: 'Histórico' },
         { id: PT_PLAN, title: 'Plano' },
+        { id: PT_AGENDA, title: 'Agendar' },
         { id: PT_VIEW, title: 'Consultar ficha' },
         { id: PT_EDIT, title: 'Editar paciente' },
         { id: MENU_EXIT, title: '↩ Trocar / Menu' },
@@ -340,6 +361,14 @@ export async function handleConversation(opts: {
   };
 
   const handleReply = async (replyId: string) => {
+    // Respostas da agenda (toque num compromisso / botões Salvar·Ajustar·Cancelar).
+    if (replyId.startsWith(APPT_PREFIX) || replyId.startsWith('ag_')) {
+      const res = await handleAgendaReply(agCtx(), replyId);
+      if (res.handled) {
+        if (res.lockedPatient) await sendPatientMenu(res.lockedPatient);
+        return;
+      }
+    }
     if (replyId.startsWith(PATIENT_PREFIX)) {
       const patient = await getPatientById(supabase, userId, replyId.slice(PATIENT_PREFIX.length));
       if (!patient) { await sendText(phone, 'Não encontrei esse paciente. Vamos recomeçar.'); await sendMenu(); return; }
@@ -408,6 +437,16 @@ export async function handleConversation(opts: {
         await patchSession(supabase, phone, { last_intent: 'plan' });
         await sendText(phone, 'Sobre qual tema/foco você quer o plano de ação para este paciente?');
         return;
+      case MENU_AGENDA:
+        await showPanorama(agCtx());
+        return;
+      case PT_AGENDA: {
+        if (!lockedId) { await sendMenu(); return; }
+        const patient = await getPatientById(supabase, userId, lockedId);
+        if (!patient) { await sendMenu(); return; }
+        await showPatientAgenda(agCtx(), patient);
+        return;
+      }
       case MENU_EXIT:
         await exitContext();
         return;
@@ -463,8 +502,21 @@ export async function handleConversation(opts: {
 
   // Item 1 — Inatividade > 24h: descarta o contexto antigo e volta ao menu inicial.
   if (stale && (session?.mode || session?.locked_patient_id || session?.flow_step)) {
-    await sendMenu();
-    return;
+    const fs = session?.flow_step ?? '';
+    const isAgendaResume = input.kind === 'interactive' && (input.replyId === AG_RESUME || input.replyId === AG_DISCARD);
+    if (!isAgendaResume) {
+      // Agendamento em aberto há >24h: oferecer Retomar/Descartar (não descartar silenciosamente).
+      if (input.kind !== 'interactive' && session?.mode === 'agenda' && /^(await_|adjust|preview)/.test(fs)) {
+        await sendButtons(phone, 'Você tem um agendamento em aberto de mais de 24h. O que deseja?', [
+          { id: AG_RESUME, title: 'Retomar' },
+          { id: AG_DISCARD, title: 'Descartar' },
+        ]);
+      } else {
+        await sendMenu();
+      }
+      return;
+    }
+    // tap em Retomar/Descartar: segue para o handleReply abaixo.
   }
 
   // 0. Saída de contexto por TEXTO — prioridade máxima (antes de paciente/cadastro).
@@ -477,6 +529,31 @@ export async function handleConversation(opts: {
   if (input.kind === 'interactive' && input.replyId) {
     await handleReply(input.replyId);
     return;
+  }
+
+  // 1.5. Agenda em andamento (texto durante um fluxo de agenda: hora, link, ajustar).
+  if (mode === 'agenda' && input.kind !== 'interactive') {
+    if (await continueAgenda(agCtx())) return;
+    const lp = lockedId ? await getPatientById(supabase, userId, lockedId) : null;
+    if (await handleAgendaCommand(agCtx(), lp, input.text ?? '')) return;
+  }
+
+  // 1.6. Comandos de texto de agenda — de qualquer lugar (exceto captura de nome/cadastro/edição).
+  if (
+    input.kind !== 'interactive' && (input.text ?? '').trim() &&
+    mode !== 'cadastro' && session?.flow_step !== 'await_name' && session?.flow_step !== 'edit_value'
+  ) {
+    const n = normalizeText(input.text ?? '');
+    if (AGENDA_WORDS.has(n)) {
+      if (lockedId) {
+        const p = await getPatientById(supabase, userId, lockedId);
+        if (p) { await showPatientAgenda(agCtx(), p); return; }
+      }
+      await showPanorama(agCtx());
+      return;
+    }
+    const lp = lockedId ? await getPatientById(supabase, userId, lockedId) : null;
+    if (await handleAgendaCommand(agCtx(), lp, input.text ?? '')) return;
   }
 
   // 2. Escolha de paciente por nome (lista grande).

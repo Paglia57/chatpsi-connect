@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import {
   Home, ClipboardList, Plus, History, Users, MessageCircle, Target, BookOpen,
   PenTool, Settings, Gift, CircleUser, HelpCircle, LogOut, Menu, ChevronDown,
-  ChevronRight, Star, MessageSquare, RotateCcw, Calculator, ShieldCheck, Bot, FileText
+  ChevronRight, Star, MessageSquare, RotateCcw, Calculator, ShieldCheck, Bot, FileText, Calendar
 } from 'lucide-react';
 import BetaChip from '@/components/ui/BetaChip';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
@@ -205,6 +205,11 @@ const ChatSidebar = () => {
         <NavLink to="/app/pacientes" onClick={onNavigate} className={navLinkClass(isActivePrefix('/app/pacientes'))} data-tour="nav-pacientes">
           <Users className="h-4 w-4 shrink-0" />
           <span>Pacientes</span>
+        </NavLink>
+
+        <NavLink to="/app/agenda" onClick={onNavigate} className={navLinkClass(isActivePrefix('/app/agenda'))}>
+          <Calendar className="h-4 w-4 shrink-0" />
+          <span>Agenda</span>
         </NavLink>
 
         <Separator className="my-3" />

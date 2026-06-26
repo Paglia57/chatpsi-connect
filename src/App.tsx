@@ -22,6 +22,7 @@ import EvolutionPage from "./pages/app/EvolutionPage";
 import HistoryPage from "./pages/app/HistoryPage";
 import ProfilePage from "./pages/app/ProfilePage";
 import PatientsPage from "./pages/app/PatientsPage";
+import AgendaPage from "./pages/app/AgendaPage";
 import PatientDetailPage from "./pages/app/PatientDetailPage";
 import ReferralsPage from "./pages/app/ReferralsPage";
 import HomePage from "./pages/app/HomePage";
@@ -54,6 +55,7 @@ const App = () => (
               <Route path="/app">
                 <Route index element={<HomePage />} />
                 <Route path="evolucao" element={<EvolutionPage />} />
+                <Route path="agenda" element={<AgendaPage />} />
                 <Route path="pacientes" element={<PatientsPage />} />
                 <Route path="pacientes/:id" element={<PatientDetailPage />} />
                 <Route path="historico" element={<HistoryPage />} />

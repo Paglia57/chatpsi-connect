@@ -32,3 +32,6 @@ supabase/.branches/
 
 # Saída temporária de scripts de verificação
 .tmp-verify/
+
+# Lockfile do Deno (gerado ao rodar deno check localmente; não faz parte do projeto)
+deno.lock

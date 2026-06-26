@@ -6,7 +6,7 @@
 // Isolamento por tenant: TODA leitura/escrita de patients/evolutions usa o userId
 // (= profiles.user_id, id de auth.users) resolvido pelo webhook.
 
-import { sendButtons, sendList, sendText } from './messaging.ts';
+import { sendButtons, sendList, sendSectionedList, sendText } from './messaging.ts';
 import {
   bumpPatientSession,
   getPatientById,
@@ -59,9 +59,16 @@ const PT_PLANEJAR = 'pt_planejar';
 const EV_USE_PLAN = 'ev_use_plan';
 const EV_NO_PLAN = 'ev_no_plan';
 const MENU_EXIT = 'ctx_exit';
+// Itens do menu inicial agrupado (Antes/Durante/Depois) que dependem de um paciente.
+const MENU_PLANEJAR = 'menu_planejar';
+const MENU_EVOLUCAO = 'menu_evolucao';
+const MENU_HISTORICO = 'menu_historico';
+const MENU_AJUDA = 'menu_ajuda';
 
 // Comandos de texto que abrem a agenda (panorama) de qualquer lugar.
 const AGENDA_WORDS = new Set(['agenda', 'agendar', 'minha agenda', 'agenda da semana', 'minha agenda da semana']);
+// Comandos de texto que reexibem o panorama de ajuda.
+const HELP_WORDS = new Set(['ajuda', 'help', '?', 'duvida', 'duvidas']);
 const PATIENT_PREFIX = 'patient:';
 const EDIT_PREFIX = 'edit:';
 
@@ -154,19 +161,31 @@ export async function handleConversation(opts: {
       mode: 'menu', kind: 'clinico', locked_patient_id: null,
       flow_step: null, flow_data: null, last_intent: null,
     });
-    // Lista (não botões) para caber a Agenda como 4º item.
-    await sendList(
-      phone,
-      `Olá, ${displayName}! O que vamos fazer?`,
-      'Menu',
-      [
+    // Saudação "Antes · Durante · Depois" + menu agrupado em seções.
+    const body =
+      `Olá, ${displayName}! O ChatPsi te acompanha na sessão inteira:\n` +
+      `🗓️ *Antes* — planejar e agendar\n` +
+      `💬 *Durante* — conversar e anotar\n` +
+      `📝 *Depois* — registrar a evolução\n\n` +
+      `O que vamos fazer?`;
+    await sendSectionedList(phone, body, 'Ver opções', [
+      { title: 'Antes', rows: [
+        { id: MENU_PLANEJAR, title: 'Planejar sessão' },
+        { id: MENU_AGENDA, title: 'Agendar / Agenda' },
+      ] },
+      { title: 'Durante', rows: [
         { id: MENU_CHOOSE, title: 'Escolher paciente' },
         { id: MENU_CREATE, title: 'Cadastrar paciente' },
         { id: MENU_FREE, title: 'Conversar com chat', description: 'Sem vincular a um paciente' },
-        { id: MENU_AGENDA, title: 'Agenda' },
-      ],
-      'Início',
-    );
+      ] },
+      { title: 'Depois', rows: [
+        { id: MENU_EVOLUCAO, title: 'Nova evolução' },
+        { id: MENU_HISTORICO, title: 'Ver evoluções' },
+      ] },
+      { title: 'Mais', rows: [
+        { id: MENU_AJUDA, title: 'Ajuda' },
+      ] },
+    ]);
   };
 
   // Usamos LISTA (não botões) no modo paciente: cabem as 3 ações + a saída de
@@ -207,7 +226,8 @@ export async function handleConversation(opts: {
     if (patients.length > MAX_LIST) {
       // Lista interativa não comporta tantos itens: texto numerado, escolha por NÚMERO ou NOME.
       const items: PickItem[] = patients.map((p) => ({ id: p.id, name: p.full_name, sub: p.initials }));
-      await patchSession(supabase, phone, { mode: 'menu', flow_step: 'await_name', flow_data: { pick_items: items } });
+      const pending = (session?.flow_data as Record<string, unknown> | null)?.pending_action ?? null;
+      await patchSession(supabase, phone, { mode: 'menu', flow_step: 'await_name', flow_data: { pick_items: items, pending_action: pending } });
       await sendText(phone, numberedList(items, 'pacientes'));
       return;
     }
@@ -392,6 +412,47 @@ export async function handleConversation(opts: {
     await logWaMessage(supabase, phone, 'ai', result.text, result.usage);
   };
 
+  // Inicia a evolução de um paciente (já travado): oferta de plano recente, senão pede o relato.
+  const startEvolutionForPatient = async (patient: Patient) => {
+    const { data: plan } = await supabase
+      .from('session_plans').select('id')
+      .eq('user_id', userId).eq('patient_id', patient.id).eq('status', 'salvo')
+      .is('used_in_evolution_id', null)
+      .order('criado_em', { ascending: false }).limit(1).maybeSingle();
+    if (plan?.id) {
+      await patchSession(supabase, phone, { flow_data: { offer_plan_id: plan.id } });
+      await sendButtons(phone, 'Você planejou esta sessão. Quer partir do plano?', [
+        { id: EV_USE_PLAN, title: 'Partir do plano' },
+        { id: EV_NO_PLAN, title: 'Sem o plano' },
+      ]);
+      return;
+    }
+    await patchSession(supabase, phone, { last_intent: 'evolution' });
+    await sendText(phone, 'Pode ditar (áudio) ou escrever o relato da sessão. Vou gerar a evolução a partir dele.');
+  };
+
+  // Executa uma ação pendente do menu inicial após o paciente ser escolhido.
+  const performPendingAction = async (patient: Patient, action: string) => {
+    await lockPatient(patient);
+    if (action === 'planejar') { await startPlanning(planCtx(), patient); return; }
+    if (action === 'historico') { await showHistory(patient); await sendPatientMenu(patient); return; }
+    if (action === 'evolucao') { await startEvolutionForPatient(patient); return; }
+    await sendPatientMenu(patient);
+  };
+
+  // Panorama de ajuda (versão um pouco mais longa que a saudação).
+  const showHelp = async () => {
+    await sendText(
+      phone,
+      `*O ChatPsi te acompanha na sessão inteira:*\n\n` +
+        `🗓️ *Antes* — planeje a próxima sessão e organize sua agenda.\n` +
+        `💬 *Durante* — converse com o chat clínico (com ou sem paciente) e tire dúvidas.\n` +
+        `📝 *Depois* — registre a evolução do atendimento.\n\n` +
+        `Toque numa opção do menu ou escreva (ex.: "agenda", "planejar", "nova evolução"). ` +
+        `Digite *menu* a qualquer momento para voltar.`,
+    );
+  };
+
   const handleReply = async (replyId: string) => {
     // Respostas da agenda (compromisso, picker de paciente, duração, link, próximos passos).
     if (replyId.startsWith(APPT_PREFIX) || replyId.startsWith('ag')) {
@@ -416,6 +477,8 @@ export async function handleConversation(opts: {
     if (replyId.startsWith(PATIENT_PREFIX)) {
       const patient = await getPatientById(supabase, userId, replyId.slice(PATIENT_PREFIX.length));
       if (!patient) { await sendText(phone, 'Não encontrei esse paciente. Vamos recomeçar.'); await sendMenu(); return; }
+      const pending = (session?.flow_data as Record<string, unknown> | null)?.pending_action as string | undefined;
+      if (pending) { await performPendingAction(patient, pending); return; }
       await lockPatient(patient);
       await sendPatientMenu(patient);
       return;
@@ -442,28 +505,30 @@ export async function handleConversation(opts: {
         await patchSession(supabase, phone, { mode: 'cadastro', flow_step: 'nome', flow_data: {}, locked_patient_id: null });
         await sendText(phone, 'Vamos cadastrar um paciente. Qual é o *nome completo* dele(a)?');
         return;
+      case MENU_PLANEJAR:
+        await patchSession(supabase, phone, { mode: 'menu', flow_step: null, flow_data: { pending_action: 'planejar' } });
+        await showPatientList();
+        return;
+      case MENU_EVOLUCAO:
+        await patchSession(supabase, phone, { mode: 'menu', flow_step: null, flow_data: { pending_action: 'evolucao' } });
+        await showPatientList();
+        return;
+      case MENU_HISTORICO:
+        await patchSession(supabase, phone, { mode: 'menu', flow_step: null, flow_data: { pending_action: 'historico' } });
+        await showPatientList();
+        return;
+      case MENU_AJUDA:
+        await showHelp();
+        return;
       case MENU_FREE:
         await patchSession(supabase, phone, { mode: 'livre', kind: 'clinico', locked_patient_id: null, last_intent: null });
         await sendText(phone, 'Modo livre ativado. Pode mandar sua dúvida clínica, um tema de estudo ou um pedido (sem vincular a um paciente).');
         return;
       case PT_EVOLUTION: {
         if (!lockedId) { await sendMenu(); return; }
-        // Conexão com o planejamento: se há plano recente salvo, oferecer partir dele.
-        const { data: plan } = await supabase
-          .from('session_plans').select('id')
-          .eq('user_id', userId).eq('patient_id', lockedId).eq('status', 'salvo')
-          .is('used_in_evolution_id', null)
-          .order('criado_em', { ascending: false }).limit(1).maybeSingle();
-        if (plan?.id) {
-          await patchSession(supabase, phone, { flow_data: { offer_plan_id: plan.id } });
-          await sendButtons(phone, 'Você planejou esta sessão. Quer partir do plano?', [
-            { id: EV_USE_PLAN, title: 'Partir do plano' },
-            { id: EV_NO_PLAN, title: 'Sem o plano' },
-          ]);
-          return;
-        }
-        await patchSession(supabase, phone, { last_intent: 'evolution' });
-        await sendText(phone, 'Pode ditar (áudio) ou escrever o relato da sessão. Vou gerar a evolução a partir dele.');
+        const patient = await getPatientById(supabase, userId, lockedId);
+        if (!patient) { await sendMenu(); return; }
+        await startEvolutionForPatient(patient);
         return;
       }
       case EV_USE_PLAN: {
@@ -603,6 +668,12 @@ export async function handleConversation(opts: {
     return;
   }
 
+  // 0.1. Ajuda por TEXTO — reexibe o panorama dos três momentos.
+  if (input.kind !== 'interactive' && HELP_WORDS.has(normalizeText(input.text ?? ''))) {
+    await showHelp();
+    return;
+  }
+
   // 1. Resposta de botão/lista.
   if (input.kind === 'interactive' && input.replyId) {
     await handleReply(input.replyId);
@@ -657,13 +728,19 @@ export async function handleConversation(opts: {
 
   // 2. Escolha de paciente por nome (lista grande).
   if (mode === 'menu' && session?.flow_step === 'await_name' && input.text) {
-    const items = (session?.flow_data as Record<string, unknown> | null)?.pick_items as PickItem[] | undefined;
+    const fd = session?.flow_data as Record<string, unknown> | null;
+    const items = fd?.pick_items as PickItem[] | undefined;
+    const pending = fd?.pending_action as string | undefined;
+    const chosen = async (patient: Patient) => {
+      if (pending) await performPendingAction(patient, pending);
+      else { await lockPatient(patient); await sendPatientMenu(patient); }
+    };
     // Escolha por NÚMERO (via a lista guardada) ou por NOME.
     if (items && items.length) {
       const pick = resolvePick(input.text, items);
       if (pick && 'id' in pick) {
         const patient = await getPatientById(supabase, userId, pick.id);
-        if (patient) { await lockPatient(patient); await sendPatientMenu(patient); return; }
+        if (patient) { await chosen(patient); return; }
       } else if (pick && 'ambiguous' in pick) {
         await sendList(
           phone, 'Encontrei mais de um. Selecione:', 'Ver pacientes',
@@ -678,8 +755,7 @@ export async function handleConversation(opts: {
     if (matches.length === 0) {
       await sendText(phone, 'Não encontrei nenhum paciente com esse nome. Pode tentar de novo?');
     } else if (matches.length === 1) {
-      await lockPatient(matches[0]);
-      await sendPatientMenu(matches[0]);
+      await chosen(matches[0]);
     } else {
       await sendList(
         phone, 'Encontrei mais de um. Selecione:', 'Ver pacientes',

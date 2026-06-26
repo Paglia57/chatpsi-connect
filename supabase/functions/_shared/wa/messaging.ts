@@ -118,6 +118,41 @@ export interface ListRow {
   description?: string; // máx 72 chars
 }
 
+export interface ListSection {
+  title: string;
+  rows: ListRow[];
+}
+
+/** Envia uma lista interativa com VÁRIAS seções (até 10 linhas no total). */
+export async function sendSectionedList(
+  to: string,
+  body: string,
+  buttonLabel: string,
+  sections: ListSection[],
+): Promise<void> {
+  let remaining = 10;
+  const builtSections = [];
+  for (const s of sections) {
+    if (remaining <= 0) break;
+    const rows = s.rows.slice(0, remaining).map((r) => ({
+      id: r.id.slice(0, 200),
+      title: r.title.slice(0, 24),
+      ...(r.description ? { description: r.description.slice(0, 72) } : {}),
+    }));
+    remaining -= rows.length;
+    if (rows.length) builtSections.push({ title: s.title.slice(0, 24), rows });
+  }
+  await postMessage({
+    to,
+    type: 'interactive',
+    interactive: {
+      type: 'list',
+      body: { text: body.slice(0, 1024) },
+      action: { button: buttonLabel.slice(0, 20), sections: builtSections },
+    },
+  });
+}
+
 /** Envia uma lista interativa (uma seção, até 10 linhas). */
 export async function sendList(
   to: string,

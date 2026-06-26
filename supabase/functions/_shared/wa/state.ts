@@ -29,7 +29,7 @@ import {
   AG_DISCARD, AG_RESUME, type AgendaCtx, APPT_PREFIX, continueAgenda, handleAgendaCommand,
   handleAgendaReply, showPanorama, showPatientAgenda, startAgendar,
 } from './agenda.ts';
-import { continuePlanning, handlePlanningReply, type PlanningCtx, startPlanning } from './planning.ts';
+import { continuePlanning, handlePlanningReply, offerPlanningChoice, type PlanningCtx, showPlansList, startPlanning } from './planning.ts';
 import { numberedList, type PickItem, resolvePick } from './pickList.ts';
 
 // Persona do clínico no WhatsApp (instruções vêm do banco; o backend resolve o assistant
@@ -56,6 +56,7 @@ const PT_VIEW = 'pt_view';
 const PT_EDIT = 'pt_edit';
 const PT_AGENDA = 'pt_agenda';
 const PT_PLANEJAR = 'pt_planejar';
+const PT_PLANS = 'pt_plans';
 const EV_USE_PLAN = 'ev_use_plan';
 const EV_NO_PLAN = 'ev_no_plan';
 // Rascunho da evolução: acumular relato → gerar prévia → revisar (Salvar/Ajustar/Cancelar).
@@ -212,6 +213,7 @@ export async function handleConversation(opts: {
       [
         { id: PT_EVOLUTION, title: 'Nova evolução' },
         { id: PT_PLANEJAR, title: 'Planejar sessão' },
+        { id: PT_PLANS, title: 'Ver planejamentos' },
         { id: PT_HISTORY, title: 'Ver evoluções' },
         { id: PT_PLAN, title: 'Plano de ação' },
         { id: PT_AGENDA, title: 'Agendar' },
@@ -492,7 +494,9 @@ export async function handleConversation(opts: {
 
   // Abre o RASCUNHO da evolução: estado que acumula o relato (texto/áudio) sem gerar.
   const openEvoCapture = async (patient: Patient, usePlanId?: string) => {
+    // Garante MODO PACIENTE travado (pode vir de outro contexto, ex.: "Usar na evolução").
     await patchSession(supabase, phone, {
+      mode: 'paciente', kind: 'clinico', locked_patient_id: patient.id,
       last_intent: 'evolution',
       flow_step: 'evo_capture',
       flow_data: usePlanId ? { relato_parts: [], use_plan_id: usePlanId } : { relato_parts: [] },
@@ -524,7 +528,7 @@ export async function handleConversation(opts: {
   // Executa uma ação pendente do menu inicial após o paciente ser escolhido.
   const performPendingAction = async (patient: Patient, action: string) => {
     await lockPatient(patient);
-    if (action === 'planejar') { await startPlanning(planCtx(), patient); return; }
+    if (action === 'planejar') { await offerPlanningChoice(planCtx(), patient); return; }
     if (action === 'historico') { await showHistory(patient); await sendPatientMenu(patient); return; }
     if (action === 'evolucao') { await startEvolutionForPatient(patient); return; }
     await sendPatientMenu(patient);
@@ -549,7 +553,7 @@ export async function handleConversation(opts: {
       const res = await handleAgendaReply(agCtx(), replyId);
       if (res.handled) {
         if (res.lockedPatient) await sendPatientMenu(res.lockedPatient);
-        if (res.action === 'planning' && res.patient) await startPlanning(planCtx(), res.patient);
+        if (res.action === 'planning' && res.patient) await offerPlanningChoice(planCtx(), res.patient);
         else if (res.action === 'agendar_again' && res.patient) await startAgendar(agCtx(), res.patient, '');
         else if (res.action === 'menu') await sendMenu();
         return;
@@ -562,6 +566,7 @@ export async function handleConversation(opts: {
         if (res.action === 'agendar' && res.patient) await startAgendar(agCtx(), res.patient, '');
         else if (res.action === 'patient_agenda' && res.patient) { await showPatientAgenda(agCtx(), res.patient); await sendPatientMenu(res.patient); }
         else if (res.action === 'patient_menu') { if (res.patient) await sendPatientMenu(res.patient); else await sendMenu(); }
+        else if (res.action === 'use_plan_in_evo' && res.patient) await openEvoCapture(res.patient, res.planId);
         return;
       }
     }
@@ -723,7 +728,14 @@ export async function handleConversation(opts: {
         if (!lockedId) { await sendMenu(); return; }
         const patient = await getPatientById(supabase, userId, lockedId);
         if (!patient) { await sendMenu(); return; }
-        await startPlanning(planCtx(), patient);
+        await offerPlanningChoice(planCtx(), patient);
+        return;
+      }
+      case PT_PLANS: {
+        if (!lockedId) { await sendMenu(); return; }
+        const patient = await getPatientById(supabase, userId, lockedId);
+        if (!patient) { await sendMenu(); return; }
+        await showPlansList(planCtx(), patient);
         return;
       }
       case MENU_EXIT:
@@ -827,7 +839,7 @@ export async function handleConversation(opts: {
   if (
     input.kind !== 'interactive' && (input.text ?? '').trim() &&
     mode !== 'cadastro' && session?.flow_step !== 'await_name' && session?.flow_step !== 'edit_value' &&
-    session?.flow_step !== 'evo_capture'
+    session?.flow_step !== 'evo_capture' && session?.flow_step !== 'pl_capture' && session?.flow_step !== 'plan_pick'
   ) {
     const n = normalizeText(input.text ?? '');
     if (AGENDA_WORDS.has(n)) {
@@ -851,13 +863,30 @@ export async function handleConversation(opts: {
   if (
     input.kind !== 'interactive' && (input.text ?? '').trim() &&
     mode !== 'cadastro' && session?.flow_step !== 'await_name' && session?.flow_step !== 'edit_value' &&
-    session?.flow_step !== 'evo_capture'
+    session?.flow_step !== 'evo_capture' && session?.flow_step !== 'pl_capture' && session?.flow_step !== 'plan_pick'
   ) {
     const n = normalizeText(input.text ?? '');
+    // "Ver planejamentos" por texto (precisa de paciente travado).
+    if (n === 'planejamentos') {
+      if (lockedId) {
+        const p = await getPatientById(supabase, userId, lockedId);
+        if (p) { await showPlansList(planCtx(), p); return; }
+      }
+      await sendButtons(phone, 'Para ver planejamentos, escolha primeiro o paciente:', [
+        { id: MENU_CHOOSE, title: 'Escolher paciente' },
+        { id: MENU_EXIT, title: 'Menu' },
+      ]);
+      return;
+    }
     if (n === 'planejar' || n === 'planeja' || n.startsWith('planeja ') || n.startsWith('planejar ')) {
       if (lockedId) {
         const p = await getPatientById(supabase, userId, lockedId);
-        if (p) { await startPlanning(planCtx(), p, input.text); return; }
+        if (p) {
+          // Bare "planejar" → etapa de escolha; com direção inline → gera direto.
+          if (n === 'planejar' || n === 'planeja') await offerPlanningChoice(planCtx(), p);
+          else await startPlanning(planCtx(), p, input.text);
+          return;
+        }
       }
       await sendButtons(phone, 'Para planejar, escolha primeiro o paciente:', [
         { id: MENU_CHOOSE, title: 'Escolher paciente' },

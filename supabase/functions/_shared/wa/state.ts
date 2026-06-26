@@ -324,7 +324,7 @@ export async function handleConversation(opts: {
     const parts = Array.isArray(fd.relato_parts) ? (fd.relato_parts as string[]) : [];
     const relato = parts.join('\n').trim();
     if (relato.length < 3) {
-      await evoCapturePrompt('Ainda não recebi o relato. Pode ditar ou escrever o que aconteceu na sessão.');
+      await evoCapturePrompt('Ainda não recebi o relato. Pode ditar (enviar Áudio) ou escrever o que aconteceu na sessão.');
       return;
     }
 
@@ -438,7 +438,7 @@ export async function handleConversation(opts: {
       hadContent = true;
     }
     if (!hadContent) {
-      await evoCapturePrompt('Ainda não recebi o relato. Pode ditar ou escrever o que aconteceu na sessão.');
+      await evoCapturePrompt('Ainda não recebi o relato. Pode ditar (enviar Áudio) ou escrever o que aconteceu na sessão.');
       return;
     }
     fd.relato_parts = parts;
@@ -498,7 +498,7 @@ export async function handleConversation(opts: {
       flow_data: usePlanId ? { relato_parts: [], use_plan_id: usePlanId } : { relato_parts: [] },
     });
     await evoCapturePrompt(
-      `Pode ditar ou escrever o relato da sessão de *${patient.full_name}* (em quantas mensagens quiser). ` +
+      `Pode ditar (enviar Áudio) ou escrever o relato da sessão de *${patient.full_name}* (em quantas mensagens quiser). ` +
         `Quando terminar, toque em *Gerar evolução* — você poderá revisar e editar antes de salvar.`,
     );
   };
@@ -666,7 +666,7 @@ export async function handleConversation(opts: {
             ...(fd.audio_url ? { audio_url: fd.audio_url } : {}),
           },
         });
-        await evoCapturePrompt('O que você quer complementar ou corrigir? Pode ditar ou escrever; depois toque em *Gerar evolução*.');
+        await evoCapturePrompt('O que você quer complementar ou corrigir? Pode ditar (enviar Áudio) ou escrever; depois toque em *Gerar evolução*.');
         return;
       }
       case EV_CANCEL: {

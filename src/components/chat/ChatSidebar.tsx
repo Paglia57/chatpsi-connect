@@ -317,6 +317,7 @@ const ChatSidebar = () => {
     const bottomNavItems = [
       { icon: Home, label: 'Início', path: '/app', exact: true },
       { icon: ClipboardList, label: 'Evolução', path: '/app/evolucao', exact: false },
+      { icon: Calendar, label: 'Agenda', path: '/app/agenda', exact: false },
       { icon: Users, label: 'Pacientes', path: '/app/pacientes', exact: false },
       { icon: MessageCircle, label: 'Chat', path: '/chat', exact: true },
     ];

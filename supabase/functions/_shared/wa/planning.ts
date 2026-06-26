@@ -3,12 +3,20 @@
 // ouro), e salva em session_plans. Reaproveita generateSessionPlan.
 
 import { sendButtons, sendText } from "./messaging.ts";
-import { type Patient, patchSession } from "./repo.ts";
+import { getPatientById, type Patient, patchSession } from "./repo.ts";
 import { generateSessionPlan } from "../planning/generate.ts";
 
 export const PL_SAVE = "pl_save";
 export const PL_ADJUST = "pl_adjust";
 export const PL_CANCEL = "pl_cancel";
+export const PL_NEXT_AGENDA = "pl_next_agenda";   // "Agendar esta sessão" / "Ver agenda do paciente"
+export const PL_NEXT_PATIENT = "pl_next_patient";  // "Voltar ao paciente"
+
+export type PlanningReplyResult = {
+  handled: boolean;
+  action?: "agendar" | "patient_agenda" | "patient_menu";
+  patient?: Patient | null;
+};
 
 type PlInput = { kind: string; text: string; replyId?: string };
 type Session = { mode?: string | null; flow_step?: string | null; flow_data?: Record<string, unknown> | null } | null;
@@ -101,22 +109,22 @@ export async function continuePlanning(ctx: PlanningCtx): Promise<boolean> {
   return false;
 }
 
-/** Trata os botões do planejamento. Retorna true se tratou. */
-export async function handlePlanningReply(ctx: PlanningCtx, replyId: string): Promise<boolean> {
+/** Trata os botões do planejamento. */
+export async function handlePlanningReply(ctx: PlanningCtx, replyId: string): Promise<PlanningReplyResult> {
   const data = (ctx.session?.flow_data ?? {}) as unknown as PendingPlan;
 
   if (replyId === PL_ADJUST) {
     await patchSession(ctx.supabase, ctx.phone, { mode: "planning", flow_step: "adjust", flow_data: data as unknown as Record<string, unknown> });
     await sendText(ctx.phone, "O que você quer ajustar? (ex.: \"foca na ansiedade no trabalho\" ou mande um áudio)");
-    return true;
+    return { handled: true };
   }
   if (replyId === PL_CANCEL) {
     await patchSession(ctx.supabase, ctx.phone, { mode: "paciente", flow_step: null, flow_data: null });
     await sendText(ctx.phone, "Plano descartado. Nada foi salvo.");
-    return true;
+    return { handled: true };
   }
   if (replyId === PL_SAVE) {
-    if (!data?.patient_id) { await sendText(ctx.phone, "Não há plano pendente para salvar."); return true; }
+    if (!data?.patient_id) { await sendText(ctx.phone, "Não há plano pendente para salvar."); return { handled: true }; }
     const { error } = await ctx.supabase.from("session_plans").insert({
       user_id: ctx.userId,
       patient_id: data.patient_id,
@@ -126,14 +134,39 @@ export async function handlePlanningReply(ctx: PlanningCtx, replyId: string): Pr
       input_content: data.direction ?? null,
       status: "salvo",
     });
-    await patchSession(ctx.supabase, ctx.phone, { mode: "paciente", flow_step: null, flow_data: null });
     if (error) {
       console.error("Erro ao salvar session_plan (WA):", error.message);
+      await patchSession(ctx.supabase, ctx.phone, { mode: "paciente", flow_step: null, flow_data: null });
       await sendText(ctx.phone, "Não consegui salvar o plano agora. Tente novamente.");
-    } else {
-      await sendText(ctx.phone, `✅ Plano salvo para *${data.patient_name}*. Ele aparece no painel web e será oferecido na próxima evolução.`);
+      return { handled: true };
     }
-    return true;
+    await sendText(ctx.phone, `✅ Plano salvo para *${data.patient_name}*.`);
+    // Próximo passo: agendar (ou ver agenda, se já houver compromisso futuro) / voltar / menu.
+    const { data: future } = await ctx.supabase
+      .from("appointments").select("id")
+      .eq("user_id", ctx.userId).eq("patient_id", data.patient_id).eq("status", "agendado")
+      .gte("starts_at", new Date().toISOString()).limit(1).maybeSingle();
+    const hasAppt = !!future?.id;
+    await patchSession(ctx.supabase, ctx.phone, {
+      mode: "planning", flow_step: "after_save",
+      flow_data: { patient_id: data.patient_id, patient_name: data.patient_name, has_appt: hasAppt },
+    });
+    await sendButtons(ctx.phone, "Plano salvo. E agora?", [
+      { id: PL_NEXT_AGENDA, title: hasAppt ? "Ver agenda" : "Agendar sessão" },
+      { id: PL_NEXT_PATIENT, title: "Voltar ao paciente" },
+      { id: "ctx_exit", title: "Menu" },
+    ]);
+    return { handled: true };
   }
-  return false;
+  if (replyId === PL_NEXT_AGENDA) {
+    const patient = data?.patient_id ? await getPatientById(ctx.supabase, ctx.userId, data.patient_id) : null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const hasAppt = (ctx.session?.flow_data as any)?.has_appt === true;
+    return { handled: true, action: hasAppt ? "patient_agenda" : "agendar", patient };
+  }
+  if (replyId === PL_NEXT_PATIENT) {
+    const patient = data?.patient_id ? await getPatientById(ctx.supabase, ctx.userId, data.patient_id) : null;
+    return { handled: true, action: "patient_menu", patient };
+  }
+  return { handled: false };
 }

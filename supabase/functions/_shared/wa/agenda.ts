@@ -8,6 +8,7 @@ import { sendButtons, sendList, sendText } from "./messaging.ts";
 import { getPatientById, listActivePatients, type Patient, patchSession, searchPatientsByName } from "./repo.ts";
 import { parseDateTimePtBr } from "./datetime.ts";
 import { diaChaveSP, fmtDiaCurto, fmtHora, nowSP, spParts, spWallToUtc, startOfTodaySP } from "./tz.ts";
+import { numberedList, type PickItem, resolvePick } from "./pickList.ts";
 
 export const APPT_PREFIX = "appt:";
 export const AG_SAVE = "ag_save";
@@ -15,6 +16,20 @@ export const AG_ADJUST = "ag_adjust";
 export const AG_CANCEL = "ag_cancel";
 export const AG_RESUME = "ag_resume";
 export const AG_DISCARD = "ag_discard";
+// Navegação guiada do agendamento.
+export const AG_PICK_PATIENT = "ag_pick_patient";   // botão "Selecionar paciente"
+export const AG_PT_PREFIX = "agpt:";                  // linha de paciente no picker de agenda
+export const AG_DUR_PREFIX = "agdur_";                // agdur_30 / agdur_50 / agdur_60 / agdur_other
+export const AG_SKIP_LINK = "ag_skip_link";           // botão "Pular" (link)
+export const AG_NEXT_PLAN = "ag_next_plan";           // próximo passo: planejar
+export const AG_NEXT_AGAIN = "ag_next_again";         // próximo passo: agendar outra
+
+export type AgendaReplyResult = {
+  handled: boolean;
+  lockedPatient?: Patient | null;
+  action?: "planning" | "agendar_again";
+  patient?: Patient | null;
+};
 
 type AgInput = { kind: string; text: string; replyId?: string };
 type Session = { mode?: string | null; locked_patient_id?: string | null; flow_step?: string | null; flow_data?: Record<string, unknown> | null } | null;
@@ -119,6 +134,61 @@ async function showPreview(ctx: AgendaCtx, op: PendingOp) {
   ]);
 }
 
+// ---- Agendamento guiado: picker de paciente, duração, próximo passo ----
+
+/** Lista de pacientes para o agendamento guiado (interativa ≤10; senão número/nome). */
+async function showSchedulePatientList(ctx: AgendaCtx): Promise<void> {
+  const patients = await listActivePatients(ctx.supabase, ctx.userId, 50);
+  if (patients.length === 0) {
+    await sendButtons(ctx.phone, "Você ainda não tem pacientes. Cadastre um para agendar.", [
+      { id: "menu_create", title: "Cadastrar" },
+      { id: "ctx_exit", title: "Menu" },
+    ]);
+    return;
+  }
+  if (patients.length > 10) {
+    const items: PickItem[] = patients.map((p) => ({ id: p.id, name: p.full_name, sub: p.initials }));
+    await patchSession(ctx.supabase, ctx.phone, { mode: "agenda", flow_step: "agenda_pick", flow_data: { pick_items: items } });
+    await sendText(ctx.phone, numberedList(items, "pacientes"));
+    return;
+  }
+  await patchSession(ctx.supabase, ctx.phone, { mode: "agenda", flow_step: "agenda_pick", flow_data: {} });
+  await sendList(
+    ctx.phone, "Para quem é a sessão?", "Pacientes",
+    patients.map((p) => ({ id: `${AG_PT_PREFIX}${p.id}`, title: p.full_name, description: p.initials })),
+    "Selecionar paciente",
+  );
+}
+
+/** Passo de duração por lista (30/50/60/Outro); default = duração do paciente. */
+async function askDuration(ctx: AgendaCtx, op: PendingOp): Promise<void> {
+  await patchSession(ctx.supabase, ctx.phone, { mode: "agenda", flow_step: "agenda_duration", flow_data: op as unknown as Record<string, unknown> });
+  await sendList(ctx.phone, `Duração da sessão? (padrão: ${op.duration_min} min)`, "Duração", [
+    { id: `${AG_DUR_PREFIX}30`, title: "30 min" },
+    { id: `${AG_DUR_PREFIX}50`, title: "50 min" },
+    { id: `${AG_DUR_PREFIX}60`, title: "60 min" },
+    { id: `${AG_DUR_PREFIX}other`, title: "Outro" },
+  ], "Duração");
+}
+
+/** Após resolver data/hora: criar → pergunta a duração; editar → vai direto à prévia. */
+async function proceedCreateOrEdit(ctx: AgendaCtx, op: PendingOp): Promise<void> {
+  if (op.ag_op === "create") await askDuration(ctx, op);
+  else await showPreview(ctx, op);
+}
+
+/** Próximo passo após salvar o agendamento (continuidade). */
+async function finishWithNextSteps(ctx: AgendaCtx, patientId: string | null, patientName: string): Promise<void> {
+  await patchSession(ctx.supabase, ctx.phone, {
+    mode: "agenda", flow_step: "after_save", flow_data: { patient_id: patientId, patient_name: patientName },
+  });
+  await sendButtons(ctx.phone, "Tudo certo! E agora?", [
+    { id: AG_NEXT_PLAN, title: "Planejar a sessão" },
+    { id: AG_NEXT_AGAIN, title: "Agendar outra" },
+    { id: "ctx_exit", title: "Menu" },
+  ]);
+}
+
 // ---- Montagem do horário a partir do texto ----
 
 function modalityFromText(text: string): "online" | "presencial" {
@@ -146,7 +216,10 @@ export async function showPanorama(ctx: AgendaCtx): Promise<void> {
   await patchSession(ctx.supabase, ctx.phone, { mode: "menu", flow_step: null, flow_data: null });
 
   if (appts.length === 0) {
-    await sendText(ctx.phone, "Sua agenda dos próximos dias está vazia. Para marcar, escreva por exemplo: *agenda a Maria quinta 15h*.");
+    await sendButtons(ctx.phone, "Sua agenda dos próximos dias está vazia.", [
+      { id: AG_PICK_PATIENT, title: "Agendar sessão" },
+      { id: "ctx_exit", title: "Menu" },
+    ]);
     return;
   }
 
@@ -200,8 +273,8 @@ export async function startAgendar(ctx: AgendaCtx, lockedPatient: Patient | null
     patient = await resolvePatientFromText(ctx, rawText);
   }
   if (!patient) {
-    await sendButtons(ctx.phone, "Não identifiquei o paciente. O que deseja?", [
-      { id: "menu_choose", title: "Escolher" },
+    await sendButtons(ctx.phone, "Para qual paciente é a sessão?", [
+      { id: AG_PICK_PATIENT, title: "Selecionar paciente" },
       { id: "menu_create", title: "Cadastrar" },
       { id: "ctx_exit", title: "Menu" },
     ]);
@@ -229,7 +302,7 @@ export async function startAgendar(ctx: AgendaCtx, lockedPatient: Patient | null
     return;
   }
 
-  await showPreview(ctx, {
+  await proceedCreateOrEdit(ctx, {
     ag_op: "create", patient_id: patient.id, patient_name: patient.full_name,
     patient_initials: patient.initials, starts_at: resolved.iso, duration_min: dur, modality,
   });
@@ -294,11 +367,42 @@ export async function continueAgenda(ctx: AgendaCtx): Promise<boolean> {
   const data = (ctx.session?.flow_data ?? {}) as Record<string, any>;
   const text = ctx.input.text ?? "";
 
+  if (step === "agenda_pick") {
+    // Escolha de paciente (por número/nome) no agendamento guiado.
+    const items = data.pick_items as PickItem[] | undefined;
+    let patientId: string | null = null;
+    if (items && items.length) {
+      const pick = resolvePick(text, items);
+      if (pick && "id" in pick) patientId = pick.id;
+      else if (pick && "ambiguous" in pick) {
+        await sendList(ctx.phone, "Encontrei mais de um. Selecione:", "Pacientes",
+          pick.ambiguous.map((p) => ({ id: `${AG_PT_PREFIX}${p.id}`, title: p.name, description: p.sub })), "Selecionar paciente");
+        return true;
+      }
+    } else {
+      const m = await searchPatientsByName(ctx.supabase, ctx.userId, text.trim(), 1);
+      patientId = m[0]?.id ?? null;
+    }
+    if (!patientId) { await sendText(ctx.phone, "Não encontrei. Responda com o *número* ou parte do *nome*."); return true; }
+    const patient = await getPatientById(ctx.supabase, ctx.userId, patientId);
+    if (!patient) { await sendText(ctx.phone, "Paciente não encontrado."); return true; }
+    await startAgendar(ctx, patient, "");
+    return true;
+  }
+
+  if (step === "agenda_dur_other" || step === "agenda_duration") {
+    const m = text.match(/\d{1,3}/);
+    if (!m) { await sendText(ctx.phone, "Quantos minutos? (ex.: 45) — ou toque numa das opções."); return true; }
+    const dur = Math.max(10, Math.min(240, +m[0]));
+    await showPreview(ctx, { ...(data as unknown as PendingOp), duration_min: dur });
+    return true;
+  }
+
   if (step === "await_time" && data.date) {
     const t = parseDateTimePtBr(text);
     if (!t.time) { await sendText(ctx.phone, "Não entendi o horário. Envie como 15h ou 15:30."); return true; }
     const iso = spWallToUtc(data.date.y, data.date.mo, data.date.d, t.time.h, t.time.mi).toISOString();
-    await showPreview(ctx, { ag_op: data.ag_op, patient_id: data.patient_id, patient_name: data.patient_name, patient_initials: data.patient_initials, starts_at: iso, duration_min: data.duration_min ?? 50, modality: data.modality ?? "online", appt_id: data.appt_id });
+    await proceedCreateOrEdit(ctx, { ag_op: data.ag_op, patient_id: data.patient_id, patient_name: data.patient_name, patient_initials: data.patient_initials, starts_at: iso, duration_min: data.duration_min ?? 50, modality: data.modality ?? "online", appt_id: data.appt_id });
     return true;
   }
 
@@ -310,7 +414,7 @@ export async function continueAgenda(ctx: AgendaCtx): Promise<boolean> {
       return true;
     }
     if (!r.iso) { await sendText(ctx.phone, "Não entendi a data/hora. Tente: quinta 15h, amanhã 10h, 12/06 14h."); return true; }
-    await showPreview(ctx, { ag_op: data.ag_op, patient_id: data.patient_id, patient_name: data.patient_name, patient_initials: data.patient_initials, starts_at: r.iso, duration_min: data.duration_min ?? 50, modality: data.modality ?? "online", appt_id: data.appt_id });
+    await proceedCreateOrEdit(ctx, { ag_op: data.ag_op, patient_id: data.patient_id, patient_name: data.patient_name, patient_initials: data.patient_initials, starts_at: r.iso, duration_min: data.duration_min ?? 50, modality: data.modality ?? "online", appt_id: data.appt_id });
     return true;
   }
 
@@ -318,11 +422,9 @@ export async function continueAgenda(ctx: AgendaCtx): Promise<boolean> {
     const url = text.match(/https?:\/\/[^\s]+/i)?.[0];
     if (url && data.appt_id) {
       await ctx.supabase.from("appointments").update({ meeting_link: url, atualizado_em: new Date().toISOString() }).eq("id", data.appt_id);
-      await sendText(ctx.phone, "🔗 Link adicionado à sessão. Tudo certo!");
-    } else {
-      await sendText(ctx.phone, "Ok, sem link por enquanto. Você pode colar depois com \"o link é https://...\".");
+      await sendText(ctx.phone, "🔗 Link adicionado à sessão.");
     }
-    await patchSession(ctx.supabase, ctx.phone, { mode: "menu", flow_step: null, flow_data: null });
+    await finishWithNextSteps(ctx, data.patient_id ?? null, data.patient_name ?? "");
     return true;
   }
 
@@ -330,7 +432,45 @@ export async function continueAgenda(ctx: AgendaCtx): Promise<boolean> {
 }
 
 /** Trata respostas de botão/lista da agenda. Retorna true se tratou. */
-export async function handleAgendaReply(ctx: AgendaCtx, replyId: string): Promise<{ handled: boolean; lockedPatient?: Patient | null }> {
+export async function handleAgendaReply(ctx: AgendaCtx, replyId: string): Promise<AgendaReplyResult> {
+  // Agendamento guiado: botão "Selecionar paciente".
+  if (replyId === AG_PICK_PATIENT) {
+    await showSchedulePatientList(ctx);
+    return { handled: true };
+  }
+  // Escolha de paciente no picker do agendamento → resume o agendamento.
+  if (replyId.startsWith(AG_PT_PREFIX)) {
+    const patient = await getPatientById(ctx.supabase, ctx.userId, replyId.slice(AG_PT_PREFIX.length));
+    if (!patient) { await sendText(ctx.phone, "Paciente não encontrado."); return { handled: true }; }
+    await startAgendar(ctx, patient, "");
+    return { handled: true };
+  }
+  // Duração escolhida (30/50/60/Outro).
+  if (replyId.startsWith(AG_DUR_PREFIX)) {
+    const op = (ctx.session?.flow_data ?? {}) as unknown as PendingOp;
+    if (!op?.starts_at) { await sendText(ctx.phone, "Não há agendamento em andamento."); return { handled: true }; }
+    const suf = replyId.slice(AG_DUR_PREFIX.length);
+    if (suf === "other") {
+      await patchSession(ctx.supabase, ctx.phone, { mode: "agenda", flow_step: "agenda_dur_other", flow_data: op as unknown as Record<string, unknown> });
+      await sendText(ctx.phone, "Quantos minutos? (ex.: 45)");
+      return { handled: true };
+    }
+    await showPreview(ctx, { ...op, duration_min: Math.max(10, Math.min(240, +suf || op.duration_min)) });
+    return { handled: true };
+  }
+  // Pular o link.
+  if (replyId === AG_SKIP_LINK) {
+    const data = (ctx.session?.flow_data ?? {}) as Record<string, any>;
+    await finishWithNextSteps(ctx, data.patient_id ?? null, data.patient_name ?? "");
+    return { handled: true };
+  }
+  // Próximo passo após salvar: planejar / agendar outra.
+  if (replyId === AG_NEXT_PLAN || replyId === AG_NEXT_AGAIN) {
+    const data = (ctx.session?.flow_data ?? {}) as Record<string, any>;
+    const patient = data.patient_id ? await getPatientById(ctx.supabase, ctx.userId, data.patient_id) : null;
+    return { handled: true, action: replyId === AG_NEXT_PLAN ? "planning" : "agendar_again", patient };
+  }
+
   // Tocar num compromisso do panorama: trava o paciente e mostra a agenda dele.
   if (replyId.startsWith(APPT_PREFIX)) {
     const apptId = replyId.slice(APPT_PREFIX.length);
@@ -368,8 +508,15 @@ export async function handleAgendaReply(ctx: AgendaCtx, replyId: string): Promis
         user_id: ctx.userId, patient_id: op.patient_id, patient_initials: op.patient_initials,
         starts_at: op.starts_at, duration_min: op.duration_min, modality: op.modality, status: "agendado",
       }).select("id").maybeSingle();
-      await patchSession(ctx.supabase, ctx.phone, { mode: "agenda", flow_step: "await_link", flow_data: { appt_id: inserted?.id } });
-      await sendText(ctx.phone, `✅ Sessão agendada para *${op.patient_name}* — ${fmtDiaCurto(op.starts_at)} ${fmtHora(op.starts_at)}.\n\nQuer adicionar o link da reunião? Envie a URL, ou digite *pular*.`);
+      await patchSession(ctx.supabase, ctx.phone, {
+        mode: "agenda", flow_step: "await_link",
+        flow_data: { appt_id: inserted?.id, patient_id: op.patient_id, patient_name: op.patient_name },
+      });
+      await sendButtons(
+        ctx.phone,
+        `✅ Sessão agendada para *${op.patient_name}* — ${fmtDiaCurto(op.starts_at)} ${fmtHora(op.starts_at)}.\n\nEnvie a *URL* do link da reunião, ou toque em *Pular*.`,
+        [{ id: AG_SKIP_LINK, title: "Pular" }],
+      );
       return { handled: true };
     }
     if (op.ag_op === "edit" && op.appt_id) {

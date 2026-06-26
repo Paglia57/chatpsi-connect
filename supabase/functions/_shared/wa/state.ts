@@ -58,6 +58,11 @@ const PT_AGENDA = 'pt_agenda';
 const PT_PLANEJAR = 'pt_planejar';
 const EV_USE_PLAN = 'ev_use_plan';
 const EV_NO_PLAN = 'ev_no_plan';
+// Rascunho da evolução: acumular relato → gerar prévia → revisar (Salvar/Ajustar/Cancelar).
+const EV_GENERATE = 'ev_generate';
+const EV_SAVE = 'ev_save';
+const EV_ADJUST = 'ev_adjust';
+const EV_CANCEL = 'ev_cancel';
 const MENU_EXIT = 'ctx_exit';
 // Itens do menu inicial agrupado (Antes/Durante/Depois) que dependem de um paciente.
 const MENU_PLANEJAR = 'menu_planejar';
@@ -305,10 +310,21 @@ export async function handleConversation(opts: {
     await sendPatientMenu(updated);
   };
 
-  const generateEvolution = async (patient: Patient) => {
-    const relato = input.text;
-    if (!relato || relato.trim().length < 3) {
-      await askExit('Não recebi o relato da sessão. Pode ditar (áudio) ou escrever o que aconteceu.');
+  // Aviso/instrução do rascunho com os botões de gerar e sair.
+  const evoCapturePrompt = async (body: string) => {
+    await sendButtons(phone, body, [
+      { id: EV_GENERATE, title: 'Gerar evolução' },
+      { id: EV_CANCEL, title: 'Cancelar' },
+    ]);
+  };
+
+  // Gera a PRÉVIA da evolução a partir do relato acumulado — NÃO grava ainda.
+  const generatePreview = async (patient: Patient) => {
+    const fd = (session?.flow_data as Record<string, unknown> | null) ?? {};
+    const parts = Array.isArray(fd.relato_parts) ? (fd.relato_parts as string[]) : [];
+    const relato = parts.join('\n').trim();
+    if (relato.length < 3) {
+      await evoCapturePrompt('Ainda não recebi o relato. Pode ditar ou escrever o que aconteceu na sessão.');
       return;
     }
 
@@ -320,7 +336,7 @@ export async function handleConversation(opts: {
       : 'Sem evoluções anteriores.';
 
     // Conexão com o planejamento: se o psicólogo optou por partir do plano, usá-lo como base.
-    const usePlanId = (session?.flow_data as Record<string, unknown> | null)?.use_plan_id as string | undefined;
+    const usePlanId = fd.use_plan_id as string | undefined;
     let planPrefix = '';
     if (usePlanId) {
       const { data: plan } = await supabase
@@ -341,27 +357,47 @@ export async function handleConversation(opts: {
     const result = await chat({
       task: 'clinico', personaSlug: CLINICO_WA, userText, tools: clinicalTools(displayName), shadowKey: phone,
     });
-
-    await sendText(phone, result.text);
     await logWaMessage(supabase, phone, 'ai', result.text, result.usage);
 
+    // Guarda o rascunho gerado para a confirmação (nada é gravado ainda — regra de ouro).
+    await patchSession(supabase, phone, {
+      flow_step: 'evo_preview',
+      flow_data: {
+        evo_output: result.text,
+        relato,
+        input_type: (fd.input_type as string) ?? 'text',
+        audio_url: (fd.audio_url as string) ?? null,
+        use_plan_id: usePlanId ?? null,
+      },
+    });
+    await sendText(phone, result.text);
+    await sendButtons(phone, 'Salvar esta evolução? Você pode revisar e editar depois.', [
+      { id: EV_SAVE, title: 'Salvar' },
+      { id: EV_ADJUST, title: 'Ajustar' },
+      { id: EV_CANCEL, title: 'Cancelar' },
+    ]);
+  };
+
+  // Grava a evolução já confirmada na prévia (Salvar).
+  const saveEvolution = async (patient: Patient) => {
+    const fd = (session?.flow_data as Record<string, unknown> | null) ?? {};
+    const evoOutput = (fd.evo_output as string) ?? '';
+    if (!evoOutput) { await sendPatientMenu(patient); return; }
+
     if (allowed) {
-      let audioUrl: string | null = null;
-      if (input.kind === 'audio' && input.audio) {
-        audioUrl = await uploadSessionAudio(supabase, userId, input.audio.bytes, input.audio.mimeType);
-      }
       await insertEvolution(supabase, {
         user_id: userId,
         patient_id: patient.id,
         patient_initials: patient.initials,
-        input_type: input.kind === 'audio' ? 'audio' : 'text',
-        input_content: relato,
-        output_content: result.text,
+        input_type: (fd.input_type as string) === 'audio' ? 'audio' : 'text',
+        input_content: (fd.relato as string) ?? '',
+        output_content: evoOutput,
         approach: patient.approach,
-        audio_url: audioUrl,
+        audio_url: (fd.audio_url as string) ?? null,
       });
       await bumpPatientSession(supabase, patient);
       // Marca o plano como usado e liga à evolução recém-criada (best-effort).
+      const usePlanId = fd.use_plan_id as string | undefined;
       if (usePlanId) {
         const { data: lastEv } = await supabase
           .from('evolutions').select('id')
@@ -371,16 +407,44 @@ export async function handleConversation(opts: {
           .update({ status: 'usado', used_in_evolution_id: lastEv?.id ?? null, atualizado_em: new Date().toISOString() })
           .eq('id', usePlanId);
       }
+      await sendText(phone, '✅ Evolução salva na ficha.');
     } else {
       await sendText(phone, '_(Modo teste: esta evolução não foi salva no prontuário porque seu número não está na allowlist.)_');
     }
-    await patchSession(supabase, phone, { last_intent: null, flow_data: null });
+    await patchSession(supabase, phone, { last_intent: null, flow_step: null, flow_data: null });
     // Continuidade: oferecer o próximo passo por botões (paciente segue travado).
     await sendButtons(phone, 'Evolução pronta. Próximo passo?', [
       { id: PT_PLANEJAR, title: 'Planejar próxima' },
       { id: PT_AGENDA, title: 'Agendar' },
       { id: MENU_EXIT, title: 'Menu' },
     ]);
+  };
+
+  // Acumula o relato (texto/áudio) SEM gerar. "pronto" dispara a geração da prévia.
+  const accumulateRelato = async (patient: Patient) => {
+    if (input.kind !== 'interactive' && normalizeText(input.text ?? '') === 'pronto') {
+      await generatePreview(patient);
+      return;
+    }
+    const fd = { ...((session?.flow_data as Record<string, unknown> | null) ?? {}) } as Record<string, unknown>;
+    const parts = Array.isArray(fd.relato_parts) ? (fd.relato_parts as string[]).slice() : [];
+    const text = (input.text ?? '').trim();
+    let hadContent = false;
+    if (text) { parts.push(text); hadContent = true; }
+    if (input.kind === 'audio' && input.audio) {
+      const url = await uploadSessionAudio(supabase, userId, input.audio.bytes, input.audio.mimeType);
+      if (url) fd.audio_url = url;
+      fd.input_type = 'audio';
+      hadContent = true;
+    }
+    if (!hadContent) {
+      await evoCapturePrompt('Ainda não recebi o relato. Pode ditar ou escrever o que aconteceu na sessão.');
+      return;
+    }
+    fd.relato_parts = parts;
+    if (!fd.input_type) fd.input_type = 'text';
+    // Acúmulo silencioso: persiste o relato e não responde a cada mensagem.
+    await patchSession(supabase, phone, { flow_data: fd });
   };
 
   const runPlan = async (patient: Patient) => {
@@ -426,7 +490,20 @@ export async function handleConversation(opts: {
     await logWaMessage(supabase, phone, 'ai', result.text, result.usage);
   };
 
-  // Inicia a evolução de um paciente (já travado): oferta de plano recente, senão pede o relato.
+  // Abre o RASCUNHO da evolução: estado que acumula o relato (texto/áudio) sem gerar.
+  const openEvoCapture = async (patient: Patient, usePlanId?: string) => {
+    await patchSession(supabase, phone, {
+      last_intent: 'evolution',
+      flow_step: 'evo_capture',
+      flow_data: usePlanId ? { relato_parts: [], use_plan_id: usePlanId } : { relato_parts: [] },
+    });
+    await evoCapturePrompt(
+      `Pode ditar ou escrever o relato da sessão de *${patient.full_name}* (em quantas mensagens quiser). ` +
+        `Quando terminar, toque em *Gerar evolução* — você poderá revisar e editar antes de salvar.`,
+    );
+  };
+
+  // Inicia a evolução de um paciente (já travado): oferta de plano recente, senão abre o rascunho.
   const startEvolutionForPatient = async (patient: Patient) => {
     const { data: plan } = await supabase
       .from('session_plans').select('id')
@@ -441,8 +518,7 @@ export async function handleConversation(opts: {
       ]);
       return;
     }
-    await patchSession(supabase, phone, { last_intent: 'evolution' });
-    await askExit('Pode ditar (áudio) ou escrever o relato da sessão. Vou gerar a evolução a partir dele.');
+    await openEvoCapture(patient);
   };
 
   // Executa uma ação pendente do menu inicial após o paciente ser escolhido.
@@ -547,15 +623,59 @@ export async function handleConversation(opts: {
         return;
       }
       case EV_USE_PLAN: {
+        if (!lockedId) { await sendMenu(); return; }
+        const patient = await getPatientById(supabase, userId, lockedId);
+        if (!patient) { await sendMenu(); return; }
         const offered = (session?.flow_data as Record<string, unknown> | null)?.offer_plan_id as string | undefined;
-        await patchSession(supabase, phone, { last_intent: 'evolution', flow_data: offered ? { use_plan_id: offered } : null });
-        await askExit('Ótimo — vou considerar o seu plano. Pode ditar (áudio) ou escrever o relato da sessão.');
+        await openEvoCapture(patient, offered);
         return;
       }
-      case EV_NO_PLAN:
-        await patchSession(supabase, phone, { last_intent: 'evolution', flow_data: null });
-        await askExit('Sem problema. Pode ditar (áudio) ou escrever o relato da sessão.');
+      case EV_NO_PLAN: {
+        if (!lockedId) { await sendMenu(); return; }
+        const patient = await getPatientById(supabase, userId, lockedId);
+        if (!patient) { await sendMenu(); return; }
+        await openEvoCapture(patient);
         return;
+      }
+      case EV_GENERATE: {
+        if (!lockedId) { await sendMenu(); return; }
+        const patient = await getPatientById(supabase, userId, lockedId);
+        if (!patient) { await sendMenu(); return; }
+        await generatePreview(patient);
+        return;
+      }
+      case EV_SAVE: {
+        if (!lockedId) { await sendMenu(); return; }
+        const patient = await getPatientById(supabase, userId, lockedId);
+        if (!patient) { await sendMenu(); return; }
+        await saveEvolution(patient);
+        return;
+      }
+      case EV_ADJUST: {
+        if (!lockedId) { await sendMenu(); return; }
+        const patient = await getPatientById(supabase, userId, lockedId);
+        if (!patient) { await sendMenu(); return; }
+        const fd = (session?.flow_data as Record<string, unknown> | null) ?? {};
+        await patchSession(supabase, phone, {
+          last_intent: 'evolution',
+          flow_step: 'evo_capture',
+          flow_data: {
+            relato_parts: Array.isArray(fd.relato_parts) ? fd.relato_parts : (fd.relato ? [fd.relato] : []),
+            ...(fd.use_plan_id ? { use_plan_id: fd.use_plan_id } : {}),
+            ...(fd.input_type ? { input_type: fd.input_type } : {}),
+            ...(fd.audio_url ? { audio_url: fd.audio_url } : {}),
+          },
+        });
+        await evoCapturePrompt('O que você quer complementar ou corrigir? Pode ditar ou escrever; depois toque em *Gerar evolução*.');
+        return;
+      }
+      case EV_CANCEL: {
+        const patient = lockedId ? await getPatientById(supabase, userId, lockedId) : null;
+        await patchSession(supabase, phone, { last_intent: null, flow_step: null, flow_data: null });
+        await sendText(phone, 'Evolução descartada. Nada foi salvo.');
+        if (patient) await sendPatientMenu(patient); else await sendMenu();
+        return;
+      }
       case PT_HISTORY: {
         if (!lockedId) { await sendMenu(); return; }
         const patient = await getPatientById(supabase, userId, lockedId);
@@ -706,7 +826,8 @@ export async function handleConversation(opts: {
   // 1.6. Comandos de texto de agenda — de qualquer lugar (exceto captura de nome/cadastro/edição).
   if (
     input.kind !== 'interactive' && (input.text ?? '').trim() &&
-    mode !== 'cadastro' && session?.flow_step !== 'await_name' && session?.flow_step !== 'edit_value'
+    mode !== 'cadastro' && session?.flow_step !== 'await_name' && session?.flow_step !== 'edit_value' &&
+    session?.flow_step !== 'evo_capture'
   ) {
     const n = normalizeText(input.text ?? '');
     if (AGENDA_WORDS.has(n)) {
@@ -729,7 +850,8 @@ export async function handleConversation(opts: {
   // 1.8. Comando "planejar" (precisa de paciente travado).
   if (
     input.kind !== 'interactive' && (input.text ?? '').trim() &&
-    mode !== 'cadastro' && session?.flow_step !== 'await_name' && session?.flow_step !== 'edit_value'
+    mode !== 'cadastro' && session?.flow_step !== 'await_name' && session?.flow_step !== 'edit_value' &&
+    session?.flow_step !== 'evo_capture'
   ) {
     const n = normalizeText(input.text ?? '');
     if (n === 'planejar' || n === 'planeja' || n.startsWith('planeja ') || n.startsWith('planejar ')) {
@@ -799,10 +921,20 @@ export async function handleConversation(opts: {
     if (!patient) { await sendMenu(); return; }
     if (session?.last_intent === 'edit') {
       await applyPatientEdit(patient);
+    } else if (session?.flow_step === 'evo_capture') {
+      await accumulateRelato(patient);
+    } else if (session?.flow_step === 'evo_preview') {
+      // Aguardando a confirmação da prévia: reexibe os botões (não perde o rascunho).
+      await sendButtons(phone, 'Toque em *Salvar*, *Ajustar* ou *Cancelar* para esta evolução.', [
+        { id: EV_SAVE, title: 'Salvar' },
+        { id: EV_ADJUST, title: 'Ajustar' },
+        { id: EV_CANCEL, title: 'Cancelar' },
+      ]);
     } else if (session?.last_intent === 'plan') {
       await runPlan(patient);
     } else {
-      await generateEvolution(patient);
+      // Sem rascunho/intent ativo: não gerar evolução "nua" — reapresenta o menu do paciente.
+      await sendPatientMenu(patient);
     }
     return;
   }

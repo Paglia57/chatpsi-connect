@@ -24,20 +24,27 @@ const POLL_INTERVAL_MS = 1_500;
  * sombra ligada — dispara a comparação com a Responses em paralelo.
  */
 export async function chat(opts: ChatOptions): Promise<ChatResult> {
-  const instructions = opts.instructions ??
-    (opts.personaSlug ? await getPersona(opts.personaSlug) : undefined);
+  const backend = getBackend();
   const assistantId = opts.assistantId ?? assistantIdForPersona(opts.personaSlug);
   // model_hint da persona pode ser ligado aqui no futuro; hoje todas usam o default.
   const model = opts.model ?? defaultModel();
+
+  // Instruções (persona) só são usadas pela Responses ou pelo modo sombra. Sob o backend
+  // 'assistants' (default em produção) o assistant já tem suas próprias instruções, então
+  // evitamos a leitura à tabela de personas — desacoplando o caminho de produção dela.
+  const shadow = shouldShadow(opts.shadowKey);
+  const instructions = (backend === "responses" || shadow)
+    ? (opts.instructions ?? (opts.personaSlug ? await getPersona(opts.personaSlug) : undefined))
+    : opts.instructions;
   const resolved: ResolvedChat = { instructions, assistantId, model };
 
-  if (getBackend() === "responses") {
+  if (backend === "responses") {
     return await chatViaOpenAIResponses(opts, resolved);
   }
 
   const started = Date.now();
   const result = await chatViaOpenAIAssistants(opts, resolved);
-  if (shouldShadow(opts.shadowKey)) {
+  if (shadow) {
     runShadow(opts, resolved, result, Date.now() - started);
   }
   return result;

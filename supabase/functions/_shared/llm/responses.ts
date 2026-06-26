@@ -11,6 +11,15 @@ import { executeTool, toolsToMap } from "./toolrunner.ts";
 const RESPONSES_URL = "https://api.openai.com/v1/responses";
 const MAX_TOOL_ROUNDS = 6;
 
+/**
+ * Só encadeia via previous_response_id se o id guardado for realmente da Responses
+ * (`resp_...`). Ids legados das Assistants (`thread_...`) são ignorados — o turno começa
+ * do zero e o novo `resp_...` retornado passa a ser guardado, auto-curando o estado no flip.
+ */
+export function asPreviousResponseId(id: string | undefined): string | undefined {
+  return id && id.startsWith("resp_") ? id : undefined;
+}
+
 async function responsesRequest(body: Record<string, unknown>): Promise<any> {
   const apiKey = Deno.env.get("OPENAI_API_KEY");
   if (!apiKey) throw new Error("OPENAI_API_KEY não configurada no ambiente");
@@ -85,7 +94,7 @@ export async function chatViaOpenAIResponses(opts: ChatOptions, resolved: Resolv
     model: resolved.model,
     instructions: resolved.instructions,
     input: buildInitialInput(opts),
-    previous_response_id: opts.threadId || undefined,
+    previous_response_id: asPreviousResponseId(opts.threadId),
     store: true,
     ...toolsFields,
   });
@@ -138,7 +147,7 @@ export async function chatStreamViaResponses(
       model: resolved.model,
       instructions: resolved.instructions,
       input: buildInitialInput(opts),
-      previous_response_id: opts.threadId || undefined,
+      previous_response_id: asPreviousResponseId(opts.threadId),
       store: true,
       stream: true,
     }),

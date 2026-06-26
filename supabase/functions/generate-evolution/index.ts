@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { getPersona } from "../_shared/personas/resolve.ts";
 import { defaultModel, getBackend } from "../_shared/llm/config.ts";
-import { chatStreamViaResponses } from "../_shared/llm/responses.ts";
+import { asPreviousResponseId, chatStreamViaResponses } from "../_shared/llm/responses.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -136,7 +136,8 @@ serve(async (req) => {
       if (getBackend() === "responses") {
         const baseInstructions = await getPersona("paciente_thread");
         // patient.openai_thread_id passa a guardar o previous_response_id (encadeamento).
-        const prevResponseId = patient.openai_thread_id || undefined;
+        // Ids legados de thread da Assistants são ignorados (remonta contexto do histórico).
+        const prevResponseId = asPreviousResponseId(patient.openai_thread_id || undefined);
 
         let instructions = baseInstructions;
         if (!prevResponseId) {

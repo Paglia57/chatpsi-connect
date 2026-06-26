@@ -161,7 +161,7 @@ export async function handleConversation(opts: {
       [
         { id: MENU_CHOOSE, title: 'Escolher paciente' },
         { id: MENU_CREATE, title: 'Cadastrar paciente' },
-        { id: MENU_FREE, title: 'Conversar sem paciente', description: 'Sem vincular a um paciente' },
+        { id: MENU_FREE, title: 'Conversar com chat', description: 'Sem vincular a um paciente' },
         { id: MENU_AGENDA, title: 'Agenda' },
       ],
       'Início',

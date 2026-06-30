@@ -16,20 +16,15 @@ do Guru, o mapa status→ação e o teste de ponta a ponta.
 
 | Secret | Obrigatório | Para quê |
 |---|---|---|
-| `GURU_API_TOKEN` | **Sim** | Validar o `api_token` do payload. Sem ele, **todos** os eventos são rejeitados (401). |
-| `WA_TEST_ALLOWLIST` | Sim (fase de teste) | CSV de telefones que podem ser processados/notificados. **Vazio = nada é processado.** |
 | `WHATSAPP_TOKEN` | Sim | Token da WhatsApp Cloud API (já usado pelo `whatsapp-webhook`). |
 | `WHATSAPP_PHONE_NUMBER_ID` | Sim | ID do número da Cloud API (já existente). |
 | `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` | Sim | Plataforma (geralmente já presentes). |
+| `GURU_API_TOKEN` | Não (inerte) | A validação de origem por `api_token` foi **desativada em produção** (decisão de produto). O secret não é mais lido; pode existir ou não. |
+| `WA_TEST_ALLOWLIST` | Não (inerte) | A allowlist de teste foi **removida em produção**. Não bloqueia mais ninguém; sua ausência não quebra nada. |
 
-Via CLI (exemplo):
-```bash
-supabase secrets set GURU_API_TOKEN="o-token-que-voce-definir-no-guru"
-supabase secrets set WA_TEST_ALLOWLIST="5511999998888,5511888887777"
-```
-
-> O `GURU_API_TOKEN` é um valor que **você define** e informa no painel do Guru (o Guru
-> envia esse mesmo valor no campo `api_token` do payload). Use um valor longo e aleatório.
+> **Produção:** o webhook do Guru processa qualquer assinante **sem exigir `api_token`**
+> e a `WA_TEST_ALLOWLIST` não restringe mais o atendimento. Para voltar a exigir o token,
+> reativar a validação em `guru-webhook/index.ts` (há comentário marcando o ponto).
 
 ### 1.2 Migração
 
@@ -58,7 +53,8 @@ boas-vindas. Sem isso, o template é enviado **sem** o anexo.
 1. Acesse **Configurações → Webhooks → Adicionar**.
 2. Crie um webhook de **ASSINATURA** apontando para a URL:
    `https://rrdvivxdasezvhfbetra.supabase.co/functions/v1/guru-webhook`
-3. Informe o **token** no campo apropriado (o mesmo valor de `GURU_API_TOKEN`).
+3. Token: **não é exigido** (a validação por `api_token` está desativada). Se o painel
+   pedir um valor obrigatório, pode preencher qualquer um — o webhook não confere.
 4. **Selecione os status** que disparam o webhook (ver o mapa na seção 3).
 5. Deixe o webhook **Ativo** e salve.
 6. (Opcional) Se houver **venda avulsa**, repita criando um webhook de **VENDA** na mesma
@@ -97,9 +93,9 @@ suspensão**.
 
 ## 4. Teste de ponta a ponta
 
-1. Garanta que o telefone de teste está na `WA_TEST_ALLOWLIST`.
-2. Faça uma **assinatura/pagamento de teste** no Guru (ou reenvie um evento pela Auditoria).
-3. Confira que o evento chegou e foi processado:
+1. Faça uma **assinatura/pagamento de teste** no Guru (ou reenvie um evento pela Auditoria).
+   Em produção não há mais allowlist — qualquer assinante é processado.
+2. Confira que o evento chegou e foi processado:
    - **Guru → Auditoria**: ícone **azul** (200).
    - **Supabase → `webhook_events`**: linha `direction='inbound'`, `source='guru'`.
    - **Supabase → `subscription_events`**: uma linha com a `action` esperada
@@ -108,18 +104,15 @@ suspensão**.
      atualizados para o e-mail de teste.
    - **WhatsApp**: chegada do template correspondente (boas-vindas com link de senha +
      Manual, aviso de pagamento, ou cancelamento).
-4. **Se não chegar:** veja o ícone vermelho na Auditoria do Guru (erro de entrega), os
+3. **Se não chegar:** veja o ícone vermelho na Auditoria do Guru (erro de entrega), os
    **logs da função** (Supabase → Edge Functions → `guru-webhook` → Logs) e as tabelas
-   `webhook_events` / `subscription_events`. Causas comuns: `GURU_API_TOKEN` divergente
-   (401), telefone fora da `WA_TEST_ALLOWLIST` (só loga `ignorou`), ou template ainda não
-   aprovado na Meta.
+   `webhook_events` / `subscription_events`. Causa comum: template ainda não aprovado na
+   Meta (o envio falha, mas o `profile` é atualizado mesmo assim).
 
 ---
 
 ## Checklist rápido
 
-- [ ] `GURU_API_TOKEN` cadastrado (mesmo valor no painel do Guru).
-- [ ] `WA_TEST_ALLOWLIST` com o(s) telefone(s) de teste.
 - [ ] `WHATSAPP_TOKEN` e `WHATSAPP_PHONE_NUMBER_ID` presentes.
 - [ ] Migração aplicada (`supabase db push`).
 - [ ] Função publicada (`supabase functions deploy guru-webhook`).
@@ -128,4 +121,5 @@ suspensão**.
 - [ ] Manual de Uso enviado em **/admin/assinaturas** (opcional).
 - [ ] Webhook de assinatura criado e **Ativo** no Guru, apontando para a URL.
 - [ ] Teste de ponta a ponta validado.
-- [ ] **No cutover:** ajustar/remover a allowlist e desligar o webhook do n8n.
+- [ ] **No cutover:** desligar o webhook do n8n (token/allowlist já desativados no código).
+- [ ] (Opcional/segurança) reativar a validação de `api_token` quando for endurecer a segurança.

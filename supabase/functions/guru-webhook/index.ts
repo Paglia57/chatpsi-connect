@@ -2,9 +2,9 @@
 // provisiona o psicólogo, ativa/desativa o acesso (profiles.subscription_active)
 // e notifica por TEMPLATE oficial da Meta (Cloud API).
 //
-// Migra o comportamento do n8n para dentro do app. Roda EM PARALELO ao n8n na
-// fase de teste: só processa/envia para telefones na allowlist WA_TEST_ALLOWLIST
-// (evita mensagem duplicada e provisionamento indevido em produção).
+// Migra o comportamento do n8n para dentro do app. Em produção: processa qualquer
+// assinante (allowlist de teste removida) e a validação de origem por api_token está
+// desativada por decisão de produto (reativar antes de endurecer a segurança).
 //
 // Não toca no n8n; não usa a tabela legada "usuarios". Segredos só via Deno.env.
 
@@ -35,37 +35,6 @@ function toE164BR(raw: string): string {
   if (d.startsWith('55') && d.length >= 12) return d;       // já tem DDI
   if (d.length === 10 || d.length === 11) return '55' + d;  // DDD + número
   return d;                                                 // formato inesperado: não força
-}
-
-/** Formas plausíveis de um número BR (com/sem 55, com/sem 9º dígito) para casar telefones. */
-function phoneForms(raw: string): Set<string> {
-  const d = onlyDigits(raw);
-  const forms = new Set<string>();
-  if (!d) return forms;
-  const noCc = d.startsWith('55') && d.length > 11 ? d.slice(2) : d;
-  for (const base of new Set([d, noCc])) {
-    forms.add(base);
-    if (base.length >= 3 && base[2] !== '9') forms.add(base.slice(0, 2) + '9' + base.slice(2));
-    if (base.length >= 3 && base[2] === '9') forms.add(base.slice(0, 2) + base.slice(3));
-  }
-  return forms;
-}
-
-/**
- * Allowlist da fase de teste. Vazia/ausente => NÃO processa nada (segurança:
- * o n8n ainda está em produção). No cutover, relaxar/remover este gate.
- */
-function phoneMatchesAllowlist(whats: string): boolean {
-  const raw = Deno.env.get('WA_TEST_ALLOWLIST') ?? '';
-  const entries = raw.split(',').map((s) => s.trim()).filter(Boolean);
-  if (entries.length === 0) return false;
-  const want = phoneForms(whats);
-  for (const e of entries) {
-    for (const f of phoneForms(e)) {
-      if (want.has(f)) return true;
-    }
-  }
-  return false;
 }
 
 // --- Log de assinatura (auditoria + idempotência) ---
@@ -372,12 +341,7 @@ serve(async (req) => {
     return new Response('OK', { status: 200, headers: corsHeaders });
   }
 
-  // Validação de autenticidade: api_token do Guru.
-  const expectedToken = Deno.env.get('GURU_API_TOKEN');
-  if (!expectedToken || body?.api_token !== expectedToken) {
-    console.error('[guru-webhook] api_token inválido');
-    return new Response('Unauthorized', { status: 401, headers: corsHeaders });
-  }
+  // Validação de origem (api_token) desativada por decisão de produto — reativar antes de endurecer a segurança.
 
   // Só eventos de assinatura.
   if (body?.webhook_type !== 'subscription') {
@@ -419,14 +383,7 @@ serve(async (req) => {
       return;
     }
 
-    // Gate de allowlist da fase de teste: fora da lista => não provisiona, não envia, só loga.
-    if (!phoneMatchesAllowlist(n.whatsapp)) {
-      console.log(`[guru-webhook] telefone fora da allowlist — apenas log (sub=${n.subscription_id})`);
-      await logSubEvent(supabase, {
-        subscription_id: n.subscription_id, email: n.email, status: n.status, action: 'ignorou', message_sent: false,
-      });
-      return;
-    }
+    // Allowlist de teste removida para produção — acesso clínico segue protegido por identidade (profiles.whatsapp) + assinatura.
 
     try {
       await handleEvent(supabase, n);

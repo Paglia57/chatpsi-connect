@@ -14,8 +14,8 @@ resposta HTTP 200, idempotência, status tratados, resolução do psicólogo e r
 
 | Critério | Status | Evidência (código) |
 |---|---|---|
-| **Validação `api_token`** | ✅ OK | Compara `body.api_token` com `Deno.env.get('GURU_API_TOKEN')`; se faltar o secret ou divergir, responde **401** e não processa. Sem hardcode. |
-| **Resposta HTTP 200** | ✅ OK | 200 imediato + processamento em background (`EdgeRuntime.waitUntil`). 200 também para JSON malformado, `webhook_type` ≠ `subscription`, status ignorado e telefone fora da allowlist — evita retentativa do Guru à toa. |
+| **Validação `api_token`** | ⚠️ Desativada (produção) | A verificação foi **removida por decisão de produto** — o webhook processa sem exigir `api_token` (há comentário no código marcando onde reativar). Trade-off: aberto a chamadas forjadas. Ver "Observação para o go-live". |
+| **Resposta HTTP 200** | ✅ OK | 200 imediato + processamento em background (`EdgeRuntime.waitUntil`). 200 também para JSON malformado, `webhook_type` ≠ `subscription` e status ignorado — evita retentativa do Guru à toa. |
 | **Idempotência** | ✅ OK | `isDuplicateEvent` deduplica `subscription_id`+`status` nas últimas 6h; a regra dos 3 casos de onboarding impede reenvio de boas-vindas/re-inscrição; updates em `profiles` são idempotentes. |
 | **Status tratados** | 🔧 Ajustado | Antes só `canceled` desativava. Agora status terminais (`canceled`/`cancelled`/`expired`/`suspended`/`inactive`) desativam o acesso (ver C1). |
 | **Resolução do psicólogo** | ✅ OK | Busca `profiles` por **e-mail**; grava por **`user_id`** (= `auth.users.id`). Provisiona via `auth.admin.createUser` quando não existe. Não sobrescreve dados clínicos. |
@@ -43,8 +43,7 @@ código do país `55`**. A WhatsApp Cloud API exige E.164 (ex.: `5511999998888`)
 envio poderia falhar ou ir para o número errado.
 
 **Correção:** novo helper `toE164BR()` prefixa `55` defensivamente quando o número BR
-(10–11 dígitos) vem sem DDI; aplicado ao construir `n.whatsapp`. O gate de allowlist
-(`phoneForms`) já normaliza removendo o `55`, então continua casando.
+(10–11 dígitos) vem sem DDI; aplicado ao construir `n.whatsapp`.
 
 ---
 
@@ -60,12 +59,17 @@ envio poderia falhar ou ir para o número errado.
 
 ---
 
-## Observação para o go-live
+## Observação para o go-live (produção)
 
-A `WA_TEST_ALLOWLIST` é **fail-closed**: vazia/ausente → **nada é processado** (só log).
-Isso protege a produção enquanto o n8n ainda roda. **Na virada (cutover)** é preciso
-popular a allowlist com os números reais **ou remover o gate** em `phoneMatchesAllowlist`,
-senão nenhum evento de produção será processado.
+Duas travas de fase de teste foram **removidas** para produção:
 
-Da mesma forma, se `GURU_API_TOKEN` não estiver configurado, **todos** os eventos são
-rejeitados com 401 (fail-closed) — cadastrar o secret é pré-requisito.
+- **`api_token`**: a validação de origem foi **desativada** — o webhook não exige mais o
+  token. ⚠️ Isso deixa o endpoint **aberto a chamadas forjadas** (um POST malicioso poderia
+  provisionar/alterar acesso por e-mail). Decisão consciente de produto; para endurecer,
+  reativar a validação no ponto comentado de `guru-webhook/index.ts`.
+- **`WA_TEST_ALLOWLIST`**: removida — o `guru-webhook` agora processa/envia para **qualquer
+  assinante**, e o canal WhatsApp libera a gravação clínica para todo psicólogo ativo. Os
+  gates reais permanecem: identidade (`profiles.whatsapp`) + assinatura (`subscription_active`).
+
+Na virada, basta **desligar o webhook do n8n** (os secrets `GURU_API_TOKEN`/`WA_TEST_ALLOWLIST`
+ficam inertes — podem existir ou não, não afetam o comportamento).

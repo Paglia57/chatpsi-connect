@@ -115,18 +115,6 @@ function candidatesFor(from: string): string[] {
   return Array.from(forms);
 }
 
-/**
- * Pode gravar em patients/evolutions? Allowlist vazia/ausente => trava desligada
- * (todo assinante ativo grava). Allowlist populada => apenas os números listados (modo teste).
- */
-function isWriteAllowed(from: string): boolean {
-  const raw = Deno.env.get('WA_TEST_ALLOWLIST') ?? '';
-  const list = raw.split(',').map((s) => s.replace(/\D/g, '')).filter(Boolean);
-  if (list.length === 0) return true; // trava desligada: libera todo assinante ativo
-  const digits = from.replace(/\D/g, '');
-  return list.includes(digits);
-}
-
 // --- Resolução de mídia em texto (mantém os bytes do áudio p/ upload) ---
 
 async function resolveMedia(msg: IncomingMessage): Promise<{ text: string; audio?: { bytes: Uint8Array; mimeType: string } }> {
@@ -216,7 +204,8 @@ async function processMessage(supabase: any, msg: IncomingMessage): Promise<void
     phone: msg.from,
     userId: profile.user_id,
     displayName: profile.nickname || profile.name || '',
-    allowed: isWriteAllowed(msg.from),
+    // Allowlist de teste removida para produção — acesso clínico segue protegido por identidade (profiles.whatsapp) + assinatura.
+    allowed: true,
     input,
   });
 }

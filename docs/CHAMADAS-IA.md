@@ -190,7 +190,7 @@ Edge Functions leem via `Deno.env.get()`. No n8n, as chaves OpenAI usam a creden
 | `PERPLEXITY_API_KEY` | `buscarArtigos.ts` |
 | `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` / `SUPABASE_ANON_KEY` | Auth, storage, acesso admin |
 | `WHATSAPP_VERIFY_TOKEN` / `WHATSAPP_TOKEN` / `WHATSAPP_PHONE_NUMBER_ID` / `WHATSAPP_APP_SECRET` | WhatsApp Cloud API |
-| `WA_TEST_ALLOWLIST` | Allowlist de telefones para testes (trava só a gravação pós-confirmação) |
+| `WA_TEST_ALLOWLIST` | Inerte (allowlist de teste removida em produção — não bloqueia mais ninguém) |
 | `BUSCA_ARTIGOS_API_KEY` | (opcional) header do webhook n8n de busca de artigos |
 
 No frontend, variáveis públicas via `import.meta.env.VITE_*` (Vite).

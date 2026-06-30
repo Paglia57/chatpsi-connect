@@ -71,3 +71,6 @@ verify_jwt = false
 
 [functions.whatsapp-webhook]
 verify_jwt = false
+
+[functions.guru-webhook]
+verify_jwt = false

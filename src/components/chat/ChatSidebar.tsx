@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import {
   Home, ClipboardList, Plus, History, Users, MessageCircle, Target, BookOpen,
   PenTool, Settings, Gift, CircleUser, HelpCircle, LogOut, Menu, ChevronDown,
-  ChevronRight, Star, MessageSquare, RotateCcw, Calculator, ShieldCheck, Bot, FileText, Calendar
+  ChevronRight, Star, MessageSquare, RotateCcw, Calculator, ShieldCheck, Bot, FileText, Calendar, CreditCard
 } from 'lucide-react';
 import BetaChip from '@/components/ui/BetaChip';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
@@ -269,6 +269,10 @@ const ChatSidebar = () => {
               <FileText className="h-4 w-4 shrink-0" />
               <span>Planos de ação</span>
             </NavLink>
+            <NavLink to="/admin/assinaturas" onClick={onNavigate} className={navLinkClass(isActive('/admin/assinaturas'))}>
+              <CreditCard className="h-4 w-4 shrink-0" />
+              <span>Assinaturas & Manual</span>
+            </NavLink>
           </>
         )}
 
@@ -445,6 +449,10 @@ const ChatSidebar = () => {
               <NavLink to="/admin/planos-acao" title="Planos de ação"
                 className={`p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg transition-colors ${isActive('/admin/planos-acao') ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground hover:bg-sidebar-accent/50'}`}>
                 <FileText className="h-4 w-4" />
+              </NavLink>
+              <NavLink to="/admin/assinaturas" title="Assinaturas & Manual"
+                className={`p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg transition-colors ${isActive('/admin/assinaturas') ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground hover:bg-sidebar-accent/50'}`}>
+                <CreditCard className="h-4 w-4" />
               </NavLink>
             </>
           )}

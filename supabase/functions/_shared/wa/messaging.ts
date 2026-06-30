@@ -92,6 +92,45 @@ export async function sendText(to: string, body: string): Promise<void> {
   }
 }
 
+export interface TemplateHeaderDocument {
+  link: string;     // URL pública do documento (ex.: Manual de Uso em storage)
+  filename: string; // nome exibido no WhatsApp
+}
+
+/**
+ * Envia uma mensagem de TEMPLATE aprovado da Meta (Cloud API). É o único caminho
+ * para mensagens proativas fora da janela de 24h. `bodyParams` preenche {{1}}, {{2}}...
+ * na ordem; `headerDocument` adiciona um cabeçalho do tipo documento quando informado.
+ * Retorna true se a Graph API aceitou o envio.
+ */
+export async function sendTemplate(
+  to: string,
+  name: string,
+  lang: string,
+  bodyParams: string[],
+  headerDocument?: TemplateHeaderDocument,
+): Promise<boolean> {
+  const components: Record<string, unknown>[] = [];
+  if (headerDocument) {
+    components.push({
+      type: 'header',
+      parameters: [{
+        type: 'document',
+        document: { link: headerDocument.link, filename: headerDocument.filename },
+      }],
+    });
+  }
+  components.push({
+    type: 'body',
+    parameters: bodyParams.map((t) => ({ type: 'text', text: t })),
+  });
+  return await postMessage({
+    to,
+    type: 'template',
+    template: { name, language: { code: lang }, components },
+  });
+}
+
 export interface ReplyButton {
   id: string;
   title: string; // máx 20 chars

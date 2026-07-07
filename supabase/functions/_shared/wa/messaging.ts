@@ -92,6 +92,29 @@ export async function sendText(to: string, body: string): Promise<void> {
   }
 }
 
+export interface DocumentMessage {
+  link: string;      // URL pública do documento (PDF etc.)
+  filename: string;  // nome exibido no WhatsApp
+  caption?: string;  // legenda opcional
+}
+
+/**
+ * Envia um DOCUMENTO como mensagem livre. Só funciona dentro da janela de 24h
+ * (mensagem iniciada pelo usuário nas últimas 24h) — e aí é GRÁTIS. Fora da janela
+ * a Graph API recusa; use sendTemplate. Retorna true se a Graph API aceitou.
+ */
+export async function sendDocument(to: string, doc: DocumentMessage): Promise<boolean> {
+  return await postMessage({
+    to,
+    type: 'document',
+    document: {
+      link: doc.link,
+      filename: doc.filename,
+      ...(doc.caption ? { caption: doc.caption.slice(0, 1024) } : {}),
+    },
+  });
+}
+
 export interface TemplateHeaderDocument {
   link: string;     // URL pública do documento (ex.: Manual de Uso em storage)
   filename: string; // nome exibido no WhatsApp

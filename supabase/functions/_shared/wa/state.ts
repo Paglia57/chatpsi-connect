@@ -100,6 +100,27 @@ function normalizeText(t: string): string {
 /** Palavras-chave que acionam a saída de contexto (já normalizadas, sem acento). */
 const ESCAPE_WORDS = new Set(['menu', 'trocar', 'trocar de paciente', 'sair', 'voltar', 'inicio']);
 
+/**
+ * Rotula, para o LLM conversacional, a mídia que o usuário mandou. Áudio/imagem/documento
+ * chegam já convertidos em texto (transcrição/descrição/extração); sem essa marcação a IA
+ * não sabe que o texto VEIO de uma mídia e, quando o usuário anuncia "vou mandar um áudio",
+ * fica esperando o áudio em vez de tratar a transcrição como o próprio áudio.
+ * Usado APENAS no MODO LIVRE — comandos, match de paciente e relato clínico seguem no texto cru.
+ */
+function labelMediaForLLM(kind: ConversationInput['kind'], text: string): string {
+  const t = (text ?? '').trim();
+  switch (kind) {
+    case 'audio':
+      return `[O usuário enviou uma mensagem de ÁUDIO. Abaixo está a transcrição — trate como se ele tivesse falado isto agora; é o áudio que ele mencionou, não fique esperando outro.]\n${t}`;
+    case 'image':
+      return `[O usuário enviou uma IMAGEM. Abaixo está a descrição do conteúdo dela — é a imagem que ele enviou, use-a na resposta.]\n${t}`;
+    case 'document':
+      return `[O usuário enviou um DOCUMENTO. Abaixo está o conteúdo extraído dele — é o documento que ele enviou, use-o na resposta.]\n${t}`;
+    default:
+      return t;
+  }
+}
+
 export interface ConversationInput {
   kind: 'text' | 'audio' | 'image' | 'document' | 'interactive';
   text: string;                                   // texto derivado (transcrição/descrição) ou body
@@ -178,7 +199,7 @@ export async function handleConversation(opts: {
     });
     // Saudação "Antes · Durante · Depois" + menu agrupado em seções.
     const body =
-      `Olá, ${displayName}! O ChatPsi te acompanha na sessão inteira:\n` +
+      `Olá, ${displayName}! O ChatPsi te acompanha em toda a sua prática clínica:\n` +
       `🗓️ *Antes* — planejar e agendar\n` +
       `💬 *Durante* — conversar e anotar\n` +
       `📝 *Depois* — registrar a evolução\n\n` +
@@ -373,7 +394,7 @@ export async function handleConversation(opts: {
       },
     });
     await sendText(phone, result.text);
-    await sendButtons(phone, 'Salvar esta evolução? Você pode revisar e editar depois.', [
+    await sendButtons(phone, 'Isso é apenas um rascunho. A responsabilidade de revisar e editar é sua.\n\nSalvar esta evolução?', [
       { id: EV_SAVE, title: 'Salvar' },
       { id: EV_ADJUST, title: 'Ajustar' },
       { id: EV_CANCEL, title: 'Cancelar' },
@@ -482,7 +503,7 @@ export async function handleConversation(opts: {
       return;
     }
     const result = await chat({
-      task: 'clinico', personaSlug: CLINICO_WA, userText: text,
+      task: 'clinico', personaSlug: CLINICO_WA, userText: labelMediaForLLM(input.kind, text),
       threadId: session?.thread_id ?? undefined, tools: clinicalTools(displayName), shadowKey: phone,
     });
     if (result.threadId && result.threadId !== session?.thread_id) {
@@ -538,7 +559,7 @@ export async function handleConversation(opts: {
   const showHelp = async () => {
     await sendText(
       phone,
-      `*O ChatPsi te acompanha na sessão inteira:*\n\n` +
+      `*O ChatPsi te acompanha em toda a sua prática clínica:*\n\n` +
         `🗓️ *Antes* — planeje a próxima sessão e organize sua agenda.\n` +
         `💬 *Durante* — converse com o chat clínico (com ou sem paciente) e tire dúvidas.\n` +
         `📝 *Depois* — registre a evolução do atendimento.\n\n` +
@@ -757,11 +778,6 @@ export async function handleConversation(opts: {
         return;
       case 'iniciais':
         data.initials = text;
-        await patchSession(supabase, phone, { flow_data: data, flow_step: 'abordagem' });
-        await askExit('Qual a *abordagem* terapêutica? (ex.: TCC, Psicanálise)');
-        return;
-      case 'abordagem':
-        data.approach = text;
         await patchSession(supabase, phone, { flow_data: data, flow_step: 'queixa' });
         await askExit('Qual a *queixa principal*?');
         return;

@@ -3,23 +3,10 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { toast } from 'sonner';
-
-const APPROACHES = [
-  "TCC (Terapia Cognitivo-Comportamental)",
-  "Psicanálise",
-  "Humanista",
-  "Fenomenologia Existencial e Humanista",
-  "Comportamental",
-  "Sistêmica",
-  "Gestalt",
-  "Psicodrama",
-  "Outra",
-];
 
 interface StepPatientProps {
   selectedApproach: string;
@@ -30,7 +17,6 @@ interface StepPatientProps {
 export default function StepPatient({ selectedApproach, onNext, onSkip }: StepPatientProps) {
   const { user } = useAuth();
   const [fullName, setFullName] = useState('');
-  const [approach, setApproach] = useState(selectedApproach);
   const [saving, setSaving] = useState(false);
 
   const generateInitials = (name: string) => {
@@ -48,7 +34,7 @@ export default function StepPatient({ selectedApproach, onNext, onSkip }: StepPa
           user_id: user.id,
           full_name: fullName.trim(),
           initials,
-          approach: approach || null,
+          approach: selectedApproach || null,
           status: 'active',
         })
         .select('id, full_name, initials, approach')
@@ -102,15 +88,6 @@ export default function StepPatient({ selectedApproach, onNext, onSkip }: StepPa
             <Label>Nome completo ou iniciais do paciente *</Label>
             <Input value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Ex: Maria S. ou M.S." />
             <p className="text-xs text-muted-foreground">Use iniciais para maior sigilo. Você poderá editar depois.</p>
-          </div>
-          <div className="space-y-2">
-            <Label>Abordagem para este paciente</Label>
-            <Select value={approach} onValueChange={setApproach}>
-              <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-              <SelectContent>
-                {APPROACHES.map(a => <SelectItem key={a} value={a}>{a}</SelectItem>)}
-              </SelectContent>
-            </Select>
           </div>
         </CardContent>
       </Card>

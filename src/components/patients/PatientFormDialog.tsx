@@ -10,17 +10,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { toast } from "sonner";
 
-const APPROACHES = [
-  "TCC (Terapia Cognitivo-Comportamental)",
-  "Psicanálise",
-  "Humanista",
-  "Fenomenologia Existencial e Humanista",
-  "Comportamental",
-  "Sistêmica",
-  "Gestalt",
-  "Psicodrama",
-  "Outra",
-];
 const DURATIONS = ["30min", "40min", "50min", "60min"];
 const SESSION_TYPES = ["Presencial", "Online"];
 const FREQUENCIES = ["Semanal", "Quinzenal", "Mensal"];
@@ -71,7 +60,7 @@ interface Props {
 }
 
 export default function PatientFormDialog({ open, onOpenChange, editData, onSaved }: Props) {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [form, setForm] = useState<PatientData>(emptyPatient);
   const [saving, setSaving] = useState(false);
 
@@ -115,7 +104,6 @@ export default function PatientFormDialog({ open, onOpenChange, editData, onSave
             initials: form.initials,
             date_of_birth: form.date_of_birth || null,
             gender: form.gender || null,
-            approach: form.approach || null,
             main_complaint: form.main_complaint || null,
             cid_10: form.cid_10 || null,
             dsm_5: form.dsm_5 || null,
@@ -140,7 +128,7 @@ export default function PatientFormDialog({ open, onOpenChange, editData, onSave
             initials: form.initials,
             date_of_birth: form.date_of_birth || null,
             gender: form.gender || null,
-            approach: form.approach || null,
+            approach: profile?.main_approach || null,
             main_complaint: form.main_complaint || null,
             cid_10: form.cid_10 || null,
             dsm_5: form.dsm_5 || null,
@@ -172,7 +160,7 @@ export default function PatientFormDialog({ open, onOpenChange, editData, onSave
                 body: JSON.stringify({
                   patient_name: form.full_name,
                   patient_initials: form.initials,
-                  approach: form.approach,
+                  approach: profile?.main_approach || "",
                   main_complaint: form.main_complaint,
                   cid_10: form.cid_10,
                   dsm_5: form.dsm_5,
@@ -249,15 +237,6 @@ export default function PatientFormDialog({ open, onOpenChange, editData, onSave
           <div>
             <h3 className="text-sm font-semibold text-foreground mb-3">Informações clínicas</h3>
             <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>Abordagem terapêutica</Label>
-                <Select value={form.approach} onValueChange={v => set("approach", v)}>
-                  <SelectTrigger><SelectValue placeholder="Selecione a abordagem" /></SelectTrigger>
-                  <SelectContent>
-                    {APPROACHES.map(a => <SelectItem key={a} value={a}>{a}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
               <div className="space-y-2">
                 <Label>Queixa principal</Label>
                 <Textarea value={form.main_complaint} onChange={e => set("main_complaint", e.target.value)} placeholder="Ex: Ansiedade generalizada, dificuldade de relacionamento" rows={3} />

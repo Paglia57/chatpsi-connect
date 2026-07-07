@@ -72,6 +72,7 @@ export default function EvolutionOutput({ content, isLoading, onRegenerate, onSa
         <CardTitle className="font-display text-xl text-foreground">Evolução Clínica</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        <p className="text-sm text-muted-foreground">Isso é apenas um rascunho. A responsabilidade de revisar e editar é sua.</p>
         {isEditing ? (
           <Textarea
             value={editedContent}

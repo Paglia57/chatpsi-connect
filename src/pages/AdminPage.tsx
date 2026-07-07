@@ -31,6 +31,7 @@ import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/comp
 import { Search, Edit, RotateCcw, Users, ArrowUpDown, ArrowDown, ArrowUp } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
+import ManualSendCard from '@/components/admin/ManualSendCard';
 
 interface Profile {
   user_id: string;
@@ -217,6 +218,10 @@ const AdminPageContent = () => {
             );
           })()}
         </div>
+      </div>
+
+      <div className="mb-6">
+        <ManualSendCard />
       </div>
 
       <div className="mb-6 flex gap-4">

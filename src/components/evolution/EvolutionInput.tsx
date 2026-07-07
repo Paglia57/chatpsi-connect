@@ -15,18 +15,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useAudioRecording } from "@/hooks/useAudioRecording";
 
-const APPROACHES = [
-  "TCC (Terapia Cognitivo-Comportamental)",
-  "Psicanálise",
-  "Humanista",
-  "Fenomenologia Existencial e Humanista",
-  "Comportamental",
-  "Sistêmica",
-  "Gestalt",
-  "Psicodrama",
-  "Outra",
-];
-
 const DURATIONS = ["30min", "40min", "50min", "60min"];
 const SESSION_TYPES = ["Presencial", "Online"];
 
@@ -48,12 +36,13 @@ interface EvolutionInputProps {
 }
 
 export default function EvolutionInput({ onGenerate, isLoading, trialReached }: EvolutionInputProps) {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [searchParams] = useSearchParams();
   const [selectedPatient, setSelectedPatient] = useState<SelectedPatient | null>(null);
   const [avulsoMode, setAvulsoMode] = useState(false);
 
-  const [approach, setApproach] = useState("");
+  // Abordagem vem do perfil do psicólogo (não é mais pedida por paciente).
+  const approach = profile?.main_approach || "";
   const [patientInitials, setPatientInitials] = useState("");
   const [sessionNumber, setSessionNumber] = useState("");
   const [sessionDuration, setSessionDuration] = useState("");
@@ -89,7 +78,6 @@ export default function EvolutionInput({ onGenerate, isLoading, trialReached }: 
 
   useEffect(() => {
     if (selectedPatient) {
-      if (selectedPatient.approach) setApproach(selectedPatient.approach);
       if (selectedPatient.default_session_duration) setSessionDuration(selectedPatient.default_session_duration);
       if (selectedPatient.default_session_type) setSessionType(selectedPatient.default_session_type);
       setSessionNumber(String((selectedPatient.total_sessions || 0) + 1));
@@ -142,7 +130,6 @@ export default function EvolutionInput({ onGenerate, isLoading, trialReached }: 
 
   const handleClearPatient = () => {
     setSelectedPatient(null);
-    setApproach("");
     setPatientInitials("");
     setSessionNumber("");
     setSessionDuration("");
@@ -199,17 +186,6 @@ export default function EvolutionInput({ onGenerate, isLoading, trialReached }: 
             </AlertDescription>
           </Alert>
         )}
-
-        {/* Approach */}
-        <div className="space-y-2">
-          <Label className="text-sm font-medium text-foreground">Abordagem terapêutica</Label>
-          <Select value={approach} onValueChange={setApproach}>
-            <SelectTrigger><SelectValue placeholder="Selecione a abordagem" /></SelectTrigger>
-            <SelectContent>
-              {APPROACHES.map(a => <SelectItem key={a} value={a}>{a}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
 
         {/* Session info - shorter labels */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

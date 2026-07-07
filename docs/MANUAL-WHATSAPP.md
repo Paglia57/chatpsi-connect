@@ -43,7 +43,7 @@ Entra no fluxo de vendas (conversa contínua, sem botões).
 ## 2. Menu inicial (saudação "Antes · Durante · Depois")
 
 > **Mensagem:**
-> "Olá, {nome}! O ChatPsi te acompanha na sessão inteira:
+> "Olá, {nome}! O ChatPsi te acompanha em toda a sua prática clínica:
 > 🗓️ *Antes* — planejar e agendar
 > 💬 *Durante* — conversar e anotar
 > 📝 *Depois* — registrar a evolução
@@ -61,7 +61,7 @@ A qualquer momento, **menu** / **sair** / **voltar** retornam aqui.
 
 ### 2.1 Ajuda (item "Ajuda" ou digitar "ajuda")
 > **Mensagem:**
-> "*O ChatPsi te acompanha na sessão inteira:*
+> "*O ChatPsi te acompanha em toda a sua prática clínica:*
 > 🗓️ *Antes* — planeje a próxima sessão e organize sua agenda.
 > 💬 *Durante* — converse com o chat clínico (com ou sem paciente) e tire dúvidas.
 > 📝 *Depois* — registre a evolução do atendimento.
@@ -128,7 +128,9 @@ Toque em **[Gerar evolução]** ou diga **pronto**.
 > aconteceu na sessão." **[Gerar evolução]** · **[Cancelar]**
 
 A IA gera e mostra o texto da evolução (**prévia**), seguido de:
-> **Mensagem:** "Salvar esta evolução? Você pode revisar e editar depois."
+> **Mensagem:** "Isso é apenas um rascunho. A responsabilidade de revisar e editar é sua.
+>
+> Salvar esta evolução?"
 > **[Salvar]** · **[Ajustar]** · **[Cancelar]**
 
 - **Salvar** → grava na ficha: "✅ Evolução salva na ficha." e oferece o próximo passo:
@@ -157,11 +159,12 @@ A IA gera e mostra o texto da evolução (**prévia**), seguido de:
 
 ## 7. Cadastrar paciente
 
-Fluxo guiado em 4 passos; cada pergunta traz **[Cancelar]**:
+Fluxo guiado em 3 passos; cada pergunta traz **[Cancelar]**:
 1. > "Vamos cadastrar um paciente. Qual é o *nome completo* dele(a)?" **[Cancelar]**
 2. > "Quais as *iniciais* do paciente? (ex.: M.S.)" **[Cancelar]**
-3. > "Qual a *abordagem* terapêutica? (ex.: TCC, Psicanálise)" **[Cancelar]**
-4. > "Qual a *queixa principal*?" **[Cancelar]**
+3. > "Qual a *queixa principal*?" **[Cancelar]**
+
+*(A abordagem terapêutica não é mais perguntada no cadastro: vem do perfil do psicólogo.)*
 
 > **Conclusão:** "Pronto! *{nome}* foi cadastrado(a) e já aparece no seu painel web." → abre o menu
 > do paciente.
@@ -263,10 +266,10 @@ Escreva, por exemplo, "remarca para sexta 16h" ou "cancela a sessão da Maria".
 ### 12.1 Escolha antes de gerar
 Ao tocar em **Planejar sessão** (ou digitar "planejar"):
 > **Mensagem:** "Vamos planejar a sessão de *{nome}*. Como prefere?"
-> **[Dar mais contexto]** · **[Gerar agora]** · **[Menu]**
+> **[Quero dar contexto]** · **[Gerar agora]** · **[Menu]**
 
 - **Gerar agora** → gera a partir do histórico do paciente (vai direto à prévia).
-- **Dar mais contexto** → abre um **rascunho de direcionamento**:
+- **Quero dar contexto** → abre um **rascunho de direcionamento**:
   > "Pode ditar (enviar Áudio) ou escrever o foco do planejamento de *{nome}* (em quantas mensagens
   > quiser). Quando terminar, toque em *Gerar planejamento*." **[Gerar planejamento]** · **[Cancelar]**
   >
@@ -317,7 +320,7 @@ Ao escolher um planejamento:
 - **menu**, **sair**, **voltar**, **trocar**, **trocar de paciente**, **inicio** → menu / destrava paciente.
 - **ajuda**, **help**, **?**, **duvida(s)** → painel de ajuda.
 - **agenda**, **agendar**, **minha agenda**, **agenda da semana** → agenda.
-- **planejar** (sozinho) → abre a escolha *Dar mais contexto / Gerar agora*; **"planeja {foco}"**
+- **planejar** (sozinho) → abre a escolha *Quero dar contexto / Gerar agora*; **"planeja {foco}"**
   (com direção) → gera direto com esse foco.
 - **planejamentos** → ver os planejamentos salvos do paciente travado.
 - **pronto** → fecha o rascunho e gera a prévia (na **Nova evolução** e no **Dar mais contexto** do

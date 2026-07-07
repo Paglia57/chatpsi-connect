@@ -141,7 +141,7 @@ export async function offerPlanningChoice(ctx: PlanningCtx, patient: Patient): P
     flow_data: { patient_id: patient.id, patient_name: patient.full_name },
   });
   await sendButtons(ctx.phone, `Vamos planejar a sessão de *${patient.full_name}*. Como prefere?`, [
-    { id: PL_ADD_CONTEXT, title: "Dar mais contexto" },
+    { id: PL_ADD_CONTEXT, title: "Quero dar contexto" },
     { id: PL_GEN_NOW, title: "Gerar agora" },
     { id: "ctx_exit", title: "Menu" },
   ]);

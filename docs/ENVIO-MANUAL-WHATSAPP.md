@@ -52,6 +52,12 @@ Opcionais (têm default no código):
      **pt_BR**, header **Documento** (anexar o PDF de exemplo), corpo com `{{1}}` (primeiro nome) e
      botão de URL para `https://app.chatpsi.com.br/`.
    - Aprovação da Meta: ~24–48h. **O caminho grátis (janela aberta) já funciona sem esperar o template.**
+   - **Precisa ser feito por você:** o `WHATSAPP_TOKEN` fica mascarado na Management API do Supabase
+     (só existe em runtime dentro das functions), então o template não pode ser criado "de fora".
+     Caminho mais fácil: **WhatsApp Manager UI** (ele faz o upload do PDF de exemplo pra você).
+     O template deve se chamar **`manual_whatsapp`**, idioma **pt_BR**, categoria **Utility**,
+     **header = Documento** (anexe o PDF), **corpo com {{1}}** (primeiro nome) e um botão de URL
+     opcional — exatamente o formato que a function `admin-send-manual` já envia.
 
 ## Verificação (fazer antes de liberar para a base)
 

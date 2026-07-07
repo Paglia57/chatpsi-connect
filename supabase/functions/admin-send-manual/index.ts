@@ -16,8 +16,10 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-// Config (pode sobrescrever por env). O PDF é servido pelo próprio webapp em /public.
-const MANUAL_URL = Deno.env.get("MANUAL_URL") ?? "https://app.chatpsi.com.br/manual-whatsapp-chatpsi.pdf";
+// Config (pode sobrescrever por env). O PDF é servido pelo jsDelivr (CDN do GitHub,
+// content-type application/pdf), independente do deploy do frontend. O arquivo-fonte
+// fica em public/manual-whatsapp-chatpsi.pdf no repo.
+const MANUAL_URL = Deno.env.get("MANUAL_URL") ?? "https://cdn.jsdelivr.net/gh/Paglia57/chatpsi-connect@main/public/manual-whatsapp-chatpsi.pdf";
 const MANUAL_FILENAME = Deno.env.get("MANUAL_FILENAME") ?? "Manual do WhatsApp - ChatPsi.pdf";
 const MANUAL_VERSION = Deno.env.get("MANUAL_VERSION") ?? "whatsapp-2026-07";
 const TEMPLATE_NAME = Deno.env.get("MANUAL_TEMPLATE_NAME") ?? "manual_whatsapp";

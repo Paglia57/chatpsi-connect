@@ -24,7 +24,7 @@ interface SendResponse {
   manual_version?: string;
 }
 
-const MANUAL_URL = 'https://app.chatpsi.com.br/manual-whatsapp-chatpsi.pdf';
+const MANUAL_URL = 'https://cdn.jsdelivr.net/gh/Paglia57/chatpsi-connect@main/public/manual-whatsapp-chatpsi.pdf';
 
 export default function ManualSendCard() {
   const { toast } = useToast();

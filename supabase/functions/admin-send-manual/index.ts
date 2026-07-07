@@ -153,7 +153,11 @@ serve(async (req) => {
       let error: string | null = null;
       try {
         if (open) {
-          const cap = `Olá, ${r.first_name}! 📄 Aqui está o guia rápido do ChatPsi no WhatsApp — Antes, Durante e Depois da sua prática clínica. Qualquer dúvida, é só responder por aqui.`;
+          const cap =
+            `Olá, ${r.first_name}! 👋\n\n` +
+            `📄 *Seu guia rápido do ChatPsi no WhatsApp*\n` +
+            `Um passo a passo de *Antes · Durante · Depois* da sua prática clínica: planejar, conversar e registrar a evolução — tudo por aqui.\n\n` +
+            `É só abrir o arquivo. Qualquer dúvida, responda nesta conversa. 💙`;
           ok = await sendDocument(r.phone, { link: MANUAL_URL, filename: MANUAL_FILENAME, caption: cap });
         } else {
           ok = await sendTemplate(r.phone, TEMPLATE_NAME, TEMPLATE_LANG, [r.first_name], {

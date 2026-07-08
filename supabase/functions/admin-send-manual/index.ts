@@ -161,7 +161,7 @@ serve(async (req) => {
           ok = await sendDocument(r.phone, { link: MANUAL_URL, filename: MANUAL_FILENAME, caption: cap });
         } else {
           ok = await sendTemplate(r.phone, TEMPLATE_NAME, TEMPLATE_LANG, [r.first_name], {
-            link: MANUAL_URL, filename: MANUAL_FILENAME,
+            kind: "document", link: MANUAL_URL, filename: MANUAL_FILENAME,
           });
         }
       } catch (e) {

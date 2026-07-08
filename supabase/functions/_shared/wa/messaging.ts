@@ -115,15 +115,32 @@ export async function sendDocument(to: string, doc: DocumentMessage): Promise<bo
   });
 }
 
-export interface TemplateHeaderDocument {
-  link: string;     // URL pública do documento (ex.: Manual de Uso em storage)
-  filename: string; // nome exibido no WhatsApp
+/** Envia uma IMAGEM como mensagem livre (dentro da janela de 24h). */
+export async function sendImage(to: string, img: { link: string; caption?: string }): Promise<boolean> {
+  return await postMessage({
+    to, type: 'image',
+    image: { link: img.link, ...(img.caption ? { caption: img.caption.slice(0, 1024) } : {}) },
+  });
+}
+
+/** Envia um VÍDEO como mensagem livre (dentro da janela). GIF deve ser enviado como .mp4. */
+export async function sendVideo(to: string, vid: { link: string; caption?: string }): Promise<boolean> {
+  return await postMessage({
+    to, type: 'video',
+    video: { link: vid.link, ...(vid.caption ? { caption: vid.caption.slice(0, 1024) } : {}) },
+  });
+}
+
+export interface TemplateHeaderMedia {
+  kind: 'document' | 'image' | 'video'; // tipo do header de mídia do template
+  link: string;                          // URL pública da mídia
+  filename?: string;                     // só para documento
 }
 
 /**
  * Envia uma mensagem de TEMPLATE aprovado da Meta (Cloud API). É o único caminho
  * para mensagens proativas fora da janela de 24h. `bodyParams` preenche {{1}}, {{2}}...
- * na ordem; `headerDocument` adiciona um cabeçalho do tipo documento quando informado.
+ * na ordem; `header` adiciona um cabeçalho de mídia (documento/imagem/vídeo) quando informado.
  * Retorna true se a Graph API aceitou o envio.
  */
 export async function sendTemplate(
@@ -131,17 +148,16 @@ export async function sendTemplate(
   name: string,
   lang: string,
   bodyParams: string[],
-  headerDocument?: TemplateHeaderDocument,
+  header?: TemplateHeaderMedia,
 ): Promise<boolean> {
   const components: Record<string, unknown>[] = [];
-  if (headerDocument) {
-    components.push({
-      type: 'header',
-      parameters: [{
-        type: 'document',
-        document: { link: headerDocument.link, filename: headerDocument.filename },
-      }],
-    });
+  if (header) {
+    const param = header.kind === 'document'
+      ? { type: 'document', document: { link: header.link, ...(header.filename ? { filename: header.filename } : {}) } }
+      : header.kind === 'image'
+        ? { type: 'image', image: { link: header.link } }
+        : { type: 'video', video: { link: header.link } };
+    components.push({ type: 'header', parameters: [param] });
   }
   components.push({
     type: 'body',

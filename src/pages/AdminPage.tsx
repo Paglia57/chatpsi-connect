@@ -28,10 +28,9 @@ import {
 } from '@/components/ui/collapsible';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
-import { Search, Edit, RotateCcw, Users, ArrowUpDown, ArrowDown, ArrowUp } from 'lucide-react';
+import { Search, Edit, RotateCcw, Users, ArrowUpDown, ArrowDown, ArrowUp, Megaphone } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import ManualSendCard from '@/components/admin/ManualSendCard';
 
 interface Profile {
   user_id: string;
@@ -221,7 +220,9 @@ const AdminPageContent = () => {
       </div>
 
       <div className="mb-6">
-        <ManualSendCard />
+        <Button variant="cta" asChild>
+          <a href="/admin/comunicacoes"><Megaphone className="h-4 w-4" /> Comunicações e Notificações</a>
+        </Button>
       </div>
 
       <div className="mb-6 flex gap-4">

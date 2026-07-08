@@ -16,6 +16,7 @@ import AdminReferralsPage from "./pages/AdminReferralsPage";
 import AdminPersonasPage from "./pages/AdminPersonasPage";
 import AdminPlanosAcaoPage from "./pages/AdminPlanosAcaoPage";
 import AdminAssinaturasPage from "./pages/AdminAssinaturasPage";
+import AdminComunicacoesPage from "./pages/AdminComunicacoesPage";
 import MarketingPage from "./pages/MarketingPage";
 import NotFound from "./pages/NotFound";
 import AppLayout from "@/components/app/AppLayout";
@@ -75,6 +76,7 @@ const App = () => (
               <Route path="/admin/personas" element={<AdminPersonasPage />} />
               <Route path="/admin/planos-acao" element={<AdminPlanosAcaoPage />} />
               <Route path="/admin/assinaturas" element={<AdminAssinaturasPage />} />
+              <Route path="/admin/comunicacoes" element={<AdminComunicacoesPage />} />
             </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

@@ -46,18 +46,19 @@ Opcionais (têm default no código):
 2. **Migration:** aplicar `20260707120000_manual_sends.sql` (`supabase db push` ou o fluxo de deploy do projeto).
 3. **Deploy da function:** `supabase functions deploy admin-send-manual`.
 4. **Template Meta (só para o caminho fora da janela):** criar/submeter o template utility.
-   - Automático: `node scripts/wa-create-manual-template.mjs` com as envs `WA_APP_ID`, `WABA_ID`,
-     `WA_MGMT_TOKEN` (system user com `whatsapp_business_management`), `MANUAL_PDF_PATH`.
-   - Ou manual: WhatsApp Manager → Modelos → criar `manual_whatsapp`, categoria **Utility**, idioma
-     **pt_BR**, header **Documento** (anexar o PDF de exemplo), corpo com `{{1}}` (primeiro nome) e
-     botão de URL para `https://app.chatpsi.com.br/`.
-   - Aprovação da Meta: ~24–48h. **O caminho grátis (janela aberta) já funciona sem esperar o template.**
-   - **Precisa ser feito por você:** o `WHATSAPP_TOKEN` fica mascarado na Management API do Supabase
-     (só existe em runtime dentro das functions), então o template não pode ser criado "de fora".
-     Caminho mais fácil: **WhatsApp Manager UI** (ele faz o upload do PDF de exemplo pra você).
-     O template deve se chamar **`manual_whatsapp`**, idioma **pt_BR**, categoria **Utility**,
-     **header = Documento** (anexe o PDF), **corpo com {{1}}** (primeiro nome) e um botão de URL
-     opcional — exatamente o formato que a function `admin-send-manual` já envia.
+   - **Caminho recomendado (novo): pelo próprio Superadmin.** Em **Comunicações e Notificações**,
+     abra **Disparar** numa comunicação com nome de template preenchido: a tela mostra o status
+     real do template na Meta e, se ele não existir, o botão **"Criar template na Meta agora"**
+     cria e submete direto (edge function `admin-wa-templates`, que roda onde o `WHATSAPP_TOKEN`
+     existe — inclusive faz o upload do exemplo de mídia pela Resumable Upload API).
+   - Alternativas antigas: `node scripts/wa-create-manual-template.mjs` (precisa de `WA_APP_ID`,
+     `WABA_ID`, `WA_MGMT_TOKEN`) ou WhatsApp Manager → Modelos (criar `manual_whatsapp`, Utility,
+     pt_BR, header Documento, corpo com `{{1}}`).
+   - Aprovação da Meta: utility costuma sair em minutos/horas (pode levar até 24–48h).
+     **O caminho grátis (janela aberta) já funciona sem esperar o template.**
+   - O disparo (`admin-send-communication`) agora **pré-checa o status do template na Meta**:
+     se não está APROVADO, quem está fora da janela é pulado com razão `template_not_approved`
+     (em vez de falhar com o erro 132001 por destinatário), e o resultado na UI mostra o motivo.
 
 ## Verificação (fazer antes de liberar para a base)
 

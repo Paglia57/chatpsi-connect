@@ -266,13 +266,51 @@ function AdminComunicacoesContent() {
   );
 }
 
+interface TplStatus {
+  checking: boolean;
+  found?: boolean;
+  status?: string; // APPROVED | PENDING | REJECTED | NOT_FOUND | UNKNOWN
+  rejectedReason?: string | null;
+}
+
 function SendDialog({ comm, onClose }: { comm: Communication; onClose: () => void }) {
   const { toast } = useToast();
   const [audience, setAudience] = useState<'active' | 'inactive' | 'all'>('active');
   const [testPhone, setTestPhone] = useState('');
-  const [busy, setBusy] = useState<null | 'preview' | 'send' | 'test'>(null);
+  const [busy, setBusy] = useState<null | 'preview' | 'send' | 'test' | 'tpl'>(null);
   const [result, setResult] = useState<any>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [tpl, setTpl] = useState<TplStatus | null>(comm.template_name ? { checking: true } : null);
+
+  const checkTemplate = useCallback(async () => {
+    if (!comm.template_name) { setTpl(null); return; }
+    setTpl({ checking: true });
+    const { data, error } = await sb.functions.invoke('admin-wa-templates', {
+      body: { action: 'status', name: comm.template_name, lang: comm.template_lang || 'pt_BR' },
+    });
+    if (error || data?.error) { setTpl({ checking: false, status: 'UNKNOWN' }); return; }
+    setTpl({ checking: false, found: data.found, status: data.found ? data.status : 'NOT_FOUND', rejectedReason: data.rejectedReason });
+  }, [comm.template_name, comm.template_lang]);
+
+  useEffect(() => { checkTemplate(); }, [checkTemplate]);
+
+  const createTemplate = async () => {
+    setBusy('tpl');
+    try {
+      const { data, error } = await sb.functions.invoke('admin-wa-templates', {
+        body: { action: 'create_from_communication', communication_id: comm.id },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast({
+        title: data.already_exists ? 'Template já existe na Meta' : 'Template enviado pra aprovação',
+        description: data.already_exists ? `Status: ${data.status}` : 'Utility costuma aprovar em minutos/horas. Atualize o status antes de disparar.',
+      });
+      checkTemplate();
+    } catch (e: any) {
+      toast({ title: 'Falha ao criar template', description: e.message, variant: 'destructive' });
+    } finally { setBusy(null); }
+  };
 
   const call = async (payload: Record<string, unknown>, kind: 'preview' | 'send' | 'test') => {
     setBusy(kind); setResult(null);
@@ -284,7 +322,11 @@ function SendDialog({ comm, onClose }: { comm: Communication; onClose: () => voi
       const s = data.summary;
       if (kind === 'preview') toast({ title: 'Simulação pronta', description: `${s?.total ?? 0} destinatários — nada enviado.` });
       else if (kind === 'test') toast({ title: 'Teste enviado', description: 'Confira o WhatsApp.' });
-      else toast({ title: 'Envio concluído', description: `Grátis: ${s?.sent_free ?? 0} · Template: ${s?.sent_template ?? 0}` });
+      else toast({
+        title: 'Envio concluído',
+        description: `Grátis: ${s?.sent_free ?? 0} · Template: ${s?.sent_template ?? 0}` +
+          ((s?.skipped_template_not_approved ?? 0) > 0 ? ` · ${s.skipped_template_not_approved} não receberam (template não aprovado)` : ''),
+      });
     } catch (e: any) {
       toast({ title: 'Erro', description: e.message, variant: 'destructive' });
     } finally { setBusy(null); }
@@ -310,6 +352,36 @@ function SendDialog({ comm, onClose }: { comm: Communication; onClose: () => voi
             </Select>
           </div>
 
+          {/* alcance fora da janela de 24h: depende do template aprovado na Meta */}
+          <div className="rounded-md border p-3 text-xs space-y-2">
+            {!comm.template_name ? (
+              <p className="text-amber-700">
+                <b>Sem template:</b> só recebe quem usou o bot nas últimas 24h. Pra alcançar <b>todos</b>,
+                salve a comunicação com um nome de template e crie ele na Meta aqui.
+              </p>
+            ) : tpl?.checking ? (
+              <p className="flex items-center gap-2 text-muted-foreground"><Loader2 className="h-3 w-3 animate-spin" /> Verificando template “{comm.template_name}” na Meta…</p>
+            ) : tpl?.status === 'APPROVED' ? (
+              <p className="text-emerald-700"><b>✓ Template aprovado</b> ({comm.template_name}) — alcança todos, dentro e fora da janela de 24h.</p>
+            ) : tpl?.status === 'NOT_FOUND' ? (
+              <div className="space-y-2">
+                <p className="text-red-600"><b>✗ O template “{comm.template_name}” não existe na Meta.</b> Fora da janela de 24h ninguém recebe até ele ser criado e aprovado.</p>
+                <Button size="sm" variant="outline" disabled={!!busy} onClick={createTemplate}>
+                  {busy === 'tpl' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />} Criar template na Meta agora
+                </Button>
+              </div>
+            ) : tpl?.status === 'REJECTED' ? (
+              <p className="text-red-600"><b>✗ Template rejeitado pela Meta</b>{tpl.rejectedReason ? ` (${tpl.rejectedReason})` : ''}. Ajuste no WhatsApp Manager ou salve com outro nome de template e crie de novo.</p>
+            ) : tpl?.status === 'UNKNOWN' ? (
+              <p className="text-muted-foreground">Não consegui verificar o template na Meta agora; o envio vai tentar mesmo assim.</p>
+            ) : (
+              <p className="text-amber-700"><b>⏳ Template “{comm.template_name}” aguardando aprovação da Meta</b> (status: {tpl?.status}). Fora da janela ainda não recebe.</p>
+            )}
+            {comm.template_name && !tpl?.checking && (
+              <button type="button" className="text-[11px] underline text-muted-foreground" onClick={checkTemplate}>Atualizar status</button>
+            )}
+          </div>
+
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" size="sm" disabled={!!busy} onClick={() => call({ audience, mode: 'dry_run' }, 'preview')}>
               {busy === 'preview' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Eye className="h-4 w-4" />} Simular
@@ -333,6 +405,15 @@ function SendDialog({ comm, onClose }: { comm: Communication; onClose: () => voi
               <p className="font-medium mb-1">{result.summary.dry_run ? 'Simulação (nada enviado)' : 'Resultado'}</p>
               <p className="text-xs">Total: {result.summary.total} · Grátis: {result.summary.sent_free} · Template: {result.summary.sent_template}
                 {' '}· Pulados (sem template fora da janela): {result.summary.skipped_no_template} · Falhas: {result.summary.failed}</p>
+              {(result.summary.skipped_template_not_approved ?? 0) > 0 && (
+                <p className="text-xs text-amber-700 mt-1">⚠ {result.summary.skipped_template_not_approved} fora da janela NÃO receberam: template “{comm.template_name}” não está aprovado na Meta (status: {result.summary.template_status ?? '?'}).</p>
+              )}
+              {(result.summary.skipped_dedupe ?? 0) > 0 && (
+                <p className="text-xs text-muted-foreground mt-1">{result.summary.skipped_dedupe} pulados por já terem recebido esta comunicação.</p>
+              )}
+              {(result.summary.top_errors ?? []).map((e: any, i: number) => (
+                <p key={i} className="text-xs text-red-600 mt-1">Erro ({e.count}x): {e.message}</p>
+              ))}
               {typeof result.est_cost_brl === 'number' && (
                 <p className="text-xs text-muted-foreground mt-1">Custo estimado (templates): <b>R$ {result.est_cost_brl.toFixed(2)}</b></p>
               )}

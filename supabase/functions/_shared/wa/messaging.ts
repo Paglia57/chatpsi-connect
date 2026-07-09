@@ -33,9 +33,10 @@ function creds(): { token: string; phoneNumberId: string } | null {
   return { token, phoneNumberId };
 }
 
-async function postMessage(payload: Record<string, unknown>): Promise<boolean> {
+/** POST na Graph API. Retorna null no sucesso ou o texto do erro na falha. */
+async function postMessageDetailed(payload: Record<string, unknown>): Promise<string | null> {
   const c = creds();
-  if (!c) return false;
+  if (!c) return 'Missing WHATSAPP_TOKEN or WHATSAPP_PHONE_NUMBER_ID';
   const res = await fetch(
     `https://graph.facebook.com/${GRAPH_API_VERSION}/${c.phoneNumberId}/messages`,
     {
@@ -48,9 +49,13 @@ async function postMessage(payload: Record<string, unknown>): Promise<boolean> {
     const errText = await res.text();
     console.error(`WhatsApp send failed (${res.status}):`, errText);
     await logSendFailure(res.status, errText, payload);
-    return false;
+    return errText;
   }
-  return true;
+  return null;
+}
+
+async function postMessage(payload: Record<string, unknown>): Promise<boolean> {
+  return (await postMessageDetailed(payload)) === null;
 }
 
 /** Ajusta markdown para o WhatsApp: ** -> *, remove cabeçalhos #/##/###. */
@@ -150,6 +155,17 @@ export async function sendTemplate(
   bodyParams: string[],
   header?: TemplateHeaderMedia,
 ): Promise<boolean> {
+  return (await sendTemplateDetailed(to, name, lang, bodyParams, header)) === null;
+}
+
+/** Igual a sendTemplate, mas retorna null no sucesso ou o erro da Graph API na falha. */
+export async function sendTemplateDetailed(
+  to: string,
+  name: string,
+  lang: string,
+  bodyParams: string[],
+  header?: TemplateHeaderMedia,
+): Promise<string | null> {
   const components: Record<string, unknown>[] = [];
   if (header) {
     const param = header.kind === 'document'
@@ -159,11 +175,13 @@ export async function sendTemplate(
         : { type: 'video', video: { link: header.link } };
     components.push({ type: 'header', parameters: [param] });
   }
-  components.push({
-    type: 'body',
-    parameters: bodyParams.map((t) => ({ type: 'text', text: t })),
-  });
-  return await postMessage({
+  if (bodyParams.length > 0) {
+    components.push({
+      type: 'body',
+      parameters: bodyParams.map((t) => ({ type: 'text', text: t })),
+    });
+  }
+  return await postMessageDetailed({
     to,
     type: 'template',
     template: { name, language: { code: lang }, components },

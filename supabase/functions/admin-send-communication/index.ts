@@ -7,7 +7,8 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.55.0";
-import { sendDocument, sendImage, sendTemplate, sendText, sendVideo } from "../_shared/wa/messaging.ts";
+import { sendDocument, sendImage, sendTemplateDetailed, sendText, sendVideo } from "../_shared/wa/messaging.ts";
+import { fetchTemplateInfo, type TemplateInfo } from "../_shared/wa/templates.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -70,6 +71,14 @@ serve(async (req) => {
     const kind = comm.kind as "text" | "document" | "image" | "video";
     const personalize = (t: string, name: string) => (t ?? "").replace(/\{\{\s*nome\s*\}\}/gi, name);
 
+    // Pré-checagem do template na Meta: se não está APROVADO, ninguém fora da janela
+    // recebe — pula com razão clara em vez de estourar 132001 por destinatário.
+    // Se a própria consulta falhar (status UNKNOWN), mantém o comportamento antigo e tenta.
+    let tpl: TemplateInfo | null = null;
+    if (comm.template_name) tpl = await fetchTemplateInfo(comm.template_name, comm.template_lang ?? "pt_BR");
+    const templateUsable = tpl !== null && (tpl.status === "APPROVED" || tpl.status === "UNKNOWN");
+    const templateStatus = tpl === null ? null : (tpl.found ? tpl.status : "NOT_FOUND");
+
     // ---- destinatários ----
     let recipients: Recipient[] = [];
     if (mode === "test") {
@@ -105,8 +114,9 @@ serve(async (req) => {
       // decide canal
       let channel: string;
       if (open) channel = kind === "text" ? "free_text" : "free_media";
-      else if (comm.template_name) channel = "template";
-      else return { phone: r.phone, channel: "skipped", reason: "out_of_window_no_template" };
+      else if (!comm.template_name) return { phone: r.phone, channel: "skipped", reason: "out_of_window_no_template" };
+      else if (!templateUsable) return { phone: r.phone, channel: "skipped", reason: "template_not_approved", template_status: templateStatus };
+      else channel = "template";
 
       if (dryRun) return { phone: r.phone, channel, dry_run: true };
 
@@ -119,9 +129,18 @@ serve(async (req) => {
           else if (kind === "image") ok = await sendImage(r.phone, { link: comm.media_url, caption });
           else ok = await sendVideo(r.phone, { link: comm.media_url, caption });
         } else {
-          const header = kind === "text" || !comm.media_url ? undefined
-            : { kind, link: comm.media_url, filename: comm.media_filename ?? undefined };
-          ok = await sendTemplate(r.phone, comm.template_name, comm.template_lang ?? "pt_BR", [r.first_name], header as any);
+          // monta o envio conforme o template REAL na Meta (variáveis e header),
+          // não conforme o palpite local — evita erro 132000 (param mismatch).
+          const paramCount = tpl?.found ? tpl.bodyParamCount : 1;
+          const bodyParams = paramCount >= 1 ? [r.first_name] : [];
+          const wantsMediaHeader = tpl?.found
+            ? ["DOCUMENT", "IMAGE", "VIDEO"].includes(tpl.headerFormat ?? "")
+            : kind !== "text";
+          const header = wantsMediaHeader && comm.media_url
+            ? { kind: (tpl?.found ? (tpl.headerFormat!.toLowerCase() as "document" | "image" | "video") : kind as "document" | "image" | "video"), link: comm.media_url, filename: comm.media_filename ?? undefined }
+            : undefined;
+          error = await sendTemplateDetailed(r.phone, comm.template_name, comm.template_lang ?? "pt_BR", bodyParams, header);
+          ok = error === null;
         }
       } catch (e) { error = e instanceof Error ? e.message : String(e); }
 
@@ -136,14 +155,27 @@ serve(async (req) => {
 
     const templatesSent = results.filter((r) => r.ok && r.channel === "template").length;
     const unit = comm.category === "marketing" ? 0.32 : 0.035;
+    // agrupa os erros reais da Graph API pra UI mostrar o motivo (não só a contagem)
+    const errCounts = new Map<string, number>();
+    for (const r of results) {
+      if (!r.error) continue;
+      let msg = String(r.error);
+      try { msg = JSON.parse(msg)?.error?.message ?? msg; } catch { /* texto puro */ }
+      errCounts.set(msg, (errCounts.get(msg) ?? 0) + 1);
+    }
+    const top_errors = [...errCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3)
+      .map(([message, count]) => ({ message: message.slice(0, 300), count }));
     const summary = {
       total: recipients.length,
       sent_free: results.filter((r) => r.ok && (r.channel === "free_text" || r.channel === "free_media")).length,
       sent_template: templatesSent,
       skipped_no_template: results.filter((r) => r.reason === "out_of_window_no_template").length,
+      skipped_template_not_approved: results.filter((r) => r.reason === "template_not_approved").length,
       skipped_dedupe: results.filter((r) => r.reason === "already_sent").length,
       failed: results.filter((r) => r.error || (r.ok === false && !r.dry_run)).length,
       dry_run: dryRun,
+      template_status: templateStatus,
+      top_errors,
     };
     const est_cost_brl = Number((templatesSent * unit).toFixed(2));
     // custo estimado no dry_run (quantos iriam por template)

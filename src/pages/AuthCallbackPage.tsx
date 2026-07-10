@@ -11,67 +11,48 @@ const AuthCallbackPage = () => {
   const { toast } = useToast();
 
   useEffect(() => {
+    let settled = false;
+    const finish = (to: string) => {
+      if (settled) return;
+      settled = true;
+      setRedirectTo(to);
+      setProcessing(false);
+    };
+
+    // Cinto de segurança: nunca deixar o usuário preso no spinner "Processando
+    // autenticação..." pra sempre. Se algo travar além disso, cai pro /auth.
+    const safety = setTimeout(() => {
+      logger.warn('Auth callback safety timeout reached');
+      finish('/auth');
+    }, 12000);
+
     const handleCallback = async () => {
       try {
         const urlParams = new URLSearchParams(window.location.search);
-        const type = urlParams.get('type');
+        const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+        const type = urlParams.get('type') || hashParams.get('type');
         const nextPath = urlParams.get('next') || '/reset-password';
-        
-        logger.debug('Processing auth callback', { type, nextPath });
+        const code = urlParams.get('code');
+        // Link já consumido (ex.: scanner de e-mail que faz prefetch) ou expirado
+        const urlError = hashParams.get('error_description') || hashParams.get('error')
+          || urlParams.get('error_description') || urlParams.get('error');
 
-        // Para recuperação de senha, aguardar estabelecimento da sessão
-        if (type === 'recovery') {
-          logger.debug('Processing password recovery callback');
-          
-          // Aguardar até 5 segundos pelo evento de sessão via onAuthStateChange
-          const sessionPromise = new Promise<boolean>((resolve) => {
-            const timeout = setTimeout(() => {
-              logger.warn('Recovery session timeout - no PASSWORD_RECOVERY event received');
-              resolve(false);
-            }, 5000);
-            
-            const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-              logger.debug('Auth state change during recovery', { event, hasSession: !!session });
-              
-              if ((event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') && session) {
-                clearTimeout(timeout);
-                subscription.unsubscribe();
-                resolve(true);
-              }
-            });
+        logger.debug('Processing auth callback', { type, nextPath, hasCode: !!code });
+
+        if (urlError) {
+          logger.error('Auth callback received error in URL', urlError);
+          toast({
+            title: "Link expirado",
+            description: GENERIC_ERROR_MESSAGES.PASSWORD_RESET_LINK_EXPIRED,
+            variant: "destructive",
           });
-          
-          const hasSession = await sessionPromise;
-          
-          if (hasSession) {
-            logger.debug('Recovery session established successfully');
-            setRedirectTo(nextPath);
-          } else {
-            // Verificar sessão existente como fallback
-            const { data: { session }, error } = await supabase.auth.getSession();
-            
-            if (error) {
-              logger.error('Session verification failed after recovery', error);
-            }
-            
-            if (session) {
-              logger.debug('Recovery session found in fallback check');
-              setRedirectTo(nextPath);
-            } else {
-              // Sem sessão válida - link expirado ou já usado
-              logger.error('No valid session after recovery - link expired or already used');
-              toast({
-                title: "Link expirado",
-                description: GENERIC_ERROR_MESSAGES.PASSWORD_RESET_LINK_EXPIRED,
-                variant: "destructive",
-              });
-              setRedirectTo('/auth');
-            }
-          }
-        } else {
-          // Para outros tipos de callback (OAuth, magic link, etc.)
+          finish('/auth');
+          return;
+        }
+
+        // OAuth / magic link com PKCE: trocar o code por sessão explicitamente
+        if (code) {
           const { error } = await supabase.auth.exchangeCodeForSession(window.location.href);
-          
           if (error) {
             logger.error('Code exchange failed', error);
             toast({
@@ -79,11 +60,43 @@ const AuthCallbackPage = () => {
               description: GENERIC_ERROR_MESSAGES.AUTH_FAILED,
               variant: "destructive",
             });
-            setRedirectTo('/auth');
-          } else {
-            logger.debug('Code processed successfully');
-            setRedirectTo(nextPath);
+            finish('/auth');
+            return;
           }
+        }
+
+        // Fluxo implícito (recovery/magic link): detectSessionInUrl já processou o
+        // hash no init do client; getSession aguarda esse init e retorna a sessão.
+        // Com processLock no client, getSession não trava mais em WebView de mobile.
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          logger.debug('Session established from callback');
+          finish(nextPath);
+          return;
+        }
+
+        // Sem sessão ainda: aguardar breve por um evento tardio antes de desistir
+        const gotLate = await new Promise<boolean>((resolve) => {
+          const t = setTimeout(() => resolve(false), 4000);
+          const { data: { subscription } } = supabase.auth.onAuthStateChange((event, s) => {
+            if (s) {
+              clearTimeout(t);
+              subscription.unsubscribe();
+              resolve(true);
+            }
+          });
+        });
+
+        if (gotLate) {
+          finish(nextPath);
+        } else {
+          logger.error('No valid session after callback - link expired or already used');
+          toast({
+            title: "Link expirado",
+            description: GENERIC_ERROR_MESSAGES.PASSWORD_RESET_LINK_EXPIRED,
+            variant: "destructive",
+          });
+          finish('/auth');
         }
       } catch (error) {
         console.error('Erro inesperado no callback:', error);
@@ -92,9 +105,9 @@ const AuthCallbackPage = () => {
           description: "Ocorreu um erro ao processar a autenticação. Tente novamente.",
           variant: "destructive",
         });
-        setRedirectTo('/auth');
+        finish('/auth');
       } finally {
-        setProcessing(false);
+        clearTimeout(safety);
       }
     };
 

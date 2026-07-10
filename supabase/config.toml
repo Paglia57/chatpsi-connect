@@ -40,8 +40,14 @@ image_transformation = { enabled = true }
 
 [auth]
 enabled = true
+# site_url/additional_redirect_urls abaixo valem pro emulador LOCAL (supabase start).
+# PRODUÇÃO é gerenciada no dashboard do Supabase hospedado. Referência do que deve estar lá:
+#   Site URL:      https://app.chatpsi.com.br   (https, nunca http)
+#   Redirect URLs: https://app.chatpsi.com.br/** (host cru sem /** é IGNORADO pelo Supabase)
+# Sem a entrada com /**, o redirect_to do reset de senha não casa e o Supabase cai no Site URL
+# (raiz /), levando o usuário pra home em vez de /reset-password.
 site_url = "http://127.0.0.1:3000"
-additional_redirect_urls = ["https://127.0.0.1:3000"]
+additional_redirect_urls = ["https://127.0.0.1:3000", "https://app.chatpsi.com.br/**"]
 jwt_expiry = 3600
 enable_signup = true
 
